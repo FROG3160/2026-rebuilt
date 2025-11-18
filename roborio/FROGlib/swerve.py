@@ -33,6 +33,11 @@ from .ctre import (
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
+from roborio.constants import (
+    swerve_drive_config,
+    swerve_steer_config,
+    swerve_cancoder_config,
+)
 
 
 @dataclass
@@ -94,7 +99,7 @@ class SwerveModule:
         # create/configure drive motor
         self.drive_motor = FROGTalonFX(
             config.drive_motor_id,
-            config.drive_motor_config,
+            swerve_drive_config,
             parent_nt=f"{parent_nt}/{self.name}",
             motor_name="Drive",
         )
@@ -104,13 +109,13 @@ class SwerveModule:
         # create/configure steer motor
         self.steer_motor = FROGTalonFX(
             config.steer_motor_id,
-            config.steer_motor_config,
+            swerve_steer_config,
             parent_nt=f"{parent_nt}/{self.name}",
             motor_name="Steer",
         )
 
         # create/configure cancoder
-        self.steer_encoder = FROGCanCoder(config.cancoder_id, config.cancoder_config)
+        self.steer_encoder = FROGCanCoder(config.cancoder_id, swerve_cancoder_config)
 
         # configure signal frequencies
         self.drive_motor.get_velocity().set_update_frequency(50)
