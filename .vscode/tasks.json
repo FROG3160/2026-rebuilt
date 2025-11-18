@@ -1,0 +1,84 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Create Virtual Environment",
+            "command": "${env:USERPROFILE}\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+            "args": [
+                "-m",
+                "venv",
+                "${workspaceFolder}\\.venv"
+            ],
+            "options": {
+                "cwd": "${env:USERPROFILE}\\AppData\\Local\\Programs\\Python\\Python313\\",
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [
+                        "/d",
+                        "/c"
+                    ]
+                },
+                "statusbar": {
+                    "color": "#026b02",
+                    "label": "$(file-directory-create) Create .venv" ,
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "Install RobotPy",
+            "command": ".venv\\Scripts\\python.exe",
+            "args": [
+                "-m",
+                "pip",
+                "install",
+                "robotpy"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [
+                        "/d",
+                        "/c"
+                    ]
+                },                
+                "statusbar": {
+                    "color": "#026b02",
+                    "label": "$(cloud-download) Install RobotPy"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "RobotPy Sync",
+            "type": "shell",
+            "command": "pwd && source ../.venv/Scripts/activate && python -m robotpy sync",
+            "options": {
+                "cwd": "${workspaceFolder}/roborio",
+                "statusbar": {
+                    "color": "#0F0",
+                    "label": "$(refresh) Sync/Update"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "RobotPy Deploy",
+            "type": "shell",
+            "command": "source ../.venv/Scripts/activate && python -m robotpy deploy",
+            "options": {
+                "cwd": "${workspaceFolder}/roborio",
+                "statusbar": {
+                    "color": "#0F0",
+                    "label": "$(arrow-down) Deploy to Robot"
+                }
+            },
+            "problemMatcher": []
+        }
+    ]
+}

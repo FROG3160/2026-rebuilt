@@ -1,0 +1,17 @@
+{
+    "terminal.integrated.automationProfile.windows": {
+        "env": {"VIRTUAL_ENV": "${workspaceFolder}/.venv"}
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/.venv": true
+    },
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": true
+}
