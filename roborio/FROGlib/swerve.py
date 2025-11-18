@@ -39,14 +39,9 @@ from dataclasses import dataclass, field
 class SwerveModuleConfig:
     name: str = "undefined"
     location: Translation2d = field(default_factory=Translation2d)
-    drive_gearing: list = field(default_factory=list)
-    wheel_diameter: float = 0.0
     drive_motor_id: int = 0
-    drive_motor_config: FROGTalonFXConfig = FROGTalonFXConfig()
     steer_motor_id: int = 0
-    steer_motor_config: FROGTalonFXConfig = FROGTalonFXConfig()
     cancoder_id: int = 0
-    cancoder_config: FROGCANCoderConfig = FROGCANCoderConfig()
 
 
 class SwerveModule:
@@ -251,10 +246,11 @@ class SwerveModule:
         # self.steer.logData()
 
 
+# TODO: #1 change from subsystem to component
 class SwerveBase(Subsystem):
     def __init__(
         self,
-        swerve_module_configs,
+        swerve_module_configs: SwerveModuleConfig,
         gyro: FROGPigeonGyro,
         max_speed: float,
         max_rotation_speed: float,
