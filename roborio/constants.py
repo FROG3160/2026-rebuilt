@@ -1,5 +1,9 @@
 from phoenix6.signals.spn_enums import InvertedValue, NeutralModeValue
 
+from FROGlib.utils import GearStage
+from wpimath.units import inchesToMeters
+
+## Swerve Module Constants
 drive_motor_output_params = {
     # set neutral mode for drive motor
     "neutral_mode": NeutralModeValue.BRAKE,
@@ -13,3 +17,9 @@ steer_motor_output_params = {
     "neutral_mode": NeutralModeValue.BRAKE,
     "inverted": InvertedValue.COUNTER_CLOCKWISE_POSITIVE,
 }
+kSwerveDriveGearing = [
+    GearStage(16, 50),
+    GearStage(28, 16),
+    GearStage(15, 45),
+]  # Mk4c L3
+kWheelDiameter = inchesToMeters(4)  # The tread has worn down

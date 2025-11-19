@@ -22,12 +22,17 @@ from phoenix6.controls import (
 from wpimath.units import radiansToRotations, rotationsToRadians
 
 from roborio.FROGlib.ctre import FROGCANCoderConfig, FROGTalonFXConfig
-from roborio.constants import drive_motor_output_params
-from roborio.constants import steer_motor_output_params
+from roborio.constants import (
+    drive_motor_output_params,
+    kSwerveDriveGearing,
+    kWheelDiameter,
+    steer_motor_output_params,
+)
 
 from .utils import DriveTrain
 from .ctre import (
     FROGCANCoderConfig,
+    FROGFeedbackConfig,
     FROGMotorOutputConfig,
     FROGPigeonGyro,
     FROGTalonFX,
@@ -38,8 +43,10 @@ from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
 
+drivetrain = DriveTrain(gear_stages=kSwerveDriveGearing, wheel_diameter=kWheelDiameter)
 drive_config = FROGTalonFXConfig(
-    motor_output=FROGMotorOutputConfig(**drive_motor_output_params)
+    motor_output=FROGMotorOutputConfig(**drive_motor_output_params),
+    feedback=FROGFeedbackConfig(feedback=drivetrain.system_reduction),
 )
 steer_config = FROGTalonFXConfig(
     motor_output=FROGMotorOutputConfig(**steer_motor_output_params)
@@ -89,11 +96,6 @@ class SwerveModule:
                 Defaults to "Undefined".
         """  # set module name
         self.name = config.name
-
-        self.drivetrain = DriveTrain(config.drive_gearing, config.wheel_diameter)
-        drive_config.feedback.sensor_to_mechanism_ratio = (
-            self.drivetrain.system_reduction
-        )
 
         # create/configure drive motor
         self.drive_motor = FROGTalonFX(
