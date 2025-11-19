@@ -1,7 +1,7 @@
 import math
 from ntcore import NetworkTableInstance
 from phoenix6.configs.cancoder_configs import CANcoderConfiguration
-from phoenix6.configs.talon_fx_configs import TalonFXConfiguration
+from phoenix6.configs.talon_fx_configs import TalonFXConfiguration, MotorOutputConfigs
 from phoenix6.hardware.cancoder import CANcoder
 from phoenix6.hardware.pigeon2 import Pigeon2
 from phoenix6.hardware.talon_fx import TalonFX
@@ -12,6 +12,30 @@ from phoenix6.signals.spn_enums import (
     SensorDirectionValue,
     StaticFeedforwardSignValue,
 )
+
+
+class FROGMotorOutputConfig(MotorOutputConfigs):
+    """FROG custom MotorOutputConfig that takes parameters during instantiation."""
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        """
+        Initialize motor output configuration for this motor controller.
+        This constructor sets up configurations that affect the motor output behavior of
+        the motor controller, such as neutral mode and inversion.
+        Args:
+            **kwargs: Arbitrary keyword arguments mapping configuration names to their
+                values. Recognized keys (if present) include:
+                - neutral_mode (NeutralModeValue): The neutral mode of the motor (e.g., BRAKE or COAST).
+                - inverted (InvertedValue): The inversion state of the motor output.
+
+        """
+        super().__init__()
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 
 class FROGSlotConfig(Slot0Configs, Slot1Configs):

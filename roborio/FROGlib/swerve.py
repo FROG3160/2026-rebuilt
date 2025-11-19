@@ -19,12 +19,16 @@ from phoenix6.controls import (
     VelocityVoltage,
     PositionVoltage,
 )
-from phoenix6.signals.spn_enums import NeutralModeValue, InvertedValue
 from wpimath.units import radiansToRotations, rotationsToRadians
+
+from roborio.FROGlib.ctre import FROGCANCoderConfig, FROGTalonFXConfig
+from roborio.constants import drive_motor_output_params
+from roborio.constants import steer_motor_output_params
 
 from .utils import DriveTrain
 from .ctre import (
     FROGCANCoderConfig,
+    FROGMotorOutputConfig,
     FROGPigeonGyro,
     FROGTalonFX,
     FROGTalonFXConfig,
@@ -33,11 +37,14 @@ from .ctre import (
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
-from roborio.constants import (
-    swerve_drive_config,
-    swerve_steer_config,
-    swerve_cancoder_config,
+
+drive_config = FROGTalonFXConfig(
+    motor_output=FROGMotorOutputConfig(**drive_motor_output_params)
 )
+steer_config = FROGTalonFXConfig(
+    motor_output=FROGMotorOutputConfig(**steer_motor_output_params)
+)
+cancoder_config = FROGCANCoderConfig()
 
 
 @dataclass
@@ -82,24 +89,16 @@ class SwerveModule:
                 Defaults to "Undefined".
         """  # set module name
         self.name = config.name
-        # set neutral mode for drive motor
-        config.drive_motor_config.motor_output.neutral_mode = NeutralModeValue.BRAKE
-        # with the non-inverted SwerveDriveSpecialties swerve modules, and
-        # the bevel gears facing left, the drive motors need to be inverted
-        # in order to move the drivetrain forward with a positive value.
-        # the default inverted setting is CCW positive.
-        config.drive_motor_config.motor_output.inverted = (
-            InvertedValue.CLOCKWISE_POSITIVE
-        )
+
         self.drivetrain = DriveTrain(config.drive_gearing, config.wheel_diameter)
-        config.drive_motor_config.feedback.sensor_to_mechanism_ratio = (
+        drive_config.feedback.sensor_to_mechanism_ratio = (
             self.drivetrain.system_reduction
         )
 
         # create/configure drive motor
         self.drive_motor = FROGTalonFX(
             config.drive_motor_id,
-            swerve_drive_config,
+            drive_config,
             parent_nt=f"{parent_nt}/{self.name}",
             motor_name="Drive",
         )
@@ -109,13 +108,13 @@ class SwerveModule:
         # create/configure steer motor
         self.steer_motor = FROGTalonFX(
             config.steer_motor_id,
-            swerve_steer_config,
+            steer_config,
             parent_nt=f"{parent_nt}/{self.name}",
             motor_name="Steer",
         )
 
         # create/configure cancoder
-        self.steer_encoder = FROGCanCoder(config.cancoder_id, swerve_cancoder_config)
+        self.steer_encoder = FROGCanCoder(config.cancoder_id, cancoder_config)
 
         # configure signal frequencies
         self.drive_motor.get_velocity().set_update_frequency(50)
