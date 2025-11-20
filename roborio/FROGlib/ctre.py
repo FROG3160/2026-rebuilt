@@ -1,6 +1,10 @@
 import math
 from ntcore import NetworkTableInstance
-from phoenix6.configs.cancoder_configs import CANcoderConfiguration
+from phoenix6.configs.cancoder_configs import (
+    CANcoderConfiguration,
+    MagnetSensorConfigs,
+    SensorDirectionValue,
+)
 from phoenix6.configs.talon_fx_configs import TalonFXConfiguration, MotorOutputConfigs
 from phoenix6.hardware.cancoder import CANcoder
 from phoenix6.hardware.pigeon2 import Pigeon2
@@ -9,8 +13,41 @@ from phoenix6.configs.talon_fx_configs import FeedbackSensorSourceValue
 from phoenix6.configs.config_groups import Slot0Configs, Slot1Configs, FeedbackConfigs
 from phoenix6.signals.spn_enums import (
     GravityTypeValue,
+    InvertedValue,
+    NeutralModeValue,
     SensorDirectionValue,
     StaticFeedforwardSignValue,
+)
+
+
+# Motor output config for ClockWise Positive rotation and Brake neutral mode
+MOTOR_OUTPUT_CWP_BRAKE = (
+    MotorOutputConfigs()
+    .with_neutral_mode(NeutralModeValue.BRAKE)
+    .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
+)
+# Motor output config for Counter-ClockWise Positive rotation and Brake neutral mode
+MOTOR_OUTPUT_CCWP_BRAKE = (
+    MotorOutputConfigs()
+    .with_neutral_mode(NeutralModeValue.BRAKE)
+    .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+)
+MOTOR_OUTPUT_CWP_COAST = (
+    MotorOutputConfigs()
+    .with_neutral_mode(NeutralModeValue.COAST)
+    .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
+)
+MOTOR_OUTPUT_CCWP_COAST = (
+    MotorOutputConfigs()
+    .with_neutral_mode(NeutralModeValue.COAST)
+    .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+)
+
+# Magnet sensor config for Counter-ClockWise Positive rotation with continuous wrap
+MAGNET_CONFIG_CONTWRAP_CCWP = (
+    MagnetSensorConfigs()
+    .with_absolute_sensor_discontinuity_point(0.5)
+    .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
 )
 
 

@@ -21,16 +21,10 @@ from phoenix6.controls import (
 )
 from wpimath.units import radiansToRotations, rotationsToRadians
 
-from roborio.FROGlib.ctre import FROGCANCoderConfig, FROGTalonFXConfig
-from roborio.constants import (
-    drive_motor_output_params,
-    kSwerveDriveGearing,
-    kWheelDiameter,
-    steer_motor_output_params,
-)
-
-from .utils import DriveTrain
 from .ctre import (
+    MOTOR_OUTPUT_CCWP_BRAKE,
+    MOTOR_OUTPUT_CWP_BRAKE,
+    MAGNET_CONFIG_CONTWRAP_CCWP,
     FROGCANCoderConfig,
     FROGFeedbackConfig,
     FROGMotorOutputConfig,
@@ -39,19 +33,24 @@ from .ctre import (
     FROGTalonFXConfig,
     FROGCanCoder,
 )
+
+from constants import kSwerveDriveGearing, kWheelDiameter
+from .utils import DriveTrain
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
 
 drivetrain = DriveTrain(gear_stages=kSwerveDriveGearing, wheel_diameter=kWheelDiameter)
 drive_config = FROGTalonFXConfig(
-    motor_output=FROGMotorOutputConfig(**drive_motor_output_params),
+    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
     feedback=FROGFeedbackConfig(feedback=drivetrain.system_reduction),
 )
 steer_config = FROGTalonFXConfig(
-    motor_output=FROGMotorOutputConfig(**steer_motor_output_params)
+    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
+    # set continuous wrap to wrap around the 180 degree point
+    closed_loop_general=ClosedLoopGeneralConfigs().with_continuous_wrap(True),
 )
-cancoder_config = FROGCANCoderConfig()
+cancoder_config = FROGCANCoderConfig().with_magnet_sensor(MAGNET_CONFIG_CONTWRAP_CCWP)
 
 
 @dataclass
@@ -61,37 +60,20 @@ class SwerveModuleConfig:
     drive_motor_id: int = 0
     steer_motor_id: int = 0
     cancoder_id: int = 0
+    cancoder_offset: float = 0.0  # in rotations
 
 
 class SwerveModule:
     def __init__(
         self,
-        # name: str,
-        # location: Translation2d,
-        # drive_gearing: list,
-        # wheel_diameter: float,
-        # drive_motor_id: int,
-        # drive_motor_config: FROGTalonFXConfig,
-        # steer_motor_id: int,
-        # steer_motor_config: FROGTalonFXConfig,
-        # cancoder_id: int,
-        # cancoder_config: FROGCANCoderConfig,
         config=SwerveModuleConfig(),
         parent_nt="Undefined",
     ):
         """Creates a Swerve Module
 
         Args:
-            name (str): Name of the module
-            location (Translation2d): coordinates from the center of the robot.
-            drive_gearing (list): the gear stages of the drive wheel
-            wheel_diameter (float): the diameter of the drive wheel in meters.
-            drive_motor_id (int): CAN ID of the drive motor.
-            drive_motor_config (FROGTalonFXConfig): config for the drive motor.
-            steer_motor_id (int): CAN ID of the steer motor.
-            steer_motor_config (FROGTalonFXConfig): config for the steer motor.
-            cancoder_id (int): CAN ID of the CANcoder (steer encoder).
-            cancoder_config (FROGCANCoderConfig): config for the CANcoder (steer encoder).
+            config (SwerveModuleConfig, optional): Configuration for this swerve module.
+                Defaults to SwerveModuleConfig().
             parent_nt (str, optional): parent Network Table to place this device under.
                 Defaults to "Undefined".
         """  # set module name
@@ -105,8 +87,6 @@ class SwerveModule:
             motor_name="Drive",
         )
 
-        # set continuous wrap to wrap around the 180 degree point
-        config.steer_motor_config.closed_loop_general.continuous_wrap = True
         # create/configure steer motor
         self.steer_motor = FROGTalonFX(
             config.steer_motor_id,
@@ -116,6 +96,7 @@ class SwerveModule:
         )
 
         # create/configure cancoder
+        cancoder_config.magnet_sensor.magnet_offset = config.magnet_offset
         self.steer_encoder = FROGCanCoder(config.cancoder_id, cancoder_config)
 
         # configure signal frequencies
