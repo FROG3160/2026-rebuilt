@@ -21,6 +21,8 @@ from phoenix6.controls import (
 )
 from wpimath.units import radiansToRotations, rotationsToRadians
 
+from .sds import MK4C_L3_GEARING, SWERVE_WHEEL_DIAMETER
+
 from .ctre import (
     MOTOR_OUTPUT_CCWP_BRAKE,
     MOTOR_OUTPUT_CWP_BRAKE,
@@ -34,13 +36,14 @@ from .ctre import (
     FROGCanCoder,
 )
 
-from constants import kSwerveDriveGearing, kWheelDiameter
 from .utils import DriveTrain
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
 
-drivetrain = DriveTrain(gear_stages=kSwerveDriveGearing, wheel_diameter=kWheelDiameter)
+drivetrain = DriveTrain(
+    gear_stages=MK4C_L3_GEARING, wheel_diameter=SWERVE_WHEEL_DIAMETER
+)
 drive_config = FROGTalonFXConfig(
     motor_output=MOTOR_OUTPUT_CWP_BRAKE,
     feedback=FROGFeedbackConfig(feedback=drivetrain.system_reduction),
