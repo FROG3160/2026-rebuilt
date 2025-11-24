@@ -1,5 +1,5 @@
 import math
-from FROGlib.swerve import SwerveBase
+from FROGlib.swerve import SwerveChassis
 from FROGlib.ctre import FROGPigeonGyro
 from configs import ctre
 
@@ -42,7 +42,7 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from subsystems.vision import VisionPose
 
 
-class DriveChassis(SwerveBase):
+class DriveChassis(SwerveChassis):
 
     def __init__(
         self,

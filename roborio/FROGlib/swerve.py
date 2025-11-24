@@ -267,31 +267,27 @@ class SwerveModule:
 
 
 # TODO: #1 change from subsystem to component
-class SwerveBase(Subsystem):
+class SwerveChassis:
+
     def __init__(
         self,
-        swerve_module_configs: SwerveModuleConfig,
+        swerve_module_configs: list[SwerveModuleConfig],
         gyro: FROGPigeonGyro,
         max_speed: float,
         max_rotation_speed: float,
-        parent_nt: str = "Subsystems",
+        parent_nt: str = "Components",
     ):
-        super().__init__()
-        self.setName("SwerveChassis")
-        nt_table = f"{parent_nt}/{self.getName()}"
-        # need each of the swerve modules
-        self.enabled = False
 
-        self.center = Translation2d(0, 0)
+        # Swerve components
+        #####################################
+
+        # instantiate all 4 swerve modules.  Using a tuple to preserve the order of the modules.
+        # Convention is to list them in the following order:
+        # Front Left, Front Right, Back Left, Back Right
         self.modules = tuple(
             SwerveModule(config, parent_nt=nt_table) for config in swerve_module_configs
         )
         self.gyro = gyro
-        self.max_speed = max_speed
-        self.max_rotation_speed = max_rotation_speed
-
-        # creates a tuple of 4 SwerveModuleState objects
-        self.moduleStates = (SwerveModuleState(),) * 4
 
         self.kinematics = SwerveDrive4Kinematics(
             # the splat operator (asterisk) below expands
@@ -304,9 +300,6 @@ class SwerveBase(Subsystem):
             # each SwerveModule in the same order we use here.
             *[m.location for m in self.modules]
         )
-
-        self.chassisSpeeds = ChassisSpeeds(0, 0, 0)
-
         self.estimator = SwerveDrive4PoseEstimator(
             self.kinematics,
             self.gyro.getRotation2d(),
@@ -320,11 +313,35 @@ class SwerveBase(Subsystem):
             # last year, setFieldPosition was called and passed the vision pose during
             # robotInit()
         )
+
+        # Swerve Characteristics
+        #####################################
+
+        # define the center of rotation for the robot.  All swerve modules positions must be given in relation to this point.
+        self.center = Translation2d(0, 0)
+        self.max_speed = max_speed
+        self.max_rotation_speed = max_rotation_speed
+
+        # Swerve initial variables
+        #####################################
+
+        # creates a tuple of 4 SwerveModuleState objects
+        # this attribute will hold the desired state (speed and direction) for each module
+        self.moduleStates = (SwerveModuleState(),) * 4
+        # this attribute will hold the requested speeds of the robot chassis (x, y, and rotational)
+        self.chassisSpeeds = ChassisSpeeds(0, 0, 0)
+        # start with the chassis disabled
+        self.enabled = False
+        # initialize timer for loop time calculations
         self.timer = Timer()
         self.timer.start()
         self.lastTime = 0
         self.loopTime = 0
 
+        self.name = self.__class__.__name__
+        # Network Tables publishers
+        #####################################
+        nt_table = f"{parent_nt}/{self.name}"
         self._chassisSpeedsPub = (
             NetworkTableInstance.getDefault()
             .getStructTopic(f"{nt_table}/chassisSpeedsCommanded", ChassisSpeeds)
@@ -356,6 +373,8 @@ class SwerveBase(Subsystem):
         for module in self.modules:
             module.enable()
 
+    # TODO: #4 Consolidate fieldOrientedDrive and fieldOrientedAutoRotateDrive
+    # add a boolean parameter to indicate whether to apply throttle to rotation or not
     def fieldOrientedDrive(self, vX: float, vY: float, vT: float, throttle=1.0):
         """Calculates the necessary chassis speeds given the commanded field-oriented
         x, y, and rotational speeds.  An optional throttle value adjusts all inputs
@@ -435,16 +454,6 @@ class SwerveBase(Subsystem):
 
     def getRotation2d(self) -> Rotation2d:
         return self.getPose().rotation()
-
-    # returns a Pose with rotation flipped
-    # SHOULD NO LONGER BE USED when using blue alliance coordintate system all the time
-    # def getFlippedPose(self) -> Pose2d:
-    #     if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
-    #         translation = self.estimator.getEstimatedPosition().translation()
-    #         rotation = self.gyro.getRotation2d().rotateBy(Rotation2d(math.pi))
-    #         return Pose2d(translation, rotation)
-    #     else:
-    #         return self.getPose()
 
     def lockChassis(self):
         # getting the "angle" of each module location on the robot.
