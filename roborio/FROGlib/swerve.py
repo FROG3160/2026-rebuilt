@@ -442,17 +442,17 @@ class SwerveChassis:
     def getModuleStates(self):
         return [module.getCurrentState() for module in self.modules]
 
-    # Returns a ChassisSpeeds object representing the speeds in the robot's frame
-    # of reference.
-    def getRobotRelativeSpeeds(self):
-        return self.chassisSpeeds
-
     # Returns the current pose of the robot as a Pose2d.
     def getPose(self) -> Pose2d:
         # translation = self.estimator.getEstimatedPosition().translation()
         # rotation = self.gyro.getRotation2d()
         # return Pose2d(translation, rotation)
         return self.estimator.getEstimatedPosition()
+
+    # Returns a ChassisSpeeds object representing the speeds in the robot's frame
+    # of reference.
+    def getRobotRelativeSpeeds(self):
+        return self.chassisSpeeds
 
     def getRotation2d(self) -> Rotation2d:
         return self.getPose().rotation()
