@@ -23,4 +23,4 @@ MK5I_R3_GEARING = [
     GearStage(32, 25),
     GearStage(15, 30),
 ]
-SWERVE_WHEEL_DIAMETER = inchesToMeters(4)  # The tread has worn down
+WHEEL_DIAMETER = inchesToMeters(4)  # The tread has worn down

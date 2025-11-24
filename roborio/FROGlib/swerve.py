@@ -21,7 +21,7 @@ from phoenix6.controls import (
 )
 from wpimath.units import radiansToRotations, rotationsToRadians
 
-from .sds import MK4C_L3_GEARING, SWERVE_WHEEL_DIAMETER
+from .sds import MK4C_L3_GEARING, WHEEL_DIAMETER
 
 from .ctre import (
     MOTOR_OUTPUT_CCWP_BRAKE,
@@ -41,9 +41,7 @@ from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
 
-drivetrain = DriveTrain(
-    gear_stages=MK4C_L3_GEARING, wheel_diameter=SWERVE_WHEEL_DIAMETER
-)
+drivetrain = DriveTrain(gear_stages=MK4C_L3_GEARING, wheel_diameter=WHEEL_DIAMETER)
 drive_config = FROGTalonFXConfig(
     motor_output=MOTOR_OUTPUT_CWP_BRAKE,
     feedback=FROGFeedbackConfig(feedback=drivetrain.system_reduction),
@@ -65,11 +63,37 @@ class SwerveModuleConfig:
     cancoder_id: int = 0
     cancoder_offset: float = 0.0  # in rotations
 
+    def __init__(
+        self,
+        name: str = "undefined",
+        location: Translation2d = field(default_factory=Translation2d),
+        drive_motor_id: int = 0,
+        steer_motor_id: int = 0,
+        cancoder_id: int = 0,
+        cancoder_offset: float = 0.0,
+    ):
+        """Config parameters for the individual swerve modules
+
+        Args:
+            name (str, optional): The name of the module, used for network tables. Defaults to "undefined".
+            location (Translation2d, optional): Position of the module from the center of the robot. Defaults to field(default_factory=Translation2d).
+            drive_motor_id (int, optional): CAN ID of the drive motor. Defaults to 0.
+            steer_motor_id (int, optional): CAN ID of the steer motor. Defaults to 0.
+            cancoder_id (int, optional): CAN ID of the CANCoder. Defaults to 0.
+            cancoder_offset (float, optional): Magnet offset of the cancoder. Defaults to 0.0.
+        """
+        self.name = name
+        self.location = location
+        self.drive_motor_id = drive_motor_id
+        self.steer_motor_id = steer_motor_id
+        self.cancoder_id = cancoder_id
+        self.cancoder_offset = cancoder_offset
+
 
 class SwerveModule:
     def __init__(
         self,
-        config=SwerveModuleConfig(),
+        module_config: SwerveModuleConfig,
         parent_nt="Undefined",
     ):
         """Creates a Swerve Module
@@ -80,11 +104,11 @@ class SwerveModule:
             parent_nt (str, optional): parent Network Table to place this device under.
                 Defaults to "Undefined".
         """  # set module name
-        self.name = config.name
+        self.name = module_config.name
 
         # create/configure drive motor
         self.drive_motor = FROGTalonFX(
-            config.drive_motor_id,
+            module_config.drive_motor_id,
             drive_config,
             parent_nt=f"{parent_nt}/{self.name}",
             motor_name="Drive",
@@ -92,33 +116,39 @@ class SwerveModule:
 
         # create/configure steer motor
         self.steer_motor = FROGTalonFX(
-            config.steer_motor_id,
+            module_config.steer_motor_id,
             steer_config,
             parent_nt=f"{parent_nt}/{self.name}",
             motor_name="Steer",
         )
 
         # create/configure cancoder
-        cancoder_config.magnet_sensor.magnet_offset = config.magnet_offset
-        self.steer_encoder = FROGCanCoder(config.cancoder_id, cancoder_config)
+        cancoder_config.magnet_sensor.magnet_offset = module_config.cancoder_offset
+        self.steer_encoder = FROGCanCoder(module_config.cancoder_id, cancoder_config)
 
         # configure signal frequencies
+        #   drive motor, need velocity and possibly voltage
         self.drive_motor.get_velocity().set_update_frequency(50)
         self.drive_motor.get_motor_voltage().set_update_frequency(50)
         self.drive_motor.get_closed_loop_error().set_update_frequency(50)
-        self.steer_motor.get_position().set_update_frequency(50)
-        self.steer_motor.get_closed_loop_error().set_update_frequency(50)
-        self.steer_encoder.get_absolute_position().set_update_frequency(50)
         self.drive_motor.optimize_bus_utilization()
+        #   steer motor, need position and maybe closed loop error
+        self.steer_motor.get_position().set_update_frequency(50)
+        # TODO: #2 is closed loop error needed for steer?
+        self.steer_motor.get_closed_loop_error().set_update_frequency(50)
         self.steer_motor.optimize_bus_utilization()
+
+        self.steer_encoder.get_absolute_position().set_update_frequency(50)
         self.steer_encoder.optimize_bus_utilization()
 
         # set module location
-        self.location = config.location
-        #
+        self.location = module_config.location
+        # initialize the state of the module as disabled
         self.enabled = False
 
+        # publish all values as children of the specific swerve module
         nt_table = f"{parent_nt}/{self.name}"
+        # log various values to network tables
         self._moduleSpeedPub = (
             NetworkTableInstance.getDefault()
             .getFloatTopic(f"{nt_table}/commanded_speed")
