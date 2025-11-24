@@ -41,27 +41,27 @@ from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
 
+# TODO: #3 Switch gear_stages to correct swerve module gearing when available
+# configure drivetrain for the specific swerve module used
 drivetrain = DriveTrain(gear_stages=MK4C_L3_GEARING, wheel_diameter=WHEEL_DIAMETER)
+
+# configure drive motor used for all swerve modules
 drive_config = FROGTalonFXConfig(
     motor_output=MOTOR_OUTPUT_CWP_BRAKE,
     feedback=FROGFeedbackConfig(feedback=drivetrain.system_reduction),
 )
+# configure steer motor used for all swerve modules
 steer_config = FROGTalonFXConfig(
     motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
     # set continuous wrap to wrap around the 180 degree point
     closed_loop_general=ClosedLoopGeneralConfigs().with_continuous_wrap(True),
 )
+# configure cancoder used for all swerve modules
 cancoder_config = FROGCANCoderConfig().with_magnet_sensor(MAGNET_CONFIG_CONTWRAP_CCWP)
 
 
 @dataclass
 class SwerveModuleConfig:
-    name: str = "undefined"
-    location: Translation2d = field(default_factory=Translation2d)
-    drive_motor_id: int = 0
-    steer_motor_id: int = 0
-    cancoder_id: int = 0
-    cancoder_offset: float = 0.0  # in rotations
 
     def __init__(
         self,
@@ -137,7 +137,7 @@ class SwerveModule:
         # TODO: #2 is closed loop error needed for steer?
         self.steer_motor.get_closed_loop_error().set_update_frequency(50)
         self.steer_motor.optimize_bus_utilization()
-
+        #  cancoder, need absolute position
         self.steer_encoder.get_absolute_position().set_update_frequency(50)
         self.steer_encoder.optimize_bus_utilization()
 
