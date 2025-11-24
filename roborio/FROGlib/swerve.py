@@ -277,6 +277,10 @@ class SwerveChassis:
         max_rotation_speed: float,
         parent_nt: str = "Components",
     ):
+        # set the name of this component to the class name
+        self.name = self.__class__.__name__
+        # set the network tables path for this component
+        nt_table = f"{parent_nt}/{self.name}"
 
         # Swerve components
         #####################################
@@ -338,10 +342,8 @@ class SwerveChassis:
         self.lastTime = 0
         self.loopTime = 0
 
-        self.name = self.__class__.__name__
         # Network Tables publishers
         #####################################
-        nt_table = f"{parent_nt}/{self.name}"
         self._chassisSpeedsPub = (
             NetworkTableInstance.getDefault()
             .getStructTopic(f"{nt_table}/chassisSpeedsCommanded", ChassisSpeeds)
