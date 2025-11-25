@@ -266,7 +266,6 @@ class SwerveModule:
         # self.steer.logData()
 
 
-# TODO: #1 change from subsystem to component
 class SwerveChassis:
 
     def __init__(
@@ -394,11 +393,10 @@ class SwerveChassis:
         xSpeed = vX * self.max_speed * throttle
         ySpeed = vY * self.max_speed * throttle
         rotSpeed = vT * self.max_rotation_speed * throttle
-        self.chassisSpeeds = ChassisSpeeds.discretize(
+        self.setChassisSpeeds(
             ChassisSpeeds.fromFieldRelativeSpeeds(
                 xSpeed, ySpeed, rotSpeed, self.getRotation2d()
-            ),
-            self.loopTime,
+            )
         )
 
     def fieldOrientedAutoRotateDrive(
@@ -420,11 +418,10 @@ class SwerveChassis:
         xSpeed = vX * self.max_speed * throttle
         ySpeed = vY * self.max_speed * throttle
         rotSpeed = vT * self.max_rotation_speed
-        self.chassisSpeeds = ChassisSpeeds.discretize(
+        self.setChassisSpeeds(
             ChassisSpeeds.fromFieldRelativeSpeeds(
                 xSpeed, ySpeed, rotSpeed, self.getRotation2d()
-            ),
-            self.loopTime,
+            )
         )
 
     def getActualChassisSpeeds(self):
@@ -481,7 +478,7 @@ class SwerveChassis:
         self.lastTime = self.newTime
 
         if self.enabled:
-            self.setStatesFromSpeeds()  # apply chassis Speeds
+            self._setStatesFromSpeeds()  # apply chassis Speeds
             for module, state in zip(self.modules, self.moduleStates):
                 module.setState(state)
 
@@ -499,17 +496,22 @@ class SwerveChassis:
         xSpeed = vX * self.max_speed * throttle
         ySpeed = vY * self.max_speed * throttle
         rotSpeed = vT * self.max_rotation_speed
-        self.chassisSpeeds = ChassisSpeeds.discretize(
-            ChassisSpeeds(xSpeed, ySpeed, rotSpeed), self.loopTime
-        )
+        self.setChassisSpeeds(ChassisSpeeds(xSpeed, ySpeed, rotSpeed))
 
     def setChassisSpeeds(self, speeds: ChassisSpeeds):
+        """Give the swerve drive the latest discretized ChassisSpeeds for it to apply.
+
+        Args:
+            speeds (ChassisSpeeds): The ChassisSpeeds to apply.
+        """
         self.chassisSpeeds = ChassisSpeeds.discretize(speeds, self.loopTime)
 
-    def setModuleStates(self, states):
+    def _setModuleStates(self, states):
         self.moduleStates = states
 
-    def setStatesFromSpeeds(self):
+    def _setStatesFromSpeeds(self):
+        """Calculates and sets the module states from the current chassis speeds."""
+
         states = self.kinematics.toSwerveModuleStates(self.chassisSpeeds, self.center)
         states = self.kinematics.desaturateWheelSpeeds(states, self.max_speed)
-        self.moduleStates = states
+        self._setModuleStates(states)
