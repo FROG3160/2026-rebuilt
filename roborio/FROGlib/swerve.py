@@ -270,7 +270,7 @@ class SwerveChassis:
 
     def __init__(
         self,
-        swerve_module_configs: list[SwerveModuleConfig],
+        swerve_module_configs: tuple[SwerveModuleConfig],
         gyro: FROGPigeonGyro,
         max_speed: float,
         max_rotation_speed: float,
