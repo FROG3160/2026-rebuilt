@@ -1,7 +1,8 @@
 import math
 from FROGlib.swerve import SwerveChassis
 from FROGlib.ctre import FROGPigeonGyro
-from configs import ctre
+
+# from configs import ctre
 
 from wpilib import DriverStation, Field2d
 from wpimath.geometry import (
@@ -22,7 +23,8 @@ from commands2 import Subsystem, Command
 from commands2.sysid import SysIdRoutine
 from FROGlib.utils import RobotRelativeTarget, remap
 import constants
-from subsystems.positioning import Position
+
+# from subsystems.positioning import Position
 from wpimath.units import degreesToRadians, lbsToKilograms, inchesToMeters
 from wpimath.controller import ProfiledPIDControllerRadians
 from wpimath.trajectory import TrapezoidProfileRadians
@@ -38,24 +40,71 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig, DCMotor
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 
+from FROGlib.swerve import SwerveModuleConfig
+
 # from subsystems.leds import LEDSubsystem
-from subsystems.vision import VisionPose
+# from subsystems.vision import VisionPose
+
+front_left_module_config = {
+    "name": "FrontLeft",
+    "location": Translation2d(
+        constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters
+    ),
+    "drive_motor_id": constants.kFrontLeftDriveID,
+    "steer_motor_id": constants.kFrontLeftSteerID,
+    "cancoder_id": constants.kFrontLeftSensorID,
+    "cancoder_offset": constants.kFrontLeftOffset,
+}
+front_right_module_config = {
+    "name": "FrontRight",
+    "location": Translation2d(
+        constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters
+    ),
+    "drive_motor_id": constants.kFrontRightDriveID,
+    "steer_motor_id": constants.kFrontRightSteerID,
+    "cancoder_id": constants.kFrontRightSensorID,
+    "cancoder_offset": constants.kFrontRightOffset,
+}
+back_left_module_config = {
+    "name": "BackLeft",
+    "location": Translation2d(
+        -constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters
+    ),
+    "drive_motor_id": constants.kBackLeftDriveID,
+    "steer_motor_id": constants.kBackLeftSteerID,
+    "cancoder_id": constants.kBackLeftSensorID,
+    "cancoder_offset": constants.kBackLeftOffset,
+}
+back_right_module_config = {
+    "name": "BackRight",
+    "location": Translation2d(
+        -constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters
+    ),
+    "drive_motor_id": constants.kBackRightDriveID,
+    "steer_motor_id": constants.kBackRightSteerID,
+    "cancoder_id": constants.kBackRightSensorID,
+    "cancoder_offset": constants.kBackRightOffset,
+}
 
 
 class DriveChassis(SwerveChassis):
+    """This is a MagicBot component that subclasses FROGlib.SwerveChassis and adds
+    additional attributes and methods
+
+    """
 
     def __init__(
         self,
-        positioningCameras: list[VisionPose],
-        positioning=Position(),
-        parent_nt: str = "Subsystems",
+        # positioningCameras: list[VisionPose],
+        # positioning=Position(),
+        parent_nt: str = constants.kComponentSubtableName,
     ):
         super().__init__(
             swerve_module_configs=(
-                ctre.swerveModuleFrontLeft,
-                ctre.swerveModuleFrontRight,
-                ctre.swerveModuleBackLeft,
-                ctre.swerveModuleBackRight,
+                SwerveModuleConfig(**front_left_module_config),
+                SwerveModuleConfig(**front_right_module_config),
+                SwerveModuleConfig(**back_left_module_config),
+                SwerveModuleConfig(**back_right_module_config),
             ),
             gyro=FROGPigeonGyro(constants.kGyroID),
             max_speed=constants.kMaxMetersPerSecond,
@@ -64,13 +113,13 @@ class DriveChassis(SwerveChassis):
         )
         self.resetController = True
 
-        self.positioningCameras = positioningCameras
+        # self.positioningCameras = positioningCameras
 
         # initializing the estimator to 0, 0, 0
         self.estimatorPose = Pose2d(0, 0, Rotation2d(0))
         self.pose_set = False
 
-        self.positioning = positioning
+        # self.positioning = positioning
 
         self.profiledRotationConstraints = TrapezoidProfileRadians.Constraints(
             constants.kProfiledRotationMaxVelocity, constants.kProfiledRotationMaxAccel
@@ -114,7 +163,8 @@ class DriveChassis(SwerveChassis):
             SysIdRoutine.Config(),
             SysIdRoutine.Mechanism(self.sysid_steer, self.sysid_log_steer, self),
         )
-        self.reef_scoring_position = self.positioning.CENTER
+
+    #  self.reef_scoring_position = self.positioning.CENTER
 
     def shouldFlipPath(self):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
@@ -168,39 +218,39 @@ class DriveChassis(SwerveChassis):
         return self.sys_id_routine_steer.dynamic(direction)
 
     # PathPlanner Auto Commands
-    def _get_reef_scoring_pose(self) -> Pose2d:
-        reef_pose = self.positioning.get_closest_reef_pose(
-            self.estimator.getEstimatedPosition()
-        )
+    # def _get_reef_scoring_pose(self) -> Pose2d:
+    #     reef_pose = self.positioning.get_closest_reef_pose(
+    #         self.estimator.getEstimatedPosition()
+    #     )
 
-        return reef_pose.transformBy(
-            self.positioning.TRANSFORMS[self.reef_scoring_position]
-        )
+    #     return reef_pose.transformBy(
+    #         self.positioning.TRANSFORMS[self.reef_scoring_position]
+    #     )
 
-    def _get_reef_scoring_path(self) -> str:
-        path_suffixes = ["Left Stem", "Center", "Right Stem"]
-        closest_tag = self.positioning.get_closest_reef_tag_num(
-            self.estimator.getEstimatedPosition()
-        )
-        return f"Reef {str(self.positioning.get_reef_enum_name(closest_tag))} - {path_suffixes[self.reef_scoring_position]}"
+    # def _get_reef_scoring_path(self) -> str:
+    #     path_suffixes = ["Left Stem", "Center", "Right Stem"]
+    #     closest_tag = self.positioning.get_closest_reef_tag_num(
+    #         self.estimator.getEstimatedPosition()
+    #     )
+    #     return f"Reef {str(self.positioning.get_reef_enum_name(closest_tag))} - {path_suffixes[self.reef_scoring_position]}"
 
-    def drive_to_reef_scoring_pose(self) -> Command:
-        return AutoBuilder.pathfindToPose(
-            self._get_reef_scoring_pose(),
-            PathConstraints(
-                # constants.kMaxTrajectorySpeed,
-                # constants.kMaxTrajectoryAccel,
-                2,
-                2,
-                constants.kProfiledRotationMaxVelocity,
-                constants.kProfiledRotationMaxAccel,
-            ),
-        ).withName("PathFindToReefScoringPose")
+    # def drive_to_reef_scoring_pose(self) -> Command:
+    #     return AutoBuilder.pathfindToPose(
+    #         self._get_reef_scoring_pose(),
+    #         PathConstraints(
+    #             # constants.kMaxTrajectorySpeed,
+    #             # constants.kMaxTrajectoryAccel,
+    #             2,
+    #             2,
+    #             constants.kProfiledRotationMaxVelocity,
+    #             constants.kProfiledRotationMaxAccel,
+    #         ),
+    #     ).withName("PathFindToReefScoringPose")
 
-    def drive_to_reef_scoring_path(self) -> Command:
-        return AutoBuilder.followPath(
-            PathPlannerPath.fromPathFile(self._get_reef_scoring_path())
-        )
+    # def drive_to_reef_scoring_path(self) -> Command:
+    #     return AutoBuilder.followPath(
+    #         PathPlannerPath.fromPathFile(self._get_reef_scoring_path())
+    #     )
 
     def driveAutoPath(self, pathname) -> Command:
         return AutoBuilder.followPath(PathPlannerPath.fromPathFile(pathname))
@@ -214,9 +264,6 @@ class DriveChassis(SwerveChassis):
     def enableResetController(self):
         self.resetController = True
 
-    def resetRotationControllerCommand(self):
-        return self.runOnce(self.enableResetController)
-
     def periodic(self):
         # update estimator with chassis data
         self.estimatorPose = self.estimator.update(
@@ -224,42 +271,33 @@ class DriveChassis(SwerveChassis):
         )
 
         # Updates pose estimator with target data from positioning cameras.
-        for camera in self.positioningCameras:
-            camera_pose = camera.periodic()
-            if camera_pose is not None:
-                estimated_pose2d = camera_pose.estimatedPose.toPose2d()
+        # for camera in self.positioningCameras:
+        #     camera_pose = camera.periodic()
+        #     if camera_pose is not None:
+        #         estimated_pose2d = camera_pose.estimatedPose.toPose2d()
 
-                for target in camera_pose.targetsUsed:
-                    translation = (
-                        target.bestCameraToTarget.translation().toTranslation2d()
-                    )
-                    distance = math.sqrt(translation.x**2 + translation.y**2)
-                    target.getFiducialId()
-                    target.getPoseAmbiguity()
-                    # print(f"Distance: {distance}")
+        #         for target in camera_pose.targetsUsed:
+        #             translation = (
+        #                 target.bestCameraToTarget.translation().toTranslation2d()
+        #             )
+        #             distance = math.sqrt(translation.x**2 + translation.y**2)
+        #             target.getFiducialId()
+        #             target.getPoseAmbiguity()
 
-                # if (
-                #     abs(estimated_pose2d.x - self.estimatorPose.x) < 1
-                #     and abs(estimated_pose2d.y - self.estimatorPose.y) < 1
-                # ) or self.pose_set == False:
-                #     self.pose_set = True
-                # TODO:  We may want to validate the first instance of tagData
-                # is a valid tag by checking tagData[0].id > 0
+        #         translationStdDev = remap(distance, 0, 6, 0.2, 0.8)
+        #         # rotation stdev is high because we are relying on the gyro as more accurate
+        #         rotationStdDev = math.pi
 
-                translationStdDev = remap(distance, 0, 6, 0.2, 0.8)
-                # rotation stdev is high because we are relying on the gyro as more accurate
-                rotationStdDev = math.pi
-
-                self.estimator.addVisionMeasurement(
-                    camera_pose.estimatedPose.toPose2d(),
-                    camera_pose.timestampSeconds,
-                    (translationStdDev, translationStdDev, rotationStdDev),
-                )
-                # put camera pose on the field
-                cameraPoseObject = self.field.getObject(
-                    camera.estimator._camera.getName()
-                )
-                cameraPoseObject.setPose(camera_pose.estimatedPose.toPose2d())
+        #         self.estimator.addVisionMeasurement(
+        #             camera_pose.estimatedPose.toPose2d(),
+        #             camera_pose.timestampSeconds,
+        #             (translationStdDev, translationStdDev, rotationStdDev),
+        #         )
+        #         # put camera pose on the field
+        #         cameraPoseObject = self.field.getObject(
+        #             camera.estimator._camera.getName()
+        #         )
+        #         cameraPoseObject.setPose(camera_pose.estimatedPose.toPose2d())
 
         self.field.setRobotPose(self.estimator.getEstimatedPosition())
         SmartDashboard.putNumberArray(
