@@ -87,9 +87,9 @@ back_right_module_config = {
 }
 
 
-class DriveChassis(SwerveChassis):
+class Drive(SwerveChassis):
     """This is a MagicBot component that subclasses FROGlib.SwerveChassis and adds
-    additional attributes and methods
+    additional components, attributes and methods
 
     """
 
@@ -97,7 +97,6 @@ class DriveChassis(SwerveChassis):
         self,
         # positioningCameras: list[VisionPose],
         # positioning=Position(),
-        parent_nt: str = constants.kComponentSubtableName,
     ):
         super().__init__(
             swerve_module_configs=(
@@ -109,7 +108,7 @@ class DriveChassis(SwerveChassis):
             gyro=FROGPigeonGyro(constants.kGyroID),
             max_speed=constants.kMaxMetersPerSecond,
             max_rotation_speed=constants.kMaxChassisRadiansPerSec,
-            parent_nt=parent_nt,
+            parent_nt=constants.kComponentSubtableName,
         )
         self.resetController = True
 
@@ -135,34 +134,36 @@ class DriveChassis(SwerveChassis):
         self.field = Field2d()
         SmartDashboard.putData("DrivePose", self.field)
 
-        autobuilder_config = RobotConfig.fromGUISettings()
+    def execute(self):
+        pass
+        # autobuilder_config = RobotConfig.fromGUISettings()
 
-        AutoBuilder.configure(
-            self.getPose,  # Robot pose supplier
-            self.resetPose,  # Method to reset odometry (will be called if your auto has a starting pose)
-            self.getRobotRelativeSpeeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            lambda speeds, feedforwards: self.setChassisSpeeds(
-                speeds
-            ),  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
-            PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
-                PIDConstants(1.0, 0.0, 0.0),  # Translation PID constants
-                PIDConstants(1.0, 0.0, 0.0),  # Rotation PID constants
-            ),
-            autobuilder_config,  # The robot configuration
-            self.shouldFlipPath,  # Supplier to control path flipping based on alliance color
-            self,  # Reference to this subsystem to set requirements
-        )
+        # AutoBuilder.configure(
+        #     self.getPose,  # Robot pose supplier
+        #     self.resetPose,  # Method to reset odometry (will be called if your auto has a starting pose)
+        #     self.getRobotRelativeSpeeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+        #     lambda speeds, feedforwards: self.setChassisSpeeds(
+        #         speeds
+        #     ),  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+        #     PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
+        #         PIDConstants(1.0, 0.0, 0.0),  # Translation PID constants
+        #         PIDConstants(1.0, 0.0, 0.0),  # Rotation PID constants
+        #     ),
+        #     autobuilder_config,  # The robot configuration
+        #     self.shouldFlipPath,  # Supplier to control path flipping based on alliance color
+        #     self,  # Reference to this subsystem to set requirements
+        # )
 
         # Tell SysId to make generated commands require this subsystem, suffix test state in
         # WPILog with this subsystem's name ("drive")
-        self.sys_id_routine_drive = SysIdRoutine(
-            SysIdRoutine.Config(),
-            SysIdRoutine.Mechanism(self.sysid_drive, self.sysid_log_drive, self),
-        )
-        self.sys_id_routine_steer = SysIdRoutine(
-            SysIdRoutine.Config(),
-            SysIdRoutine.Mechanism(self.sysid_steer, self.sysid_log_steer, self),
-        )
+        # self.sys_id_routine_drive = SysIdRoutine(
+        #     SysIdRoutine.Config(),
+        #     SysIdRoutine.Mechanism(self.sysid_drive, self.sysid_log_drive, self),
+        # )
+        # self.sys_id_routine_steer = SysIdRoutine(
+        #     SysIdRoutine.Config(),
+        #     SysIdRoutine.Mechanism(self.sysid_steer, self.sysid_log_steer, self),
+        # )
 
     #  self.reef_scoring_position = self.positioning.CENTER
 
@@ -170,52 +171,52 @@ class DriveChassis(SwerveChassis):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
     # Tell SysId how to plumb the driving voltage to the motors.
-    def sysid_drive(self, voltage: volts) -> None:
-        for module in self.modules:
-            module.steer_motor.set_control(
-                PositionVoltage(
-                    position=0,
-                    slot=0,  # Duty Cycle gains for steer
-                )
-            )
-            module.drive_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
+    # def sysid_drive(self, voltage: volts) -> None:
+    #     for module in self.modules:
+    #         module.steer_motor.set_control(
+    #             PositionVoltage(
+    #                 position=0,
+    #                 slot=0,  # Duty Cycle gains for steer
+    #             )
+    #         )
+    #         module.drive_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
 
-    def sysid_steer(self, voltage: volts) -> None:
-        for module in self.modules:
-            module.steer_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
-            module.drive_motor.stopMotor()
+    # def sysid_steer(self, voltage: volts) -> None:
+    #     for module in self.modules:
+    #         module.steer_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
+    #         module.drive_motor.stopMotor()
 
-    def sysid_log_drive(self, sys_id_routine: SysIdRoutineLog) -> None:
-        # Record a frame for each module.  Since these share an encoder, we consider
-        # the entire group to be one motor.
-        for module in self.modules:
-            with module.drive_motor as m:
-                sys_id_routine.motor(module.name).voltage(
-                    m.get_motor_voltage().value
-                ).position(m.get_position().value).velocity(m.get_velocity().value)
+    # def sysid_log_drive(self, sys_id_routine: SysIdRoutineLog) -> None:
+    #     # Record a frame for each module.  Since these share an encoder, we consider
+    #     # the entire group to be one motor.
+    #     for module in self.modules:
+    #         with module.drive_motor as m:
+    #             sys_id_routine.motor(module.name).voltage(
+    #                 m.get_motor_voltage().value
+    #             ).position(m.get_position().value).velocity(m.get_velocity().value)
 
-    def sysid_log_steer(self, sys_id_routine: SysIdRoutineLog) -> None:
-        # Record a frame for each module.  Since these share an encoder, we consider
-        # the entire group to be one motor.
-        for module in self.modules:
-            with module.steer_motor as m:
-                sys_id_routine.motor(module.name).voltage(
-                    m.get_motor_voltage().value
-                ).angularPosition(m.get_position().value).angularVelocity(
-                    m.get_velocity().value
-                )
+    # def sysid_log_steer(self, sys_id_routine: SysIdRoutineLog) -> None:
+    #     # Record a frame for each module.  Since these share an encoder, we consider
+    #     # the entire group to be one motor.
+    #     for module in self.modules:
+    #         with module.steer_motor as m:
+    #             sys_id_routine.motor(module.name).voltage(
+    #                 m.get_motor_voltage().value
+    #             ).angularPosition(m.get_position().value).angularVelocity(
+    #                 m.get_velocity().value
+    #             )
 
-    def sysIdQuasistaticDrive(self, direction: SysIdRoutine.Direction) -> Command:
-        return self.sys_id_routine_drive.quasistatic(direction)
+    # def sysIdQuasistaticDrive(self, direction: SysIdRoutine.Direction) -> Command:
+    #     return self.sys_id_routine_drive.quasistatic(direction)
 
-    def sysIdDynamicDrive(self, direction: SysIdRoutine.Direction) -> Command:
-        return self.sys_id_routine_drive.dynamic(direction)
+    # def sysIdDynamicDrive(self, direction: SysIdRoutine.Direction) -> Command:
+    #     return self.sys_id_routine_drive.dynamic(direction)
 
-    def sysIdQuasistaticSteer(self, direction: SysIdRoutine.Direction) -> Command:
-        return self.sys_id_routine_steer.quasistatic(direction)
+    # def sysIdQuasistaticSteer(self, direction: SysIdRoutine.Direction) -> Command:
+    #     return self.sys_id_routine_steer.quasistatic(direction)
 
-    def sysIdDynamicSteer(self, direction: SysIdRoutine.Direction) -> Command:
-        return self.sys_id_routine_steer.dynamic(direction)
+    # def sysIdDynamicSteer(self, direction: SysIdRoutine.Direction) -> Command:
+    #     return self.sys_id_routine_steer.dynamic(direction)
 
     # PathPlanner Auto Commands
     # def _get_reef_scoring_pose(self) -> Pose2d:
@@ -260,6 +261,7 @@ class DriveChassis(SwerveChassis):
             self.getRotation2d().radians(),
             self.gyro.getRadiansPerSecCCW(),
         )
+        self.resetController = False
 
     def enableResetController(self):
         self.resetController = True
