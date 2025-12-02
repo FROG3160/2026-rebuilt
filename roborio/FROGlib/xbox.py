@@ -1,6 +1,8 @@
 import math
 from wpilib import XboxController, Timer
-from commands2.button import CommandXboxController
+from wpilib import XboxController
+
+# from commands2.button import CommandXboxController
 from wpimath.filter import SlewRateLimiter
 from wpimath import applyDeadband
 from wpilib.interfaces import GenericHID
@@ -11,7 +13,7 @@ RIGHT_RUMBLE = GenericHID.RumbleType.kRightRumble
 LEFT_RUMBLE = GenericHID.RumbleType.kLeftRumble
 
 
-class FROGXboxDriver(CommandXboxController):
+class FROGXboxDriver(XboxController):
     """Custom Xbox Controller class for the driver controller specifically
     for field-oriented swerve drive control.
     """
@@ -92,16 +94,16 @@ class FROGXboxDriver(CommandXboxController):
         return val
 
     def leftRumble(self):
-        self._hid.setRumble(LEFT_RUMBLE, 1)
+        self.setRumble(LEFT_RUMBLE, 1)
 
     def stopLeftRumble(self):
-        self._hid.setRumble(LEFT_RUMBLE, 0)
+        self.setRumble(LEFT_RUMBLE, 0)
 
     def rightRumble(self):
-        self._hid.setRumble(RIGHT_RUMBLE, 1)
+        self.setRumble(RIGHT_RUMBLE, 1)
 
     def stopRightRumble(self):
-        self._hid.setRumble(RIGHT_RUMBLE, 0)
+        self.setRumble(RIGHT_RUMBLE, 0)
 
     def set_alliance(self, alliance):
         if alliance == DriverStation.Alliance.kBlue:
@@ -110,7 +112,7 @@ class FROGXboxDriver(CommandXboxController):
             self.alliance = self.RED_ALLIANCE
 
 
-class FROGXboxTactical(CommandXboxController):
+class FROGXboxTactical(XboxController):
     """Custom Xbox Controller class for the operator controller"""
 
     def __init__(self, port, deadband):
