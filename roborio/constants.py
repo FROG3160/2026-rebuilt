@@ -74,3 +74,15 @@ kProfiledRotationD = 0.0
 ## Network Tables names
 #########################################
 kComponentSubtableName = "Components"
+
+## Xbox Controller Constants
+#########################################
+# Xbox controller ports
+kDriverControllerPort = 0
+kOperatorControllerPort = 1
+
+# Xbox controller constants
+kDeadband = 0.15
+kDebouncePeriod = 0.5
+kTranslationSlew = 2
+kRotSlew = 2
