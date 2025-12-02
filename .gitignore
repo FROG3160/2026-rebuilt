@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+roborio/networktables.json
+roborio/simgui-ds.json
+roborio/simgui-window.json
+roborio/simgui.json
+roborio/ctre_sim/
