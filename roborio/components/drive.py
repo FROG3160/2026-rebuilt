@@ -135,7 +135,7 @@ class Drive(SwerveChassis):
         SmartDashboard.putData("DrivePose", self.field)
 
     def execute(self):
-        pass
+        self.periodic()
         # autobuilder_config = RobotConfig.fromGUISettings()
 
         # AutoBuilder.configure(
