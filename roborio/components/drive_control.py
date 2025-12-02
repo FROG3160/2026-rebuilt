@@ -50,7 +50,7 @@ class DriveState(StateMachine):
                 self.logger.info("Resetting profiledRotationController")
                 self.drive.resetRotationController()
             # Rotate to 180 degrees
-            # TODO: switch from reading gyro to reading drive estimator
+            # TODO: #5 switch from reading gyro to reading drive estimator
             vT = self.drive.profiledRotationController.calculate(
                 self.drive.gyro.getRotation2d().radians(), math.radians(180)
             )
