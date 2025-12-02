@@ -48,7 +48,7 @@ drivetrain = DriveTrain(gear_stages=MK4C_L3_GEARING, wheel_diameter=WHEEL_DIAMET
 # configure drive motor used for all swerve modules
 drive_config = FROGTalonFXConfig(
     motor_output=MOTOR_OUTPUT_CWP_BRAKE,
-    feedback=FROGFeedbackConfig(feedback=drivetrain.system_reduction),
+    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=drivetrain.system_reduction),
 )
 # configure steer motor used for all swerve modules
 steer_config = FROGTalonFXConfig(
@@ -109,6 +109,7 @@ class SwerveModule:
         # create/configure drive motor
         self.drive_motor = FROGTalonFX(
             module_config.drive_motor_id,
+            "rio",
             drive_config,
             parent_nt=f"{parent_nt}/{self.name}",
             motor_name="Drive",
@@ -117,6 +118,7 @@ class SwerveModule:
         # create/configure steer motor
         self.steer_motor = FROGTalonFX(
             module_config.steer_motor_id,
+            "rio",
             steer_config,
             parent_nt=f"{parent_nt}/{self.name}",
             motor_name="Steer",
