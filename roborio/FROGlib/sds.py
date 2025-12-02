@@ -1,6 +1,6 @@
 ## Swerve Module Constants
 from wpimath.units import inchesToMeters
-from roborio.FROGlib.utils import GearStage
+from FROGlib.utils import GearStage
 
 
 MK4C_L3_GEARING = [
