@@ -1,5 +1,6 @@
 import math
 from ntcore import NetworkTableInstance
+from phoenix6 import StatusSignal
 from phoenix6.configs.cancoder_configs import (
     CANcoderConfiguration,
     MagnetSensorConfigs,
@@ -18,6 +19,7 @@ from phoenix6.signals.spn_enums import (
     SensorDirectionValue,
     StaticFeedforwardSignValue,
 )
+from wpimath.geometry import Rotation2d
 
 
 # Motor output config for ClockWise Positive rotation and Brake neutral mode
@@ -243,26 +245,29 @@ class FROGPigeonGyro:
         self.gyro = Pigeon2(can_id)
         self.gyro.reset()
 
-    def getAngleCCW(self):
+    def getAngleCCW(self) -> float:
         # returns gyro heading
         # and inverts it to change from bearing to
         # cartesian angles with CCW positive.
         # return -self.gyro.getYaw()
+        return self.getYaw()
+
+    def getYaw(self) -> float:
         return self.gyro.get_yaw().value
 
-    def getRoll(self):
+    def getRoll(self) -> float:
         return self.gyro.get_roll().value
 
-    def getPitch(self):
+    def getPitch(self) -> float:
         return self.gyro.get_pitch().value
 
-    def getDegreesPerSecCCW(self):
+    def getDegreesPerSecCCW(self) -> float:
         return self.gyro.get_angular_velocity_z_world().value
 
-    def getRadiansPerSecCCW(self):
+    def getRadiansPerSecCCW(self) -> float:
         return math.radians(self.getDegreesPerSecCCW())
 
-    def getRotation2d(self):
+    def getRotation2d(self) -> Rotation2d:
         return self.gyro.getRotation2d()
 
     def setAngleAdjustment(self, angle):
