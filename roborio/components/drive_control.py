@@ -73,3 +73,13 @@ class DriveState(StateMachine):
             vT,
             self.driver_xbox.getFieldThrottle(),
         )
+
+    # for driving to objects on the field
+    @state(first=True)
+    def robotOriented(self, initial_call):
+        self.drive.robotOrientedDrive(
+            self.driver_xbox.getSlewLimitedFieldForward(),
+            self.driver_xbox.getSlewLimitedFieldLeft(),
+            self.driver_xbox.getSlewLimitedFieldRotation(),
+            self.driver_xbox.getFieldThrottle(),
+        )
