@@ -5,12 +5,13 @@
 # the WPILib BSD license file in the root directory of this project.
 #
 
-import wpilib
+from wpilib import DriverStation
 from magicbot import MagicRobot
 
 from components.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
 import constants
+from components.drive_control import DriveState
 
 # from components.component1 import Component1
 # from components.component2 import Component2
@@ -20,6 +21,7 @@ class FROGBot(MagicRobot):
     # Define components here
     #
     drive: Drive
+    drive_statemachine: DriveState
     # component1: Component1
     # component2: Component2
 
@@ -28,6 +30,7 @@ class FROGBot(MagicRobot):
 
     def createObjects(self):
         """Initialize all wpilib motors & sensors"""
+        self.alliance = None
 
         self.driver_xbox = FROGXboxDriver(
             constants.kDriverControllerPort,
@@ -47,7 +50,17 @@ class FROGBot(MagicRobot):
     # autonomous folder will automatically get added to a list
     #
 
+    def setAlliance(self):
+        self.alliance = DriverStation.getAlliance()
+        if self.alliance:
+            self.driver_xbox.set_alliance(self.alliance)
+
+    def autonomousInit(self):
+        self.setAlliance()
+        self.drive.enable()
+
     def teleopInit(self) -> None:
+        self.setAlliance()
         self.drive.enable()
 
     def teleopPeriodic(self):
