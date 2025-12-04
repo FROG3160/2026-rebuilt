@@ -134,8 +134,6 @@ class Drive(SwerveChassis):
         self.field = Field2d()
         SmartDashboard.putData("DrivePose", self.field)
 
-    def execute(self):
-        self.periodic()
         # autobuilder_config = RobotConfig.fromGUISettings()
 
         # AutoBuilder.configure(
@@ -162,10 +160,12 @@ class Drive(SwerveChassis):
         # )
         # self.sys_id_routine_steer = SysIdRoutine(
         #     SysIdRoutine.Config(),
-        #     SysIdRoutine.Mechanism(self.sysid_steer, self.sysid_log_steer, self),
+        #     SysIdRoutine.Mechanism(self.sysid_steer2S, self.sysid_log_steer, self),
         # )
 
     #  self.reef_scoring_position = self.positioning.CENTER
+    def execute(self):
+        self.periodic()
 
     def shouldFlipPath(self):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
@@ -301,7 +301,7 @@ class Drive(SwerveChassis):
         #         )
         #         cameraPoseObject.setPose(camera_pose.estimatedPose.toPose2d())
 
-        self.field.setRobotPose(self.estimator.getEstimatedPosition())
+        # self.field.setRobotPose(self.estimatorPose)
         SmartDashboard.putNumberArray(
             "Drive Pose",
             [
