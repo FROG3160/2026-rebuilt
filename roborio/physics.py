@@ -58,4 +58,4 @@ class PhysicsEngine:
             self.startingPositionSet = True
 
         pose = self.physics_controller.drive(self.robot.drive.chassisSpeeds, tm_diff)
-        self.robot.drive.field.setRobotPose(pose)
+        self.robot.drive.resetPose(pose)
