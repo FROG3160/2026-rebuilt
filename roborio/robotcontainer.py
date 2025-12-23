@@ -1,0 +1,55 @@
+from pathplannerlib.auto import NamedCommands
+
+from commands.drive import ManualDrive
+from subsystems.drive import Drive
+from FROGlib.xbox import FROGXboxDriver
+from FROGlib.xbox import FROGXboxTactical
+import constants
+
+
+class RobotContainer:
+    """
+    This class is where the bulk of the robot should be declared. Since Command-based is a
+    "declarative" paradigm, very little robot logic should actually be handled in the :class:`.Robot`
+    periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+    subsystems, commands, and button mappings) should be declared here.
+    """
+
+    def __init__(self):
+        self.alliance = None
+        self.drive = Drive()
+        self.driver_xbox = FROGXboxDriver(
+            constants.kDriverControllerPort,
+            constants.kDeadband,
+            constants.kDebouncePeriod,
+            constants.kTranslationSlew,
+            constants.kRotSlew,
+        )
+
+        self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
+
+        self.register_named_commands()
+        self.configure_button_bindings()
+
+    def configure_automation_bindings(self):
+        # Configure automation bindings
+        self.configure_driver_controls()
+        self.configure_tactical_controls()
+        self.configure_automation_bindings()
+
+    def configure_button_bindings(self):
+        # Bind buttons to commands
+        pass
+
+    def configure_driver_controls(self):
+        # Configure driver controls
+        pass
+
+    def configure_tactical_controls(self):
+        # Configure operator controls
+        pass
+
+    def register_named_commands(self):
+        # Register named commands
+        # NamedCommands.registerCommand("shoot", ShootCommand(self.shooter))
+        pass

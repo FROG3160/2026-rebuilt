@@ -87,7 +87,7 @@ back_right_module_config = {
 }
 
 
-class Drive(SwerveChassis):
+class Drive(SwerveChassis, Subsystem):
     """This is a MagicBot component that subclasses FROGlib.SwerveChassis and adds
     additional components, attributes and methods
 
@@ -164,8 +164,6 @@ class Drive(SwerveChassis):
         # )
 
     #  self.reef_scoring_position = self.positioning.CENTER
-    def execute(self):
-        self.periodic()
 
     def shouldFlipPath(self):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
