@@ -149,6 +149,10 @@ class FROGTalonFXConfig(TalonFXConfiguration):
 
     def __init__(
         self,
+        id=0,
+        can_bus="rio",
+        motor_name: str = "",
+        parent_nt: str = "Undefined",
         **kwargs,
     ):
         """
@@ -181,11 +185,25 @@ class FROGTalonFXConfig(TalonFXConfiguration):
                         slot1 (Slot1Configs): Alternative Slot 1 configuration object. Defaults to Slot1Configs().
                         slot2 (Slot2Configs): Slot 2 configuration object. Defaults to Slot2Configs().
         """
-
+        self.id = id
+        self.can_bus = can_bus
+        self.motor_name = motor_name
+        self.parent_nt = parent_nt
         super().__init__()
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
+
+    def with_id(self, id: int):
+        """Sets the CAN ID for this motor configuration.
+
+        Args:
+            id (int): The CAN ID to set.
+        Returns:
+            FROGTalonFXConfig: The updated motor configuration.
+        """
+        self.id = id
+        return self
 
 
 class FROGTalonFX(TalonFX):
@@ -193,27 +211,21 @@ class FROGTalonFX(TalonFX):
 
     def __init__(
         self,
-        can_id: int = 0,
-        can_bus: str = "rio",
         motor_config: FROGTalonFXConfig = FROGTalonFXConfig(),
-        parent_nt: str = "Undefined",
-        motor_name: str = "",
     ):
         """Creates a TalonFX motor object with applied configuration
 
         Args:
-            can_id (int, required): The CAN ID of the motor.
-            can_bus (str, optional): The CAN bus the motor is connected to. Defaults to "rio".
             motor_config (FROGTalonFXConfig): The configuration to apply to the motor. Defaults to a default FROGTalonFXConfig.
-            table_name (str, optional): NetworksTable to place motor data under. Defaults to "Undefined".
-            motor_name (str, optional): NetworksTable name for the motor. If left blank, will use "TalonFX(CAN ID)".
         """
-        super().__init__(device_id=can_id, canbus=can_bus)
+        super().__init__(device_id=motor_config.id, canbus=motor_config.can_bus)
         self.config = motor_config
         self.configurator.apply(self.config)
-        if motor_name == "":
-            motor_name = f"TalonFX({can_id})"
-        table = f"{parent_nt}/{motor_name}"
+
+        if motor_config.motor_name == "":
+            motor_config.motor_name = f"TalonFX({motor_config.id})"
+        table = f"{motor_config.parent_nt}/{motor_config.motor_name}"
+
         self._motorVelocityPub = (
             NetworkTableInstance.getDefault()
             .getFloatTopic(f"{table}/velocity")
@@ -286,10 +298,32 @@ class FROGCANCoderConfig(CANcoderConfiguration):
             SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE
         )
 
+    def with_id(self, id: int):
+        """Sets the CAN ID for this CANCoder configuration.
+
+        Args:
+            id (int): The CAN ID to set.
+        Returns:
+            FROGCANCoderConfig: The updated CANCoder configuration.
+        """
+        self.id = id
+        return self
+
+    def with_offset(self, offset: float):
+        """Sets the steer offset for this CANCoder configuration.
+
+        Args:
+            offset (float): The steer offset to set.
+        Returns:
+            FROGCANCoderConfig: The updated CANCoder configuration.
+        """
+        self.magnet_sensor.magnet_offset = offset
+        return self
+
 
 class FROGCanCoder(CANcoder):
-    def __init__(self, id, config: FROGCANCoderConfig):
-        super().__init__(id)
+    def __init__(self, config: FROGCANCoderConfig):
+        super().__init__(config.id)
         self.configurator.apply(config)
         # self._motorPositionPub.set(self.get_position().value)
         # self._motorVoltagePub.set(self.get_motor_voltage().value)
