@@ -67,10 +67,9 @@ class SwerveModuleConfig:
         self,
         name: str = "undefined",
         location: Translation2d = field(default_factory=Translation2d),
-        drive_motor_id: int = 0,
-        steer_motor_id: int = 0,
-        cancoder_id: int = 0,
-        cancoder_offset: float = 0.0,
+        drive_motor_config: FROGTalonFXConfig = FROGTalonFXConfig(),
+        steer_motor_config: FROGTalonFXConfig = FROGTalonFXConfig(),
+        cancoder_config: FROGCANCoderConfig = FROGCANCoderConfig(),
     ):
         """Config parameters for the individual swerve modules
 
@@ -84,10 +83,9 @@ class SwerveModuleConfig:
         """
         self.name = name
         self.location = location
-        self.drive_motor_id = drive_motor_id
-        self.steer_motor_id = steer_motor_id
-        self.cancoder_id = cancoder_id
-        self.cancoder_offset = cancoder_offset
+        self.drive_motor_config = drive_motor_config
+        self.steer_motor_config = steer_motor_config
+        self.cancoder_config = cancoder_config
 
 
 class SwerveModule:
@@ -103,30 +101,21 @@ class SwerveModule:
                 Defaults to SwerveModuleConfig().
             parent_nt (str, optional): parent Network Table to place this device under.
                 Defaults to "Undefined".
-        """  # set module name
+        """
+        # set module name
         self.name = module_config.name
+        nt_table = f"{parent_nt}/{self.name}"
+        module_config.drive_motor_config.parent_nt = nt_table
+        module_config.steer_motor_config.parent_nt = nt_table
 
         # create/configure drive motor
-        self.drive_motor = FROGTalonFX(
-            module_config.drive_motor_id,
-            "rio",
-            drive_config,
-            parent_nt=f"{parent_nt}/{self.name}",
-            motor_name="Drive",
-        )
+        self.drive_motor = FROGTalonFX(module_config.drive_motor_config)
 
         # create/configure steer motor
-        self.steer_motor = FROGTalonFX(
-            module_config.steer_motor_id,
-            "rio",
-            steer_config,
-            parent_nt=f"{parent_nt}/{self.name}",
-            motor_name="Steer",
-        )
+        self.steer_motor = FROGTalonFX(module_config.steer_motor_config)
 
         # create/configure cancoder
-        cancoder_config.magnet_sensor.magnet_offset = module_config.cancoder_offset
-        self.steer_encoder = FROGCanCoder(module_config.cancoder_id, cancoder_config)
+        self.steer_encoder = FROGCanCoder(module_config.cancoder_config)
 
         # configure signal frequencies
         #   drive motor, need velocity and possibly voltage
@@ -149,7 +138,6 @@ class SwerveModule:
         self.enabled = False
 
         # publish all values as children of the specific swerve module
-        nt_table = f"{parent_nt}/{self.name}"
         # log various values to network tables
         self._moduleSpeedPub = (
             NetworkTableInstance.getDefault()
@@ -276,7 +264,7 @@ class SwerveChassis:
         gyro: FROGPigeonGyro,
         max_speed: float,
         max_rotation_speed: float,
-        parent_nt: str = "Components",
+        parent_nt: str = "Undefined",
     ):
         # set the name of this component to the class name
         self.name = self.__class__.__name__
