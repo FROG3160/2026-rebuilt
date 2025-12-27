@@ -244,7 +244,7 @@ class SwerveModule:
             self.drive_motor.set_control(
                 VelocityVoltage(
                     velocity=self.commandedSpeed,
-                    slot=1,  # Voltage gains for drive
+                    slot=0,  # Voltage gains for drive
                 )
             )
 
