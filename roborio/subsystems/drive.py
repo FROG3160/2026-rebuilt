@@ -1,9 +1,13 @@
 import math
 from FROGlib.swerve import SwerveChassis
-from FROGlib.ctre import FROGPigeonGyro
+from FROGlib.ctre import (
+    FROGCANCoderConfig,
+    FROGFeedbackConfig,
+    FROGPigeonGyro,
+    FROGTalonFX,
+)
 
 # from configs import ctre
-
 from wpilib import DriverStation, Field2d
 from wpimath.geometry import (
     Pose2d,
@@ -21,7 +25,7 @@ from wpilib.sysid import SysIdRoutineLog
 from wpilib import SmartDashboard
 from commands2 import Subsystem, Command
 from commands2.sysid import SysIdRoutine
-from FROGlib.utils import RobotRelativeTarget, remap
+from FROGlib.utils import DriveTrain, RobotRelativeTarget, remap
 import constants
 
 # from subsystems.positioning import Position
@@ -41,49 +45,93 @@ from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig, DCMot
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 
 from FROGlib.swerve import SwerveModuleConfig
+from FROGlib.ctre import (
+    FROGTalonFXConfig,
+    FROGSlotConfig,
+    MOTOR_OUTPUT_CCWP_BRAKE,
+    MOTOR_OUTPUT_CWP_BRAKE,
+)
+from FROGlib.sds import MK4C_L3_GEARING, MK5I_R3_GEARING, WHEEL_DIAMETER
+from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 
 # from subsystems.leds import LEDSubsystem
 # from subsystems.vision import VisionPose
+
+drivetrain = DriveTrain(gear_stages=MK4C_L3_GEARING, wheel_diameter=WHEEL_DIAMETER)
+
+drive_slot0 = FROGSlotConfig(
+    k_s=constants.kVoltageDriveS,
+    k_v=constants.kVoltageDriveV,
+    k_a=constants.kVoltageDriveA,
+    k_p=constants.kVoltageDriveP,
+)
+steer_slot0 = FROGSlotConfig(
+    k_p=constants.kSteerP,
+    k_i=constants.kSteerI,
+    k_s=constants.kSteerS,
+    k_v=constants.kSteerV,
+)
+
+# configure drive motor used for all swerve modules
+drive_config = FROGTalonFXConfig(
+    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
+    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=drivetrain.system_reduction),
+    slot0=drive_slot0,
+    motor_name="Drive",
+)
+# configure steer motor used for all swerve modules
+steer_config = FROGTalonFXConfig(
+    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
+    # set continuous wrap to wrap around the 180 degree point
+    closed_loop_general=ClosedLoopGeneralConfigs().with_continuous_wrap(True),
+    slot0=steer_slot0,
+    motor_name="Steer",
+)
+
 
 front_left_module_config = {
     "name": "FrontLeft",
     "location": Translation2d(
         constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters
     ),
-    "drive_motor_id": constants.kFrontLeftDriveID,
-    "steer_motor_id": constants.kFrontLeftSteerID,
-    "cancoder_id": constants.kFrontLeftSensorID,
-    "cancoder_offset": constants.kFrontLeftOffset,
+    "drive_motor_config": drive_config.with_id(constants.kFrontLeftDriveID),
+    "steer_motor_config": steer_config.with_id(constants.kFrontLeftSteerID),
+    "cancoder_config": FROGCANCoderConfig()
+    .with_id(constants.kFrontLeftSensorID)
+    .with_offset(constants.kFrontLeftOffset),
 }
 front_right_module_config = {
     "name": "FrontRight",
     "location": Translation2d(
         constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters
     ),
-    "drive_motor_id": constants.kFrontRightDriveID,
-    "steer_motor_id": constants.kFrontRightSteerID,
-    "cancoder_id": constants.kFrontRightSensorID,
-    "cancoder_offset": constants.kFrontRightOffset,
+    "drive_motor_config": drive_config.with_id(constants.kFrontRightDriveID),
+    "steer_motor_config": steer_config.with_id(constants.kFrontRightSteerID),
+    "cancoder_config": FROGCANCoderConfig()
+    .with_id(constants.kFrontRightSensorID)
+    .with_offset(constants.kFrontRightOffset),
 }
 back_left_module_config = {
     "name": "BackLeft",
     "location": Translation2d(
         -constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters
     ),
-    "drive_motor_id": constants.kBackLeftDriveID,
-    "steer_motor_id": constants.kBackLeftSteerID,
-    "cancoder_id": constants.kBackLeftSensorID,
-    "cancoder_offset": constants.kBackLeftOffset,
+    "drive_motor_config": drive_config.with_id(constants.kBackLeftDriveID),
+    "steer_motor_config": steer_config.with_id(constants.kBackLeftSteerID),
+    "cancoder_config": FROGCANCoderConfig()
+    .with_id(constants.kBackLeftSensorID)
+    .with_offset(constants.kBackLeftOffset),
 }
 back_right_module_config = {
     "name": "BackRight",
     "location": Translation2d(
         -constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters
     ),
-    "drive_motor_id": constants.kBackRightDriveID,
-    "steer_motor_id": constants.kBackRightSteerID,
-    "cancoder_id": constants.kBackRightSensorID,
-    "cancoder_offset": constants.kBackRightOffset,
+    "drive_motor_config": drive_config.with_id(constants.kBackRightDriveID),
+    "steer_motor_config": steer_config.with_id(constants.kBackRightSteerID),
+    "cancoder_config": FROGCANCoderConfig()
+    .with_id(constants.kBackRightSensorID)
+    .with_offset(constants.kBackRightOffset),
 }
 
 
