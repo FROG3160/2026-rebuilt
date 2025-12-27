@@ -40,6 +40,7 @@ from .utils import DriveTrain
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
+from phoenix6.signals.spn_enums import FeedbackSensorSourceValue
 
 # TODO: #3 Switch gear_stages to correct swerve module gearing when available
 # configure drivetrain for the specific swerve module used
@@ -111,12 +112,18 @@ class SwerveModule:
         # create/configure drive motor
         self.drive_motor = FROGTalonFX(module_config.drive_motor_config)
 
-        # create/configure steer motor
-        self.steer_motor = FROGTalonFX(module_config.steer_motor_config)
-
         # create/configure cancoder
         self.steer_encoder = FROGCanCoder(module_config.cancoder_config)
 
+        # create/configure steer motor using a feedback config that uses the steer encoder as a remote sensor
+        self.steer_motor = FROGTalonFX(
+            module_config.steer_motor_config.with_feedback(
+                FROGFeedbackConfig(
+                    remote_sensor_id=self.steer_encoder.device_id,
+                    sensor_source=FeedbackSensorSourceValue.REMOTE_CANCODER,
+                )
+            ),
+        )
         # configure signal frequencies
         #   drive motor, need velocity and possibly voltage
         self.drive_motor.get_velocity().set_update_frequency(50)
