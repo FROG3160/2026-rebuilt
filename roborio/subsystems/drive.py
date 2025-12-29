@@ -53,6 +53,7 @@ from FROGlib.ctre import (
 )
 from FROGlib.sds import MK4C_L3_GEARING, MK5I_R3_GEARING, WHEEL_DIAMETER
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
+from copy import deepcopy
 
 # from subsystems.leds import LEDSubsystem
 # from subsystems.vision import VisionPose
@@ -94,8 +95,8 @@ front_left_module_config = {
     "location": Translation2d(
         constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters
     ),
-    "drive_motor_config": drive_config.with_id(constants.kFrontLeftDriveID),
-    "steer_motor_config": steer_config.with_id(constants.kFrontLeftSteerID),
+    "drive_motor_config": deepcopy(drive_config.with_id(constants.kFrontLeftDriveID)),
+    "steer_motor_config": deepcopy(steer_config.with_id(constants.kFrontLeftSteerID)),
     "cancoder_config": FROGCANCoderConfig()
     .with_id(constants.kFrontLeftSensorID)
     .with_offset(constants.kFrontLeftOffset),
@@ -105,8 +106,8 @@ front_right_module_config = {
     "location": Translation2d(
         constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters
     ),
-    "drive_motor_config": drive_config.with_id(constants.kFrontRightDriveID),
-    "steer_motor_config": steer_config.with_id(constants.kFrontRightSteerID),
+    "drive_motor_config": deepcopy(drive_config.with_id(constants.kFrontRightDriveID)),
+    "steer_motor_config": deepcopy(steer_config.with_id(constants.kFrontRightSteerID)),
     "cancoder_config": FROGCANCoderConfig()
     .with_id(constants.kFrontRightSensorID)
     .with_offset(constants.kFrontRightOffset),
@@ -116,8 +117,8 @@ back_left_module_config = {
     "location": Translation2d(
         -constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters
     ),
-    "drive_motor_config": drive_config.with_id(constants.kBackLeftDriveID),
-    "steer_motor_config": steer_config.with_id(constants.kBackLeftSteerID),
+    "drive_motor_config": deepcopy(drive_config.with_id(constants.kBackLeftDriveID)),
+    "steer_motor_config": deepcopy(steer_config.with_id(constants.kBackLeftSteerID)),
     "cancoder_config": FROGCANCoderConfig()
     .with_id(constants.kBackLeftSensorID)
     .with_offset(constants.kBackLeftOffset),
@@ -127,8 +128,8 @@ back_right_module_config = {
     "location": Translation2d(
         -constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters
     ),
-    "drive_motor_config": drive_config.with_id(constants.kBackRightDriveID),
-    "steer_motor_config": steer_config.with_id(constants.kBackRightSteerID),
+    "drive_motor_config": deepcopy(drive_config.with_id(constants.kBackRightDriveID)),
+    "steer_motor_config": deepcopy(steer_config.with_id(constants.kBackRightSteerID)),
     "cancoder_config": FROGCANCoderConfig()
     .with_id(constants.kBackRightSensorID)
     .with_offset(constants.kBackRightOffset),
