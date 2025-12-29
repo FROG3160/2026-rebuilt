@@ -58,6 +58,7 @@ from copy import deepcopy
 # from subsystems.leds import LEDSubsystem
 # from subsystems.vision import VisionPose
 
+# TODO: #3 Switch gear_stages to correct swerve module gearing when available
 drivetrain = DriveTrain(gear_stages=MK4C_L3_GEARING, wheel_diameter=WHEEL_DIAMETER)
 
 drive_slot0 = FROGSlotConfig(
@@ -100,6 +101,7 @@ front_left_module_config = {
     "cancoder_config": FROGCANCoderConfig()
     .with_id(constants.kFrontLeftSensorID)
     .with_offset(constants.kFrontLeftOffset),
+    "wheel_diameter": WHEEL_DIAMETER,
 }
 front_right_module_config = {
     "name": "FrontRight",
@@ -111,6 +113,7 @@ front_right_module_config = {
     "cancoder_config": FROGCANCoderConfig()
     .with_id(constants.kFrontRightSensorID)
     .with_offset(constants.kFrontRightOffset),
+    "wheel_diameter": WHEEL_DIAMETER,
 }
 back_left_module_config = {
     "name": "BackLeft",
@@ -122,6 +125,7 @@ back_left_module_config = {
     "cancoder_config": FROGCANCoderConfig()
     .with_id(constants.kBackLeftSensorID)
     .with_offset(constants.kBackLeftOffset),
+    "wheel_diameter": WHEEL_DIAMETER,
 }
 back_right_module_config = {
     "name": "BackRight",
@@ -133,6 +137,7 @@ back_right_module_config = {
     "cancoder_config": FROGCANCoderConfig()
     .with_id(constants.kBackRightSensorID)
     .with_offset(constants.kBackRightOffset),
+    "wheel_diameter": WHEEL_DIAMETER,
 }
 
 
