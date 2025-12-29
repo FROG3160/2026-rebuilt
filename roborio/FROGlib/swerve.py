@@ -19,7 +19,7 @@ from phoenix6.controls import (
     VelocityVoltage,
     PositionVoltage,
 )
-from wpimath.units import radiansToRotations, rotationsToRadians
+from wpimath.units import radiansToRotations, rotationsToRadians, rotationsToDegrees
 
 from .sds import MK4C_L3_GEARING, WHEEL_DIAMETER
 
@@ -42,24 +42,6 @@ from wpilib import Timer
 from dataclasses import dataclass, field
 from phoenix6.signals.spn_enums import FeedbackSensorSourceValue
 
-# TODO: #3 Switch gear_stages to correct swerve module gearing when available
-# configure drivetrain for the specific swerve module used
-drivetrain = DriveTrain(gear_stages=MK4C_L3_GEARING, wheel_diameter=WHEEL_DIAMETER)
-
-# configure drive motor used for all swerve modules
-drive_config = FROGTalonFXConfig(
-    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=drivetrain.system_reduction),
-)
-# configure steer motor used for all swerve modules
-steer_config = FROGTalonFXConfig(
-    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
-    # set continuous wrap to wrap around the 180 degree point
-    closed_loop_general=ClosedLoopGeneralConfigs().with_continuous_wrap(True),
-)
-# configure cancoder used for all swerve modules
-cancoder_config = FROGCANCoderConfig().with_magnet_sensor(MAGNET_CONFIG_CONTWRAP_CCWP)
-
 
 @dataclass
 class SwerveModuleConfig:
@@ -71,6 +53,7 @@ class SwerveModuleConfig:
         drive_motor_config: FROGTalonFXConfig = FROGTalonFXConfig(),
         steer_motor_config: FROGTalonFXConfig = FROGTalonFXConfig(),
         cancoder_config: FROGCANCoderConfig = FROGCANCoderConfig(),
+        wheel_diameter: float = 0.0,
     ):
         """Config parameters for the individual swerve modules
 
@@ -87,6 +70,7 @@ class SwerveModuleConfig:
         self.drive_motor_config = drive_motor_config
         self.steer_motor_config = steer_motor_config
         self.cancoder_config = cancoder_config
+        self.wheel_diameter = wheel_diameter
 
 
 class SwerveModule:
@@ -141,6 +125,7 @@ class SwerveModule:
 
         # set module location
         self.location = module_config.location
+        self.wheel_diameter = module_config.wheel_diameter
         # initialize the state of the module as disabled
         self.enabled = False
 
@@ -148,22 +133,22 @@ class SwerveModule:
         # log various values to network tables
         self._moduleSpeedPub = (
             NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{nt_table}/commanded_speed")
+            .getFloatTopic(f"{nt_table}/commanded_mps")
             .publish()
         )
         self._moduleRotationPub = (
             NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{nt_table}/commanded_angle")
+            .getFloatTopic(f"{nt_table}/commanded_rotation")
             .publish()
         )
         self._moduleVelocityPub = (
             NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{nt_table}/actual_velocity")
+            .getFloatTopic(f"{nt_table}/actual_rps")
             .publish()
         )
         self._modulePositionPub = (
             NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{nt_table}/actual_position")
+            .getFloatTopic(f"{nt_table}/actual_rotations")
             .publish()
         )
         self._module_velocity_error_pub = (
@@ -227,7 +212,9 @@ class SwerveModule:
         if self.enabled:
             # log the current state of the motors before commanding them to a new value
             self.current_velocity = self.drive_motor.get_velocity().value
-            self.current_position = self.steer_motor.get_position().value
+            self.current_position = rotationsToDegrees(
+                self.steer_motor.get_position().value
+            )
             self._moduleVelocityPub.set(self.current_velocity)
             self._modulePositionPub.set(self.current_position)
 
