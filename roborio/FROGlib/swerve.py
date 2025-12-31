@@ -19,7 +19,13 @@ from phoenix6.controls import (
     VelocityVoltage,
     PositionVoltage,
 )
-from wpimath.units import radiansToRotations, rotationsToRadians, rotationsToDegrees
+from wpimath.units import (
+    radiansToRotations,
+    rotationsToRadians,
+    rotationsToDegrees,
+    meters_per_second,
+    meters,
+)
 
 from .sds import MK4C_L3_GEARING, WHEEL_DIAMETER
 
@@ -131,24 +137,24 @@ class SwerveModule:
 
         # publish all values as children of the specific swerve module
         # log various values to network tables
-        self._moduleSpeedPub = (
+        self._moduleCommandedVelocityPub = (
             NetworkTableInstance.getDefault()
             .getFloatTopic(f"{nt_table}/commanded_mps")
             .publish()
         )
-        self._moduleRotationPub = (
+        self._moduleCommandedAnglePub = (
             NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{nt_table}/commanded_rotation")
+            .getFloatTopic(f"{nt_table}/commanded_degrees")
             .publish()
         )
-        self._moduleVelocityPub = (
+        self._moduleActualVelocityPub = (
             NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{nt_table}/actual_rps")
+            .getFloatTopic(f"{nt_table}/actual_mps")
             .publish()
         )
-        self._modulePositionPub = (
+        self._moduleActualAnglePub = (
             NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{nt_table}/actual_rotations")
+            .getFloatTopic(f"{nt_table}/actual_degrees")
             .publish()
         )
         self._module_velocity_error_pub = (
@@ -156,9 +162,9 @@ class SwerveModule:
             .getFloatTopic(f"{nt_table}/velocity_error")
             .publish()
         )
-        self._module_position_error_pub = (
+        self._module_angle_error_pub = (
             NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{nt_table}/position_error")
+            .getFloatTopic(f"{nt_table}/angle_error")
             .publish()
         )
 
@@ -168,10 +174,10 @@ class SwerveModule:
     def enable(self):
         self.enabled = True
 
-    def getEncoderAzimuthRotations(self) -> float:
+    def getEncoderAzimuthRotations(self):
         """gets the absolute position from the CANCoder
         Returns:
-            float: absolute position of the sensor in rotations
+            rotation: absolute position of the sensor in rotations
         """
         return self.steer_encoder.get_absolute_position().value
 
@@ -186,15 +192,20 @@ class SwerveModule:
         else:
             return Rotation2d(0)
 
-    def getCurrentDistance(self) -> float:
+    def getCurrentDistance(self) -> meters:
         """Gets distance traveled by the system.
 
         Returns:
-            float: distance in meters
+            meters: distance in meters
         """
         return self.drive_motor.get_position().value
 
-    def getCurrentSpeed(self) -> float:
+    def getCurrentSpeed(self) -> meters_per_second:
+        """Gets the current speed of the drive motor.
+
+        Returns:
+            meters_per_second: speed in meters per second
+        """
         return self.drive_motor.get_velocity().value
 
     def getCurrentState(self):
@@ -208,38 +219,44 @@ class SwerveModule:
             self.getCurrentDistance(), self.getCurrentSteerAzimuth()
         )
 
-    def setState(self, requested_state: SwerveModuleState):
+    def apply_state(self, requested_state: SwerveModuleState):
         if self.enabled:
             # log the current state of the motors before commanding them to a new value
-            self.current_velocity = self.drive_motor.get_velocity().value
-            self.current_position = rotationsToDegrees(
-                self.steer_motor.get_position().value
-            )
-            self._moduleVelocityPub.set(self.current_velocity)
-            self._modulePositionPub.set(self.current_position)
+            # log actual velocity (rps) and position (rotations)
+            self.current_velocity = self.getCurrentSpeed()
+            self.current_angle = self.getCurrentSteerAzimuth()
+            self._moduleActualVelocityPub.set(self.current_velocity)
+            self._moduleActualAnglePub.set(self.current_angle.degrees())
 
-            requested_state.optimize(self.getCurrentSteerAzimuth())
+            # update the state with the steer angle that is closest to the current angle
+            requested_state.optimize(self.current_angle)
+
+            # command the steer motor to the requested angle
             self.commandedRotation = radiansToRotations(requested_state.angle.radians())
-            self.commandedSpeed = requested_state.speed
             self.steer_motor.set_control(
                 PositionVoltage(
                     position=self.commandedRotation,
                     slot=0,  # Position voltage gains for steer
                 )
             )
-            self._moduleRotationPub.set(self.commandedRotation)
+            self._moduleCommandedAnglePub.set(
+                rotationsToDegrees(self.commandedRotation)
+            )
+
+            self.commandedSpeed = requested_state.speed
             self.drive_motor.set_control(
                 VelocityVoltage(
                     velocity=self.commandedSpeed,
                     slot=0,  # Voltage gains for drive
                 )
             )
+            self._moduleCommandedVelocityPub.set(self.commandedSpeed)
 
-            self._moduleSpeedPub.set(self.commandedSpeed)
+            # publish the error for velocicty and anble
             self._module_velocity_error_pub.set(
                 self.drive_motor.get_closed_loop_error().value
             )
-            self._module_position_error_pub.set(
+            self._module_angle_error_pub.set(
                 self.drive_motor.get_closed_loop_error().value
             )
 
@@ -447,7 +464,7 @@ class SwerveChassis:
         # with each angle turned to the center of the robot, the chassis
         # is effectively "locked" in position on the field.
         for module, moduleAngle in zip(self.modules, moduleAngles):
-            module.setState(SwerveModuleState(0, moduleAngle))
+            module.apply_state(SwerveModuleState(0, moduleAngle))
 
     def logTelemetry(self):
         self._actualChassisSpeeds = self.getActualChassisSpeeds()
@@ -464,7 +481,7 @@ class SwerveChassis:
         if self.enabled:
             self._setStatesFromSpeeds()  # apply chassis Speeds
             for module, state in zip(self.modules, self.moduleStates):
-                module.setState(state)
+                module.apply_state(state)
 
         self.logTelemetry()
 
