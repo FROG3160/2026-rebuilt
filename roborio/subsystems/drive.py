@@ -188,23 +188,23 @@ class Drive(SwerveChassis, Subsystem):
         self.field = Field2d()
         SmartDashboard.putData("DrivePose", self.field)
 
-        # autobuilder_config = RobotConfig.fromGUISettings()
+        autobuilder_config = RobotConfig.fromGUISettings()
 
-        # AutoBuilder.configure(
-        #     self.getPose,  # Robot pose supplier
-        #     self.resetPose,  # Method to reset odometry (will be called if your auto has a starting pose)
-        #     self.getRobotRelativeSpeeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-        #     lambda speeds, feedforwards: self.setChassisSpeeds(
-        #         speeds
-        #     ),  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
-        #     PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
-        #         PIDConstants(1.0, 0.0, 0.0),  # Translation PID constants
-        #         PIDConstants(1.0, 0.0, 0.0),  # Rotation PID constants
-        #     ),
-        #     autobuilder_config,  # The robot configuration
-        #     self.shouldFlipPath,  # Supplier to control path flipping based on alliance color
-        #     self,  # Reference to this subsystem to set requirements
-        # )
+        AutoBuilder.configure(
+            self.getPose,  # Robot pose supplier
+            self.resetPose,  # Method to reset odometry (will be called if your auto has a starting pose)
+            self.getRobotRelativeSpeeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            lambda speeds, feedforwards: self.setChassisSpeeds(
+                speeds
+            ),  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+            PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
+                PIDConstants(1.0, 0.0, 0.0),  # Translation PID constants
+                PIDConstants(1.0, 0.0, 0.0),  # Rotation PID constants
+            ),
+            autobuilder_config,  # The robot configuration
+            self.shouldFlipPath,  # Supplier to control path flipping based on alliance color
+            self,  # Reference to this subsystem to set requirements
+        )
 
         # Tell SysId to make generated commands require this subsystem, suffix test state in
         # WPILog with this subsystem's name ("drive")
