@@ -109,8 +109,8 @@ class SwerveModule:
         self.steer_motor = FROGTalonFX(
             module_config.steer_motor_config.with_feedback(
                 FROGFeedbackConfig(
-                    remote_sensor_id=self.steer_encoder.device_id,
-                    sensor_source=FeedbackSensorSourceValue.REMOTE_CANCODER,
+                    feedback_remote_sensor_id=self.steer_encoder.device_id,
+                    feedback_sensor_source=FeedbackSensorSourceValue.REMOTE_CANCODER,
                 )
             ),
         )
