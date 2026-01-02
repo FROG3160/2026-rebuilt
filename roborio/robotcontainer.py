@@ -30,16 +30,16 @@ class RobotContainer:
 
         self.register_named_commands()
         self.configure_button_bindings()
+        self.configure_automation_bindings()
 
     def configure_automation_bindings(self):
         # Configure automation bindings
-        self.configure_driver_controls()
-        self.configure_tactical_controls()
-        self.configure_automation_bindings()
+        pass
 
     def configure_button_bindings(self):
+        self.configure_driver_controls()
+        self.configure_tactical_controls()
         # Bind buttons to commands
-        pass
 
     def configure_driver_controls(self):
         # Configure driver controls
