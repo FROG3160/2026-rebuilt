@@ -1,4 +1,5 @@
-from pathplannerlib.auto import NamedCommands
+from pathplannerlib.auto import NamedCommands, AutoBuilder
+from wpilib import SmartDashboard
 
 from commands.drive import ManualDrive
 from subsystems.drive import Drive
@@ -26,11 +27,15 @@ class RobotContainer:
             constants.kRotSlew,
         )
 
-        self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
-
         self.register_named_commands()
         self.configure_button_bindings()
         self.configure_automation_bindings()
+
+        self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
+
+        # Set up PathPlanner autos and publish to dashboard
+        self.autochooser = AutoBuilder.buildAutoChooser()
+        SmartDashboard.putData("PathPlanner Autos", self.autochooser)
 
     def configure_automation_bindings(self):
         # Configure automation bindings

@@ -142,8 +142,8 @@ back_right_module_config = {
 
 
 class Drive(SwerveChassis, Subsystem):
-    """This is a MagicBot component that subclasses FROGlib.SwerveChassis and adds
-    additional components, attributes and methods
+    """The drive subsystem that subclasses FROGlib.SwerveChassis and adds
+    additional components, attributes and methods for autonomous driving, etc.
 
     """
 
