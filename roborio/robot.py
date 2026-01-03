@@ -51,3 +51,11 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def teleopPeriodic(self):
         pass
+
+    def testInit(self) -> None:
+        self.container.configureSysIDButtonBindings()
+        self.container.drive.removeDefaultCommand()
+        self.container.drive.enable()
+
+    def testPeriodic(self) -> None:
+        pass

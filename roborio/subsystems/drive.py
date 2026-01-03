@@ -208,102 +208,66 @@ class Drive(SwerveChassis, Subsystem):
 
         # Tell SysId to make generated commands require this subsystem, suffix test state in
         # WPILog with this subsystem's name ("drive")
-        # self.sys_id_routine_drive = SysIdRoutine(
-        #     SysIdRoutine.Config(),
-        #     SysIdRoutine.Mechanism(self.sysid_drive, self.sysid_log_drive, self),
-        # )
-        # self.sys_id_routine_steer = SysIdRoutine(
-        #     SysIdRoutine.Config(),
-        #     SysIdRoutine.Mechanism(self.sysid_steer2S, self.sysid_log_steer, self),
-        # )
+        self.sys_id_routine_drive = SysIdRoutine(
+            SysIdRoutine.Config(),
+            SysIdRoutine.Mechanism(self.sysid_drive, self.sysid_log_drive, self),
+        )
 
-    #  self.reef_scoring_position = self.positioning.CENTER
+        self.sys_id_routine_steer = SysIdRoutine(
+            SysIdRoutine.Config(),
+            SysIdRoutine.Mechanism(self.sysid_steer, self.sysid_log_steer, self),
+        )
+
+    # Tell SysId how to plumb the driving voltage to the motors.
+    def sysid_drive(self, voltage: volts) -> None:
+        for module in self.modules:
+            module.steer_motor.set_control(
+                PositionVoltage(
+                    position=0,
+                    slot=0,  # Duty Cycle gains for steer
+                )
+            )
+            module.drive_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
+
+    def sysid_steer(self, voltage: volts) -> None:
+        for module in self.modules:
+            module.steer_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
+            module.drive_motor.stopMotor()
+
+    def sysid_log_drive(self, sys_id_routine: SysIdRoutineLog) -> None:
+        # Record a frame for each module.  Since these share an encoder, we consider
+        # the entire group to be one motor.
+        for module in self.modules:
+            with module.drive_motor as m:
+                sys_id_routine.motor(module.name).voltage(
+                    m.get_motor_voltage().value
+                ).position(m.get_position().value).velocity(m.get_velocity().value)
+
+    def sysid_log_steer(self, sys_id_routine: SysIdRoutineLog) -> None:
+        # Record a frame for each module.  Since these share an encoder, we consider
+        # the entire group to be one motor.
+        for module in self.modules:
+            with module.steer_motor as m:
+                sys_id_routine.motor(module.name).voltage(
+                    m.get_motor_voltage().value
+                ).angularPosition(m.get_position().value).angularVelocity(
+                    m.get_velocity().value
+                )
 
     def shouldFlipPath(self):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
-    # Tell SysId how to plumb the driving voltage to the motors.
-    # def sysid_drive(self, voltage: volts) -> None:
-    #     for module in self.modules:
-    #         module.steer_motor.set_control(
-    #             PositionVoltage(
-    #                 position=0,
-    #                 slot=0,  # Duty Cycle gains for steer
-    #             )
-    #         )
-    #         module.drive_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
+    def sysIdQuasistaticDrive(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine_drive.quasistatic(direction)
 
-    # def sysid_steer(self, voltage: volts) -> None:
-    #     for module in self.modules:
-    #         module.steer_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
-    #         module.drive_motor.stopMotor()
+    def sysIdDynamicDrive(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine_drive.dynamic(direction)
 
-    # def sysid_log_drive(self, sys_id_routine: SysIdRoutineLog) -> None:
-    #     # Record a frame for each module.  Since these share an encoder, we consider
-    #     # the entire group to be one motor.
-    #     for module in self.modules:
-    #         with module.drive_motor as m:
-    #             sys_id_routine.motor(module.name).voltage(
-    #                 m.get_motor_voltage().value
-    #             ).position(m.get_position().value).velocity(m.get_velocity().value)
+    def sysIdQuasistaticSteer(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine_steer.quasistatic(direction)
 
-    # def sysid_log_steer(self, sys_id_routine: SysIdRoutineLog) -> None:
-    #     # Record a frame for each module.  Since these share an encoder, we consider
-    #     # the entire group to be one motor.
-    #     for module in self.modules:
-    #         with module.steer_motor as m:
-    #             sys_id_routine.motor(module.name).voltage(
-    #                 m.get_motor_voltage().value
-    #             ).angularPosition(m.get_position().value).angularVelocity(
-    #                 m.get_velocity().value
-    #             )
-
-    # def sysIdQuasistaticDrive(self, direction: SysIdRoutine.Direction) -> Command:
-    #     return self.sys_id_routine_drive.quasistatic(direction)
-
-    # def sysIdDynamicDrive(self, direction: SysIdRoutine.Direction) -> Command:
-    #     return self.sys_id_routine_drive.dynamic(direction)
-
-    # def sysIdQuasistaticSteer(self, direction: SysIdRoutine.Direction) -> Command:
-    #     return self.sys_id_routine_steer.quasistatic(direction)
-
-    # def sysIdDynamicSteer(self, direction: SysIdRoutine.Direction) -> Command:
-    #     return self.sys_id_routine_steer.dynamic(direction)
-
-    # PathPlanner Auto Commands
-    # def _get_reef_scoring_pose(self) -> Pose2d:
-    #     reef_pose = self.positioning.get_closest_reef_pose(
-    #         self.estimator.getEstimatedPosition()
-    #     )
-
-    #     return reef_pose.transformBy(
-    #         self.positioning.TRANSFORMS[self.reef_scoring_position]
-    #     )
-
-    # def _get_reef_scoring_path(self) -> str:
-    #     path_suffixes = ["Left Stem", "Center", "Right Stem"]
-    #     closest_tag = self.positioning.get_closest_reef_tag_num(
-    #         self.estimator.getEstimatedPosition()
-    #     )
-    #     return f"Reef {str(self.positioning.get_reef_enum_name(closest_tag))} - {path_suffixes[self.reef_scoring_position]}"
-
-    # def drive_to_reef_scoring_pose(self) -> Command:
-    #     return AutoBuilder.pathfindToPose(
-    #         self._get_reef_scoring_pose(),
-    #         PathConstraints(
-    #             # constants.kMaxTrajectorySpeed,
-    #             # constants.kMaxTrajectoryAccel,
-    #             2,
-    #             2,
-    #             constants.kProfiledRotationMaxVelocity,
-    #             constants.kProfiledRotationMaxAccel,
-    #         ),
-    #     ).withName("PathFindToReefScoringPose")
-
-    # def drive_to_reef_scoring_path(self) -> Command:
-    #     return AutoBuilder.followPath(
-    #         PathPlannerPath.fromPathFile(self._get_reef_scoring_path())
-    #     )
+    def sysIdDynamicSteer(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine_steer.dynamic(direction)
 
     def driveAutoPath(self, pathname) -> Command:
         return AutoBuilder.followPath(PathPlannerPath.fromPathFile(pathname))

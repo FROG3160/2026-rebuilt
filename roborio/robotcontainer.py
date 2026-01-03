@@ -5,6 +5,7 @@ from commands.drive import ManualDrive
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
+from commands2.sysid import SysIdRoutine
 import constants
 
 
@@ -34,8 +35,8 @@ class RobotContainer:
         self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
 
         # Set up PathPlanner autos and publish to dashboard
-        self.autochooser = AutoBuilder.buildAutoChooser()
-        SmartDashboard.putData("PathPlanner Autos", self.autochooser)
+        # self.autochooser = AutoBuilder.buildAutoChooser()
+        # SmartDashboard.putData("PathPlanner Autos", self.autochooser)
 
     def configure_automation_bindings(self):
         # Configure automation bindings
@@ -58,3 +59,19 @@ class RobotContainer:
         # Register named commands
         # NamedCommands.registerCommand("shoot", ShootCommand(self.shooter))
         pass
+
+    def configureSysIDButtonBindings(self):
+        # Bind full set of SysId routine tests to buttons; a complete routine should run each of these
+        # once.
+        self.driver_xbox.a().whileTrue(
+            self.drive.sysIdQuasistaticDrive(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.b().whileTrue(
+            self.drive.sysIdQuasistaticDrive(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.x().whileTrue(
+            self.drive.sysIdDynamicDrive(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.y().whileTrue(
+            self.drive.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse)
+        )
