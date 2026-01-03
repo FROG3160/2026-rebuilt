@@ -1,6 +1,9 @@
 import math
 from wpilib import XboxController, Timer
-from wpilib import XboxController
+from wpilib.event import EventLoop
+from commands2.button import CommandXboxController, Trigger
+from commands2 import CommandScheduler
+from typing import Optional
 
 # from commands2.button import CommandXboxController
 from wpimath.filter import SlewRateLimiter
@@ -13,7 +16,7 @@ RIGHT_RUMBLE = GenericHID.RumbleType.kRightRumble
 LEFT_RUMBLE = GenericHID.RumbleType.kLeftRumble
 
 
-class FROGXboxDriver(XboxController):
+class FROGXboxDriver(CommandXboxController):
     """Custom Xbox Controller class for the driver controller specifically
     for field-oriented swerve drive control.
     """
@@ -81,7 +84,7 @@ class FROGXboxDriver(XboxController):
     def getPOVDebounced(self):
         val = -1
         now = self.timer.getFPGATimestamp()
-        pov = self.getPOV()
+        pov = self._hid.getPOV()
         if pov > -1:
             if (now - self.button_latest.get("POV", 0)) > self.debounce_period:
                 self.button_latest["POV"] = now
@@ -111,8 +114,48 @@ class FROGXboxDriver(XboxController):
         else:
             self.alliance = self.RED_ALLIANCE
 
+    def pov0(self, loop: Optional[EventLoop] = None) -> Trigger:
+        if loop is None:
+            loop = CommandScheduler.getInstance().getDefaultButtonLoop()
+        return Trigger(loop, lambda: self.getPOVDebounced() == 0)
 
-class FROGXboxTactical(XboxController):
+    def pov45(self, loop: Optional[EventLoop] = None) -> Trigger:
+        if loop is None:
+            loop = CommandScheduler.getInstance().getDefaultButtonLoop()
+        return Trigger(loop, lambda: self.getPOVDebounced() == 45)
+
+    def pov90(self, loop: Optional[EventLoop] = None) -> Trigger:
+        if loop is None:
+            loop = CommandScheduler.getInstance().getDefaultButtonLoop()
+        return Trigger(loop, lambda: self.getPOVDebounced() == 90)
+
+    def pov135(self, loop: Optional[EventLoop] = None) -> Trigger:
+        if loop is None:
+            loop = CommandScheduler.getInstance().getDefaultButtonLoop()
+        return Trigger(loop, lambda: self.getPOVDebounced() == 135)
+
+    def pov180(self, loop: Optional[EventLoop] = None) -> Trigger:
+        if loop is None:
+            loop = CommandScheduler.getInstance().getDefaultButtonLoop()
+        return Trigger(loop, lambda: self.getPOVDebounced() == 180)
+
+    def pov225(self, loop: Optional[EventLoop] = None) -> Trigger:
+        if loop is None:
+            loop = CommandScheduler.getInstance().getDefaultButtonLoop()
+        return Trigger(loop, lambda: self.getPOVDebounced() == 225)
+
+    def pov270(self, loop: Optional[EventLoop] = None) -> Trigger:
+        if loop is None:
+            loop = CommandScheduler.getInstance().getDefaultButtonLoop()
+        return Trigger(loop, lambda: self.getPOVDebounced() == 270)
+
+    def pov315(self, loop: Optional[EventLoop] = None) -> Trigger:
+        if loop is None:
+            loop = CommandScheduler.getInstance().getDefaultButtonLoop()
+        return Trigger(loop, lambda: self.getPOVDebounced() == 315)
+
+
+class FROGXboxTactical(CommandXboxController):
     """Custom Xbox Controller class for the operator controller"""
 
     def __init__(self, port, deadband):
