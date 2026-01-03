@@ -54,7 +54,7 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def testInit(self) -> None:
         self.container.configureSysIDButtonBindings()
-        self.container.drive.removeDefaultCommand()
+        # self.container.drive.removeDefaultCommand()
         self.container.drive.enable()
 
     def testPeriodic(self) -> None:
