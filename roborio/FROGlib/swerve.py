@@ -339,7 +339,7 @@ class SwerveChassis:
         # initialize timer for loop time calculations
         self.timer = Timer()
         self.timer.start()
-        self.lastTime = 0
+        self.lastTime = self.timer.get()
         self.loopTime = 0
 
         # Network Tables publishers
@@ -474,9 +474,7 @@ class SwerveChassis:
         self._estimatorPosePub.set(self.estimator.getEstimatedPosition())
 
     def periodic(self):
-        self.newTime = self.timer.get()
-        self.loopTime = self.newTime - self.lastTime
-        self.lastTime = self.newTime
+        self.update_loop_time()
 
         if self.enabled:
             self._setStatesFromSpeeds()  # apply chassis Speeds
@@ -484,6 +482,14 @@ class SwerveChassis:
                 module.apply_state(state)
 
         self.logTelemetry()
+
+    def update_loop_time(self):
+        self.newTime = self.timer.get()
+        self.loopTime = self.newTime - self.lastTime
+        self.lastTime = self.newTime
+
+    def get_loop_time(self):
+        return self.loopTime
 
     # Resets the pose by running the resetPosition method of the estimator.
     def resetPose(self, pose: Pose2d):
