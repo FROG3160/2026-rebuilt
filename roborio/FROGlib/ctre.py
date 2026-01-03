@@ -250,6 +250,7 @@ class FROGTalonFX(TalonFX):
         self._motorVelocityPub.set(self.get_velocity().value)
 
 
+# TODO: #7 Refactor gyro class as a subclass of Pigeon2
 class FROGPigeonGyro:
     "Gyro class that creates an instance of the Pigeon 2.0 Gyro"
 
