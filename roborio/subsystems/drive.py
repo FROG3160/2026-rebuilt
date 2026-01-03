@@ -194,7 +194,7 @@ class Drive(SwerveChassis, Subsystem):
             self.getPose,  # Robot pose supplier
             self.resetPose,  # Method to reset odometry (will be called if your auto has a starting pose)
             self.getRobotRelativeSpeeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            lambda speeds, feedforwards: self.setChassisSpeeds(
+            lambda speeds, feedforwards: self.apply_chassis_speeds(
                 speeds
             ),  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
             PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
