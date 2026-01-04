@@ -293,7 +293,7 @@ class SwerveChassis:
         )
         self.gyro = gyro
 
-        self.kinematics = SwerveDrive4Kinematics(
+        self.swerve_kinematics = SwerveDrive4Kinematics(
             # the splat operator (asterisk) below expands
             # the list into positional arguments for the
             # kinematics object.  We are taking the location
@@ -304,8 +304,8 @@ class SwerveChassis:
             # each SwerveModule in the same order we use here.
             *[m.location for m in self.modules]
         )
-        self.estimator = SwerveDrive4PoseEstimator(
-            self.kinematics,
+        self.swerve_estimator = SwerveDrive4PoseEstimator(
+            self.swerve_kinematics,
             self.gyro.getRotation2d(),
             tuple(
                 [
@@ -426,7 +426,7 @@ class SwerveChassis:
         )
 
     def getActualChassisSpeeds(self):
-        return self.kinematics.toChassisSpeeds(self.getModuleStates())
+        return self.swerve_kinematics.toChassisSpeeds(self.getModuleStates())
 
     def getChassisVelocityFPS(self):
         return math.sqrt(self.chassisSpeeds.vx_fps**2 + self.chassisSpeeds.vy_fps**2)
@@ -445,7 +445,7 @@ class SwerveChassis:
         # translation = self.estimator.getEstimatedPosition().translation()
         # rotation = self.gyro.getRotation2d()
         # return Pose2d(translation, rotation)
-        return self.estimator.getEstimatedPosition()
+        return self.swerve_estimator.getEstimatedPosition()
 
     # Returns a ChassisSpeeds object representing the speeds in the robot's frame
     # of reference.
@@ -471,7 +471,7 @@ class SwerveChassis:
         self._chassisSpeedsActualPub.set(self._actualChassisSpeeds)
         self._chassisSpeedsPub.set(self.chassisSpeeds)
         self._chassisSpeedsErrorPub.set(self.chassisSpeeds - self._actualChassisSpeeds)
-        self._estimatorPosePub.set(self.estimator.getEstimatedPosition())
+        self._estimatorPosePub.set(self.swerve_estimator.getEstimatedPosition())
 
     def periodic(self):
         self.update_loop_time()
@@ -493,7 +493,7 @@ class SwerveChassis:
 
     # Resets the pose by running the resetPosition method of the estimator.
     def resetPose(self, pose: Pose2d):
-        self.estimator.resetPosition(
+        self.swerve_estimator.resetPosition(
             self.gyro.getRotation2d(),
             tuple(self.getModulePositions()),
             pose,
@@ -530,7 +530,9 @@ class SwerveChassis:
             speeds (ChassisSpeeds): The chassis speeds to apply.
         """
         self.chassisSpeeds = ChassisSpeeds.discretize(speeds, self.get_loop_time())
-        states = self.kinematics.toSwerveModuleStates(self.chassisSpeeds, self.center)
+        states = self.swerve_kinematics.toSwerveModuleStates(
+            self.chassisSpeeds, self.center
+        )
 
         if self.enabled:
             # apply module states
