@@ -44,6 +44,15 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig, DCMotor
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 
+from photonlibpy import (
+    PhotonPoseEstimator,
+    PhotonCamera,
+    PoseStrategy,
+    EstimatedRobotPose,
+)
+from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
+from wpimath.geometry import Pose2d, Rotation2d
+
 from FROGlib.swerve import SwerveModuleConfig
 from FROGlib.ctre import (
     FROGTalonFXConfig,
@@ -166,7 +175,16 @@ class Drive(SwerveChassis, Subsystem):
         )
         self.resetController = True
 
-        # self.positioningCameras = positioningCameras
+        self.photon_estimators: list[PhotonPoseEstimator] = []
+        for config in constants.kCameraConfigs:
+            self.photon_estimators.append(
+                PhotonPoseEstimator(
+                    AprilTagFieldLayout().loadField(AprilTagField.kDefaultField),
+                    PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,  # field layout
+                    PhotonCamera(config.name),
+                    config.robotToCamera,
+                )
+            )
 
         # initializing the estimator to 0, 0, 0
         self.estimatorPose = Pose2d(0, 0, Rotation2d(0))
@@ -185,8 +203,10 @@ class Drive(SwerveChassis, Subsystem):
         )
         self.profiledRotationController.enableContinuousInput(-math.pi, math.pi)
 
-        self.field = Field2d()
-        SmartDashboard.putData("DrivePose", self.field)
+        # create Field2d to display estimated swerve and camera poses
+        self.estimator_field = Field2d()
+        # put Field2d on SmartDashboard/NetworkTables
+        SmartDashboard.putData("Estimator Poses", self.estimator_field)
 
         autobuilder_config = RobotConfig.fromGUISettings()
 
@@ -284,40 +304,38 @@ class Drive(SwerveChassis, Subsystem):
 
     def periodic(self):
         # update estimator with chassis data
-        self.estimatorPose = self.estimator.update(
+        self.estimatorPose = self.swerve_estimator.update(
             self.gyro.getRotation2d(), tuple(self.getModulePositions())
         )
+        # updates field2d object with the latest estimated pose
+        self.estimator_field.setRobotPose(self.estimatorPose)
 
-        # Updates pose estimator with target data from positioning cameras.
-        # for camera in self.positioningCameras:
-        #     camera_pose = camera.periodic()
-        #     if camera_pose is not None:
-        #         estimated_pose2d = camera_pose.estimatedPose.toPose2d()
+        # update estimator with photonvision estimates
+        for estimator in self.photon_estimators:
+            estimated_pose = estimator.update()
+            if type(estimated_pose) is EstimatedRobotPose:
+                # use distance to the target tags to calculate standard deviations
+                distance = (
+                    estimated_pose.targetsUsed[0]
+                    .bestCameraToTarget.translation()
+                    .toTranslation2d()
+                    .norm()
+                )
+                translation_stddev = remap(distance, 0, 6, 0.2, 0.8)
+                rotational_stddev = math.pi  # Rely on gyro for rotation
 
-        #         for target in camera_pose.targetsUsed:
-        #             translation = (
-        #                 target.bestCameraToTarget.translation().toTranslation2d()
-        #             )
-        #             distance = math.sqrt(translation.x**2 + translation.y**2)
-        #             target.getFiducialId()
-        #             target.getPoseAmbiguity()
+                self.swerve_estimator.addVisionMeasurement(
+                    estimated_pose.estimatedPose.toPose2d(),
+                    estimated_pose.timestampSeconds,
+                    (translation_stddev, translation_stddev, rotational_stddev),
+                )
 
-        #         translationStdDev = remap(distance, 0, 6, 0.2, 0.8)
-        #         # rotation stdev is high because we are relying on the gyro as more accurate
-        #         rotationStdDev = math.pi
+                # put camera pose on the estimator field2d
+                cameraPoseObject = self.estimator_field.getObject(
+                    estimator._camera.getName()
+                )
+                cameraPoseObject.setPose(estimated_pose.estimatedPose.toPose2d())
 
-        #         self.estimator.addVisionMeasurement(
-        #             camera_pose.estimatedPose.toPose2d(),
-        #             camera_pose.timestampSeconds,
-        #             (translationStdDev, translationStdDev, rotationStdDev),
-        #         )
-        #         # put camera pose on the field
-        #         cameraPoseObject = self.field.getObject(
-        #             camera.estimator._camera.getName()
-        #         )
-        #         cameraPoseObject.setPose(camera_pose.estimatedPose.toPose2d())
-
-        # self.field.setRobotPose(self.estimatorPose)
         SmartDashboard.putNumberArray(
             "Drive Pose",
             [

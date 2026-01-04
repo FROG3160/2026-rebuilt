@@ -1,5 +1,33 @@
 import math
 from wpimath.units import feetToMeters, inchesToMeters
+from FROGlib.vision import FROGCameraConfig
+from wpimath.geometry import Transform3d, Translation3d, Rotation3d
+
+# Camera Configs
+kCameraConfigs = (
+    FROGCameraConfig(
+        "Arducam_OV9281_Apriltag_1",
+        Transform3d(
+            Translation3d(
+                inchesToMeters(7.45),  # 7.1998),  # Forward from center
+                inchesToMeters(-9.9),  # -8.125),  # Left from center
+                0.29,  # inchesToMeters(11.51),  # 11.375),  # Up from the floor
+            ),
+            Rotation3d(0, 0, -math.pi / 2),
+        ),
+    ),
+    FROGCameraConfig(
+        "Arducam_OV9281_Apriltag_2",
+        Transform3d(
+            Translation3d(
+                inchesToMeters(7.0),  # 7.0625),  # Forward from center
+                inchesToMeters(9.9),  # 8.125),  # Left from center
+                0.69,  # inchesToMeters(27.32),  # 27.25),  # Up from the floor
+            ),
+            Rotation3d(0, 0, math.pi / 2),
+        ),
+    ),
+)
 
 
 ## CANCoder offsets
