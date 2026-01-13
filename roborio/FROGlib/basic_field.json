@@ -8,9 +8,9 @@
       "ID": 101,
       "pose": {
         "translation": {
-          "x": 1.0,
-          "y": 0.5,
-          "z": 1.2
+          "x": 1.247,
+          "y": -0.375,
+          "z": 5.213
         },
         "rotation": {
           "quaternion": {
@@ -26,9 +26,9 @@
       "ID": 102,
       "pose": {
         "translation": {
-          "x": 2.0,
-          "y": 0.5,
-          "z": 1.2
+          "x": 3.76,
+          "y": -0.377,
+          "z": 5.213
         },
         "rotation": {
           "quaternion": {
@@ -44,9 +44,9 @@
       "ID": 103,
       "pose": {
         "translation": {
-          "x": 3.0,
-          "y": 0.5,
-          "z": 1.2
+          "x": 5.361,
+          "y": -0.374,
+          "z": 5.213
         },
         "rotation": {
           "quaternion": {
@@ -62,9 +62,9 @@
       "ID": 104,
       "pose": {
         "translation": {
-          "x": 5.0,
-          "y": 3.5,
-          "z": 1.2
+          "x": 11.925,
+          "y": 5.631,
+          "z": 5.213
         },
         "rotation": {
           "quaternion": {
@@ -80,9 +80,9 @@
       "ID": 105,
       "pose": {
         "translation": {
-          "x": 6.0,
-          "y": 3.5,
-          "z": 1.2
+          "x": 11.913,
+          "y": 7.222,
+          "z": 5.213
         },
         "rotation": {
           "quaternion": {
@@ -98,9 +98,9 @@
       "ID": 106,
       "pose": {
         "translation": {
-          "x": 7.0,
-          "y": 3.5,
-          "z": 1.2
+          "x": 1.99,
+          "y": 9.36,
+          "z": 5.213
         },
         "rotation": {
           "quaternion": {
