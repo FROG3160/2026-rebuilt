@@ -176,10 +176,12 @@ class Drive(SwerveChassis, Subsystem):
         self.resetController = True
 
         self.photon_estimators: list[PhotonPoseEstimator] = []
+        field_layout = AprilTagFieldLayout("FROGLib\\basic_field.json")
+        # field_layout = AprilTagFieldLayout().loadField(AprilTagField.kDefaultField)
         for config in constants.kCameraConfigs:
             self.photon_estimators.append(
                 PhotonPoseEstimator(
-                    AprilTagFieldLayout().loadField(AprilTagField.kDefaultField),
+                    field_layout,
                     PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,  # field layout
                     PhotonCamera(config.name),
                     config.robotToCamera,
