@@ -36,7 +36,8 @@
                 "-m",
                 "pip",
                 "install",
-                "robotpy"
+                "robotpy",
+                "--upgrade"
             ],
             "options": {
                 "cwd": "${workspaceFolder}",
