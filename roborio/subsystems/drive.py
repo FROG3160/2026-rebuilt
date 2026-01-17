@@ -182,7 +182,7 @@ class Drive(SwerveChassis, Subsystem):
             self.photon_estimators.append(
                 FROGPoseEstimator(
                     field_layout,  # field layout
-                    PhotonCamera(config.name),
+                    config.name,
                     config.robotToCamera,
                 )
             )

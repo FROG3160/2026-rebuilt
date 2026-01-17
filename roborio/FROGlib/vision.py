@@ -67,6 +67,7 @@ class FROGPoseEstimator:
         )
 
     def get_estimate(self) -> EstimatedRobotPose | None:
+        estPose = None
         for result in self.camera.getAllUnreadResults():
             estPose = self.estimator.estimateCoprocMultiTagPose(result)
             if estPose is None:
