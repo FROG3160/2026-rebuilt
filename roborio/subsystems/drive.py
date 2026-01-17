@@ -47,7 +47,6 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from photonlibpy import (
     PhotonPoseEstimator,
     PhotonCamera,
-    PoseStrategy,
     EstimatedRobotPose,
 )
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
@@ -61,6 +60,7 @@ from FROGlib.ctre import (
     MOTOR_OUTPUT_CWP_BRAKE,
 )
 from FROGlib.sds import MK4C_L3_GEARING, MK5I_R3_GEARING, WHEEL_DIAMETER
+from FROGlib.vision import FROGCameraConfig, FROGPoseEstimator
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from copy import deepcopy
 
@@ -175,14 +175,13 @@ class Drive(SwerveChassis, Subsystem):
         )
         self.resetController = True
 
-        self.photon_estimators: list[PhotonPoseEstimator] = []
-        field_layout = AprilTagFieldLayout("FROGLib\\basic_field.json")
+        self.photon_estimators: list[FROGPoseEstimator] = []
+        field_layout = AprilTagFieldLayout("2026_combined_field.json")
         # field_layout = AprilTagFieldLayout().loadField(AprilTagField.kDefaultField)
         for config in constants.kCameraConfigs:
             self.photon_estimators.append(
-                PhotonPoseEstimator(
-                    field_layout,
-                    PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,  # field layout
+                FROGPoseEstimator(
+                    field_layout,  # field layout
                     PhotonCamera(config.name),
                     config.robotToCamera,
                 )
@@ -314,7 +313,7 @@ class Drive(SwerveChassis, Subsystem):
 
         # update estimator with photonvision estimates
         for estimator in self.photon_estimators:
-            estimated_pose = estimator.update()
+            estimated_pose = estimator.get_estimate()
             if type(estimated_pose) is EstimatedRobotPose:
                 # use distance to the target tags to calculate standard deviations
                 distance = (
@@ -334,7 +333,7 @@ class Drive(SwerveChassis, Subsystem):
 
                 # put camera pose on the estimator field2d
                 cameraPoseObject = self.estimator_field.getObject(
-                    estimator._camera.getName()
+                    estimator.camera.getName()
                 )
                 cameraPoseObject.setPose(estimated_pose.estimatedPose.toPose2d())
 
