@@ -314,6 +314,7 @@ class Drive(SwerveChassis, Subsystem):
 
         # update estimator with photonvision estimates
         for estimator in self.photon_estimators:
+            # TODO: #20 pass in swerve estimator pose and move the distance check into FROGPoseEstimator
             estimated_pose = estimator.get_estimate()
             if type(estimated_pose) is EstimatedRobotPose:
                 # use distance to the target tags to calculate standard deviations
@@ -325,18 +326,33 @@ class Drive(SwerveChassis, Subsystem):
                 )
                 translation_stddev = remap(distance, 0, 6, 0.2, 0.8)
                 rotational_stddev = math.pi  # Rely on gyro for rotation
-
-                self.swerve_estimator.addVisionMeasurement(
-                    estimated_pose.estimatedPose.toPose2d(),
-                    estimated_pose.timestampSeconds,
-                    (translation_stddev, translation_stddev, rotational_stddev),
+                # documentation for the swerve estimator recommends rejecting vision
+                # measurements that are too far from the current estimate
+                # calculate distance between vision pose and current estimator pose
+                delta = (
+                    estimated_pose.estimatedPose.toPose2d()
+                    .translation()
+                    .distance(self.estimatorPose.translation())
                 )
 
-                # put camera pose on the estimator field2d
-                cameraPoseObject = self.estimator_field.getObject(
-                    estimator.camera.getName()
-                )
-                cameraPoseObject.setPose(estimated_pose.estimatedPose.toPose2d())
+                # only add vision measurement if within 1 meter of current estimate
+                if delta < 1.0:
+
+                    self.swerve_estimator.addVisionMeasurement(
+                        estimated_pose.estimatedPose.toPose2d(),
+                        estimated_pose.timestampSeconds,
+                        (translation_stddev, translation_stddev, rotational_stddev),
+                    )
+
+                    # put camera pose on the estimator field2d
+                    cameraPoseObject = self.estimator_field.getObject(
+                        estimator.camera.getName()
+                    )
+                    cameraPoseObject.setPose(estimated_pose.estimatedPose.toPose2d())
+                else:
+                    self.estimator_field.getObject(estimator.camera.getName()).setPose(
+                        Pose2d()
+                    )  # reset camera pose if not used
 
         SmartDashboard.putNumberArray(
             "Drive Pose",
