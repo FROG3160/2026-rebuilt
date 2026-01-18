@@ -176,7 +176,8 @@ class Drive(SwerveChassis, Subsystem):
         self.resetController = True
 
         self.photon_estimators: list[FROGPoseEstimator] = []
-        field_layout = AprilTagFieldLayout("2026_combined_field.json")
+        # TODO: #19 Fix this to work in sim and on the roborio
+        field_layout = AprilTagFieldLayout(r"/home/lvuser/py/2026_combined_field.json")
         # field_layout = AprilTagFieldLayout().loadField(AprilTagField.kDefaultField)
         for config in constants.kCameraConfigs:
             self.photon_estimators.append(
