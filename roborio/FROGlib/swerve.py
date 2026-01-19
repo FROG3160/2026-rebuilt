@@ -459,6 +459,40 @@ class SwerveChassis:
             )
         )
 
+    def fieldOrientedDriveWithHeading(
+        self, vX: float, vY: float, target_heading: float, throttle: float = 1.0
+    ) -> None:
+        """
+        Calculates the necessary chassis speeds for field-oriented driving with a target heading (rotation).
+        Uses the profiled rotation controller to generate rotational velocity to reach the target angle.
+        Throttle applies only to translational speeds (vX, vY); rotation is profiled independently.
+
+        Args:
+            vX (float): Velocity requested in the X direction (downfield), proportion of max speed (-1 to 1).
+            vY (float): Velocity requested in the Y direction (left), proportion of max speed (-1 to 1).
+            target_angle (float): Desired robot heading in radians (field-relative, continuous -π to π).
+            throttle (float, optional): Proportion applied to vX and Vy (translational). Defaults to 1.0.
+        """
+        # Compute translational speeds (throttled)
+        x_speed = vX * self.max_speed * throttle
+        y_speed = vY * self.max_speed * throttle
+
+        # Get current heading in radians
+        current_heading = self.getRotation2d().radians()
+
+        # Use profiled controller to compute rotational velocity towards target
+        rot_speed = self.profiledRotationController.calculate(
+            current_heading, target_heading
+        )
+
+        # Create field-relative chassis speeds
+        robot_speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            x_speed, y_speed, rot_speed, self.getRotation2d()
+        )
+
+        # Apply the speeds
+        self.apply_chassis_speeds(robot_speeds)
+
     def getActualChassisSpeeds(self):
         return self.swerve_kinematics.toChassisSpeeds(self.getModuleStates())
 
