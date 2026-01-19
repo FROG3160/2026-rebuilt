@@ -493,6 +493,20 @@ class SwerveChassis:
         # Apply the speeds
         self.apply_chassis_speeds(robot_speeds)
 
+    def calculateHeadingToTarget(self, target_position: Pose2d) -> float:
+        """
+        Calculates the heading angle (in radians) from the robot's current position to a target position.
+        Args:
+            target_position (Pose2d): The target position on the field.
+        Returns:
+            float: The angle in radians from the robot's current position to the target position.
+        """
+        current_pose = self.getPose()
+        calculated_heading = (
+            target_position.translation() - current_pose.translation()
+        ).angle()
+        return calculated_heading.radians()
+
     def getActualChassisSpeeds(self):
         return self.swerve_kinematics.toChassisSpeeds(self.getModuleStates())
 
