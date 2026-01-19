@@ -8,7 +8,7 @@ from FROGlib.ctre import (
 )
 
 # from configs import ctre
-from wpilib import DriverStation, Field2d
+from wpilib import DriverStation, Field2d, RobotBase
 from wpimath.geometry import (
     Pose2d,
     Rotation2d,
@@ -23,6 +23,8 @@ from wpilib.sysid import SysIdRoutineLog
 # from subsystems.vision import PositioningSubsystem
 # from subsystems.elevation import ElevationSubsystem
 from wpilib import SmartDashboard
+from wpiutil import Sendable, SendableBuilder
+
 from commands2 import Subsystem, Command
 from commands2.sysid import SysIdRoutine
 from FROGlib.utils import DriveTrain, RobotRelativeTarget, remap
@@ -150,6 +152,38 @@ back_right_module_config = {
 }
 
 
+class VisionTunables(Sendable):
+    def __init__(self):
+        super().__init__()
+        self.max_translationDistance = 6.0  # meters
+        self.min_translationStdDev = 0.2  # meters
+        self.max_translationStdDev = 0.8  # meters
+        self.max_delta = 1.0  # meters
+
+    def initSendable(self, builder: SendableBuilder) -> None:
+        builder.setSmartDashboardType("Vision Tunables")
+        builder.addDoubleProperty(
+            "Minimum Translation Std Dev",
+            lambda: self.min_translationStdDev,
+            lambda value: setattr(self, "min_translationStdDev", value),
+        )
+        builder.addDoubleProperty(
+            "Maximum Translation Std Dev",
+            lambda: self.max_translationStdDev,
+            lambda value: setattr(self, "max_translationStdDev", value),
+        )
+        builder.addDoubleProperty(
+            "Rotation Std Dev",
+            lambda: self.max_translationDistance,
+            lambda value: setattr(self, "max_translationDistance", value),
+        )
+        builder.addDoubleProperty(
+            "Max Delta",
+            lambda: self.max_delta,
+            lambda value: setattr(self, "max_delta", value),
+        )
+
+
 class Drive(SwerveChassis, Subsystem):
     """The drive subsystem that subclasses FROGlib.SwerveChassis and adds
     additional components, attributes and methods for autonomous driving, etc.
@@ -176,8 +210,13 @@ class Drive(SwerveChassis, Subsystem):
         self.resetController = True
 
         self.photon_estimators: list[FROGPoseEstimator] = []
-        # TODO: #19 Fix this to work in sim and on the roborio
-        field_layout = AprilTagFieldLayout(r"/home/lvuser/py/2026_combined_field.json")
+
+        if RobotBase.isSimulation():
+            field_layout = AprilTagFieldLayout().loadField(AprilTagField.kDefaultField)
+        else:
+            field_layout = AprilTagFieldLayout(
+                r"/home/lvuser/py/2026_combined_field.json"
+            )
         # field_layout = AprilTagFieldLayout().loadField(AprilTagField.kDefaultField)
         for config in constants.kCameraConfigs:
             self.photon_estimators.append(
@@ -239,6 +278,8 @@ class Drive(SwerveChassis, Subsystem):
             SysIdRoutine.Config(),
             SysIdRoutine.Mechanism(self.sysid_steer, self.sysid_log_steer, self),
         )
+        self.vision_tunables = VisionTunables()
+        SmartDashboard.putData("Vision Tunables", self.vision_tunables)
 
     # Tell SysId how to plumb the driving voltage to the motors.
     def sysid_drive(self, voltage: volts) -> None:
@@ -324,7 +365,13 @@ class Drive(SwerveChassis, Subsystem):
                     .toTranslation2d()
                     .norm()
                 )
-                translation_stddev = remap(distance, 0, 6, 0.2, 0.8)
+                translation_stddev = remap(
+                    distance,
+                    0,
+                    self.vision_tunables.max_translationDistance,
+                    self.vision_tunables.min_translationStdDev,
+                    self.vision_tunables.max_translationStdDev,
+                )
                 rotational_stddev = math.pi  # Rely on gyro for rotation
                 # documentation for the swerve estimator recommends rejecting vision
                 # measurements that are too far from the current estimate
@@ -336,7 +383,7 @@ class Drive(SwerveChassis, Subsystem):
                 )
 
                 # only add vision measurement if within 1 meter of current estimate
-                if delta < 1.0:
+                if delta < self.vision_tunables.max_delta:
 
                     self.swerve_estimator.addVisionMeasurement(
                         estimated_pose.estimatedPose.toPose2d(),
