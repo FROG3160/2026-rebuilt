@@ -48,6 +48,9 @@ from wpilib import Timer
 from dataclasses import dataclass, field
 from phoenix6.signals.spn_enums import FeedbackSensorSourceValue
 
+from wpimath.controller import ProfiledPIDControllerRadians
+from wpimath.trajectory import TrapezoidProfileRadians
+
 
 @dataclass
 class SwerveModuleConfig:
@@ -77,6 +80,22 @@ class SwerveModuleConfig:
         self.steer_motor_config = steer_motor_config
         self.cancoder_config = cancoder_config
         self.wheel_diameter = wheel_diameter
+
+
+class RotationControllerConfig:
+    def __init__(
+        self,
+        kProfiledRotationP: float = 0.0,
+        kProfiledRotationI: float = 0.0,
+        kProfiledRotationD: float = 0.0,
+        kProfiledRotationMaxVelocity: float = 0.0,
+        kProfiledRotationMaxAccel: float = 0.0,
+    ):
+        self.kProfiledRotationP = kProfiledRotationP
+        self.kProfiledRotationI = kProfiledRotationI
+        self.kProfiledRotationD = kProfiledRotationD
+        self.kProfiledRotationMaxVelocity = kProfiledRotationMaxVelocity
+        self.kProfiledRotationMaxAccel = kProfiledRotationMaxAccel
 
 
 class SwerveModule:
@@ -273,6 +292,7 @@ class SwerveChassis:
         self,
         swerve_module_configs: tuple[SwerveModuleConfig],
         gyro: FROGPigeonGyro,
+        rotation_contoller_config: RotationControllerConfig,
         max_speed: float,
         max_rotation_speed: float,
         parent_nt: str = "Undefined",
@@ -336,11 +356,25 @@ class SwerveChassis:
         self.chassisSpeeds = ChassisSpeeds(0, 0, 0)
         # start with the chassis disabled
         self.enabled = False
+
         # initialize timer for loop time calculations
         self.timer = Timer()
         self.timer.start()
         self.lastTime = self.timer.get()
         self.loopTime = 0
+
+        # create rotation controller for auto-rotation
+        self.profiledRotationConstraints = TrapezoidProfileRadians.Constraints(
+            rotation_contoller_config.kProfiledRotationMaxVelocity,
+            rotation_contoller_config.kProfiledRotationMaxAccel,
+        )
+        self.profiledRotationController = ProfiledPIDControllerRadians(
+            rotation_contoller_config.kProfiledRotationP,
+            rotation_contoller_config.kProfiledRotationI,
+            rotation_contoller_config.kProfiledRotationD,
+            self.profiledRotationConstraints,
+        )
+        self.profiledRotationController.enableContinuousInput(-math.pi, math.pi)
 
         # Network Tables publishers
         #####################################

@@ -1,5 +1,5 @@
 import math
-from FROGlib.swerve import SwerveChassis
+from FROGlib.swerve import SwerveChassis, RotationControllerConfig
 from FROGlib.ctre import (
     FROGCANCoderConfig,
     FROGFeedbackConfig,
@@ -32,8 +32,7 @@ import constants
 
 # from subsystems.positioning import Position
 from wpimath.units import degreesToRadians, lbsToKilograms, inchesToMeters
-from wpimath.controller import ProfiledPIDControllerRadians
-from wpimath.trajectory import TrapezoidProfileRadians
+
 
 from phoenix6.controls import (
     PositionDutyCycle,
@@ -203,6 +202,13 @@ class Drive(SwerveChassis, Subsystem):
                 SwerveModuleConfig(**back_right_module_config),
             ),
             gyro=FROGPigeonGyro(constants.kGyroID),
+            rotation_contoller_config=RotationControllerConfig(
+                constants.kProfiledRotationP,
+                constants.kProfiledRotationI,
+                constants.kProfiledRotationD,
+                constants.kProfiledRotationMaxVelocity,
+                constants.kProfiledRotationMaxAccel,
+            ),
             max_speed=constants.kMaxMetersPerSecond,
             max_rotation_speed=constants.kMaxChassisRadiansPerSec,
             parent_nt=constants.kComponentSubtableName,
@@ -232,17 +238,6 @@ class Drive(SwerveChassis, Subsystem):
         self.pose_set = False
 
         # self.positioning = positioning
-
-        self.profiledRotationConstraints = TrapezoidProfileRadians.Constraints(
-            constants.kProfiledRotationMaxVelocity, constants.kProfiledRotationMaxAccel
-        )
-        self.profiledRotationController = ProfiledPIDControllerRadians(
-            constants.kProfiledRotationP,
-            constants.kProfiledRotationI,
-            constants.kProfiledRotationD,
-            self.profiledRotationConstraints,
-        )
-        self.profiledRotationController.enableContinuousInput(-math.pi, math.pi)
 
         # create Field2d to display estimated swerve and camera poses
         self.estimator_field = Field2d()
