@@ -246,6 +246,11 @@ class Drive(SwerveChassis, Subsystem):
 
         autobuilder_config = RobotConfig.fromGUISettings()
 
+        self.holonomic_drive_ctrl = PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
+            PIDConstants(1.0, 0.0, 0.0),  # Translation PID constants
+            PIDConstants(1.0, 0.0, 0.0),  # Rotation PID constants
+        )
+
         AutoBuilder.configure(
             self.getPose,  # Robot pose supplier
             self.resetPose,  # Method to reset odometry (will be called if your auto has a starting pose)
@@ -253,10 +258,7 @@ class Drive(SwerveChassis, Subsystem):
             lambda speeds, feedforwards: self.apply_chassis_speeds(
                 speeds
             ),  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
-            PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
-                PIDConstants(1.0, 0.0, 0.0),  # Translation PID constants
-                PIDConstants(1.0, 0.0, 0.0),  # Rotation PID constants
-            ),
+            self.holonomic_drive_ctrl,
             autobuilder_config,  # The robot configuration
             self.shouldFlipPath,  # Supplier to control path flipping based on alliance color
             self,  # Reference to this subsystem to set requirements
