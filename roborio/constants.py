@@ -1,7 +1,7 @@
 import math
 from wpimath.units import feetToMeters, inchesToMeters
 from FROGlib.vision import FROGCameraConfig
-from wpimath.geometry import Transform3d, Translation3d, Rotation3d
+from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d, Pose2d
 
 # Camera Configs
 kCameraConfigs = (
@@ -114,3 +114,7 @@ kDeadband = 0.15
 kDebouncePeriod = 0.5
 kTranslationSlew = 2
 kRotSlew = 2
+
+# Field Positions
+kBlueHub = Pose2d(4.626, 4.035, Rotation2d(0))  # Facing away from blue hub
+kRedHub = Pose2d(11.915, 4.035, Rotation2d(0))
