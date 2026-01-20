@@ -1,7 +1,8 @@
 from pathplannerlib.auto import NamedCommands, AutoBuilder
 from wpilib import SmartDashboard
+from wpimath.geometry import Pose2d
 
-from commands.drive import ManualDrive
+from commands.drive import ManualDrive, ManualDriveAndAim
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
@@ -49,7 +50,11 @@ class RobotContainer:
 
     def configure_driver_controls(self):
         # Configure driver controls
-        pass
+        self.driver_xbox.a().whileTrue(
+            ManualDriveAndAim(
+                constants.kBlueHub, self.driver_xbox, self.drive, "DriveAndAim"
+            )
+        )
 
     def configure_tactical_controls(self):
         # Configure operator controls
