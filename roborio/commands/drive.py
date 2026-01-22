@@ -2,7 +2,7 @@ from commands2 import Command
 from ntcore import NetworkTableInstance
 from FROGlib.xbox import FROGXboxDriver
 from subsystems.drive import Drive
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Translation2d
 
 
 class ManualDrive(Command):
@@ -107,13 +107,24 @@ class ManualDriveAndAim(Command):
 
         vX = self.controller.getSlewLimitedFieldForward()
         vY = self.controller.getSlewLimitedFieldLeft()
+
+        # get the robot's current chassis speeds
+        chassis_speeds = self.drive.getActualChassisSpeeds()
+        robot_vector = Translation2d(chassis_speeds.vx, chassis_speeds.vy)
+        # use the robot's rotation to convert robot-relative vector to field-relative
+        field_vector = robot_vector.rotateBy(self.drive.getRotation2d())
+        # move the translation of the target by the field-relative vector
+        adjusted_translation = self.target.translation() - field_vector
+        # compose a new pose with the adjusted translation and original rotation
+        new_target = Pose2d(adjusted_translation, self.target.rotation())
+        # calculate the required rotational velocity to face the new target
         vT = self.drive.profiledRotationController.calculate(
             self.drive.getRotation2d().radians(),
-            self.drive.calculateHeadingToTarget(self.target),
+            self.drive.calculateHeadingToTarget(new_target),
         )
         self._calculated_vTPub.set(vT)
 
-        self.drive.fieldOrientedDrive(
+        self.drive.fieldOrientedAutoRotateDrive(
             vX,
             vY,
             vT,
