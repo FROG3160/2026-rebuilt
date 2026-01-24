@@ -109,7 +109,7 @@ class ManualDriveAndAim(Command):
         vY = self.controller.getSlewLimitedFieldLeft()
 
         # get the robot's current chassis speeds
-        chassis_speeds = self.drive.getActualChassisSpeeds()
+        chassis_speeds = self.drive.chassisSpeeds
         robot_vector = Translation2d(chassis_speeds.vx, chassis_speeds.vy)
         # use the robot's rotation to convert robot-relative vector to field-relative
         field_vector = robot_vector.rotateBy(self.drive.getRotation2d())
