@@ -398,6 +398,12 @@ class SwerveChassis:
             .getStructTopic(f"{nt_table}/estimatorPose", Pose2d)
             .publish()
         )
+        # create NT publisher for boolean odding vision measurements to the swerve estimator
+        self._useVisionMeasurementsPub = (
+            NetworkTableInstance.getDefault()
+            .getBooleanTopic(f"{nt_table}/useVisionMeasurements")
+            .publish()
+        )
 
     def disable(self):
         self.enabled = False
