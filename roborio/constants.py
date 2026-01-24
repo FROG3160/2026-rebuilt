@@ -58,6 +58,9 @@ kVoltageDriveS = 0.14
 kVoltageDriveP = 2.0
 kVoltageDriveA = 0.027631
 
+# intake gains
+kVoltageIntakeS = 0.12
+
 
 ## CAN ID assignments
 ########################################
@@ -80,6 +83,8 @@ kBackRightSteerID = 24
 kBackRightSensorID = 34
 
 kGyroID = 39
+
+kIntakeMotorID = 40
 
 
 # ROGOT CHARACTERISTICS
