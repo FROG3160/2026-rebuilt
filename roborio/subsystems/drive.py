@@ -1,4 +1,6 @@
 import math
+import random
+from typing import Optional
 from FROGlib.swerve import SwerveChassis, RotationControllerConfig
 from FROGlib.ctre import (
     FROGCANCoderConfig,
@@ -13,9 +15,11 @@ from wpimath.geometry import (
     Pose2d,
     Rotation2d,
     Translation2d,
+    Translation3d,
     Transform2d,
     Transform3d,
     Rotation3d,
+    Pose3d,
 )
 from wpimath.units import volts
 from wpilib.sysid import SysIdRoutineLog
@@ -62,6 +66,7 @@ from FROGlib.ctre import (
 )
 from FROGlib.sds import MK4C_L3_GEARING, MK5I_R3_GEARING, WHEEL_DIAMETER
 from FROGlib.vision import FROGCameraConfig, FROGPoseEstimator
+from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from copy import deepcopy
 
@@ -218,23 +223,25 @@ class Drive(SwerveChassis, Subsystem):
         self.photon_estimators: list[FROGPoseEstimator] = []
 
         if RobotBase.isSimulation():
-            field_layout = AprilTagFieldLayout().loadField(AprilTagField.kDefaultField)
+            self.field_layout = AprilTagFieldLayout().loadField(
+                AprilTagField.k2026RebuiltWelded
+            )
         else:
-            field_layout = AprilTagFieldLayout(
+            self.field_layout = AprilTagFieldLayout(
                 r"/home/lvuser/py/2026_combined_field.json"
             )
         # field_layout = AprilTagFieldLayout().loadField(AprilTagField.kDefaultField)
         for config in constants.kCameraConfigs:
             self.photon_estimators.append(
                 FROGPoseEstimator(
-                    field_layout,  # field layout
+                    self.field_layout,  # field layout
                     config.name,
                     config.robotToCamera,
                 )
             )
 
         # initializing the estimator to 0, 0, 0
-        self.estimatorPose = Pose2d(0, 0, Rotation2d(0))
+        self.swerve_estimator_pose = Pose2d(0, 0, Rotation2d(0))
         self.pose_set = False
 
         # self.positioning = positioning
@@ -342,22 +349,132 @@ class Drive(SwerveChassis, Subsystem):
     def enableResetController(self):
         self.resetController = True
 
+    def invert_pose3d(self, pose: Pose3d) -> Pose3d:
+        """Manually compute the inverse of a Pose3d."""
+        original_rot = pose.rotation()
+        original_trans = pose.translation()
+
+        inv_rot = -original_rot  # Inverse rotation
+        inv_trans = -original_trans  # -R^{-1} * t (unary minus on Translation3d)
+
+        return Pose3d(inv_trans, inv_rot)
+
+    def simulateTargets(self) -> list[PhotonTrackedTarget]:
+        """Generate simulated PhotonTrackedTargets based on current odometry pose and field tags."""
+        current_pose = (
+            self.swerve_estimator.getEstimatedPosition()
+        )  # 2D pose; extend to 3D if needed
+        robot_pose3d = Pose3d(current_pose)  # Convert to 3D (Z=0 assumed)
+
+        # Camera transform relative to robot (adjust based on your mount: e.g., forward 0.5m, up 0.3m)
+        camera_offset = Transform3d(
+            Translation3d(0.5, 0.0, 0.3), Rotation3d()
+        )  # Example: front-mounted
+        camera_pose = robot_pose3d.transformBy(camera_offset)
+
+        targets = []
+        # Sample 1-3 visible tags (in real sim, filter by angle/distance; here, pick first few for demo)
+        visible_tag_ids = [
+            1,
+            2,
+            3,
+        ]  # Adjust to actual tag IDs you want to simulate (e.g., speaker tags)
+        for tag_id in visible_tag_ids:
+            if tag_id >= len(self.field_layout.getTags()):
+                continue  # Skip invalid IDs
+
+            tag_pose = self.field_layout.getTagPose(tag_id)
+            if not tag_pose:
+                continue
+
+            # Compute camera-to-tag transform (inverse of tag-to-camera)
+            tag_to_camera = camera_pose.relativeTo(tag_pose)
+            camera_to_tag = self.invert_pose3d(tag_to_camera)
+
+            # Add noise (Gaussian, realistic for sim: ~1-5% error)
+            noise_trans = Translation3d(
+                random.gauss(0, 0.01),  # X noise ~1cm
+                random.gauss(0, 0.01),  # Y
+                random.gauss(0, 0.02),  # Z ~2cm
+            )
+            noise_rot = Rotation3d(
+                random.gauss(0, 0.01),  # Roll ~0.6°
+                random.gauss(0, 0.01),  # Pitch
+                random.gauss(0, 0.02),  # Yaw ~1.1°
+            )
+            noisy_camera_to_tag = camera_to_tag.transformBy(
+                Transform3d(noise_trans, noise_rot)
+            )
+
+            # Alternate target (required; make it slightly off for ambiguity)
+            alt_offset = Transform3d(
+                Translation3d(0.05, 0.0, 0.0), Rotation3d(0, 0, 0.05)
+            )
+            alt_camera_to_tag = noisy_camera_to_tag.transformBy(alt_offset)
+
+            # Create target (area=0.5 for ~50% visibility; poseAmbiguity=0.1 low confidence)
+            target = PhotonTrackedTarget(
+                tag_id,
+                noisy_camera_to_tag,
+                [alt_camera_to_tag],  # List of alternates (can be empty)
+                0.5,  # detectedArea (0-1)
+                0.1,  # poseAmbiguity (0-1; lower = better)
+            )
+            targets.append(target)
+
+        return targets
+
+    def simulateEstimatedPose(self) -> Optional[EstimatedRobotPose]:
+        """Generate a simulated EstimatedRobotPose based on current odometry with noise."""
+        if not RobotBase.isSimulation():
+            return None  # Fallback to real estimator outside sim
+
+        current_pose2d = self.swerve_estimator.getEstimatedPosition()
+        current_pose3d = Pose3d(current_pose2d)  # Embed in 3D (Z=0)
+
+        # Simulate vision correction: Add small Gaussian noise (e.g., 5cm trans, 2° rot)
+        noise_trans = Translation3d(
+            random.gauss(0, 0.05),  # X/Y noise ~5cm
+            random.gauss(0, 0.05),
+            random.gauss(0, 0.02),  # Z ~2cm
+        )
+        noise_rot = Rotation3d(
+            random.gauss(0, 0.02),  # Roll/pitch ~1.1°
+            random.gauss(0, 0.02),
+            random.gauss(0, 0.035),  # Yaw ~2°
+        )
+
+        estimated_pose3d = current_pose3d.transformBy(
+            Transform3d(noise_trans, noise_rot)
+        )
+
+        # High confidence for reliable sim corrections (tune: 0.5-0.9)
+        confidence = 0.8 + random.uniform(-0.1, 0.1)  # Vary slightly: 0.7-0.9
+        confidence = max(0.0, min(1.0, confidence))  # Clamp 0-1
+
+        return EstimatedRobotPose(
+            estimated_pose3d, self.loopTime, self.simulateTargets()
+        )
+
     def periodic(self):
         # update estimator with chassis data
-        self.estimatorPose = self.swerve_estimator.update(
+        self.swerve_estimator_pose = self.swerve_estimator.update(
             self.gyro.getRotation2d(), tuple(self.getModulePositions())
         )
         # updates field2d object with the latest estimated pose
-        self.estimator_field.setRobotPose(self.estimatorPose)
+        self.estimator_field.setRobotPose(self.swerve_estimator_pose)
 
         # update estimator with photonvision estimates
         for estimator in self.photon_estimators:
             # TODO: #20 pass in swerve estimator pose and move the distance check into FROGPoseEstimator
-            estimated_pose = estimator.get_estimate()
-            if type(estimated_pose) is EstimatedRobotPose:
+            if RobotBase.isSimulation():
+                vision_estimated_pose = self.simulateEstimatedPose()
+            else:
+                vision_estimated_pose = estimator.get_estimate()
+            if type(vision_estimated_pose) is EstimatedRobotPose:
                 # use distance to the target tags to calculate standard deviations
                 distance = (
-                    estimated_pose.targetsUsed[0]
+                    vision_estimated_pose.targetsUsed[0]
                     .bestCameraToTarget.translation()
                     .toTranslation2d()
                     .norm()
@@ -373,41 +490,44 @@ class Drive(SwerveChassis, Subsystem):
                 # documentation for the swerve estimator recommends rejecting vision
                 # measurements that are too far from the current estimate
                 # calculate distance between vision pose and current estimator pose
-                delta = (
-                    estimated_pose.estimatedPose.toPose2d()
+                pose_delta = (
+                    vision_estimated_pose.estimatedPose.toPose2d()
                     .translation()
-                    .distance(self.estimatorPose.translation())
+                    .distance(self.swerve_estimator_pose.translation())
                 )
-
+                print(
+                    f"Pose delta for {estimator.camera.getName()}: {pose_delta:.2f} m"
+                )
+                print(f"Tunable Max Delta: {self.vision_tunables.max_delta:.2f} m")
                 # only add vision measurement if within 1 meter of current estimate
-                if delta < self.vision_tunables.max_delta:
+                # put camera pose on the dashboard field
+                cameraPoseObject = self.estimator_field.getObject(
+                    estimator.camera.getName()
+                )
+                cameraPoseObject.setPose(vision_estimated_pose.estimatedPose.toPose2d())
+                if pose_delta < self.vision_tunables.max_delta:
 
                     self.swerve_estimator.addVisionMeasurement(
-                        estimated_pose.estimatedPose.toPose2d(),
-                        estimated_pose.timestampSeconds,
+                        vision_estimated_pose.estimatedPose.toPose2d(),
+                        vision_estimated_pose.timestampSeconds,
                         (translation_stddev, translation_stddev, rotational_stddev),
                     )
+                    self._useVisionMeasurementsPub.set(True)
+                else:
+                    self._useVisionMeasurementsPub.set(False)
 
                     # put camera pose on the estimator field2d
-                    cameraPoseObject = self.estimator_field.getObject(
-                        estimator.camera.getName()
-                    )
-                    cameraPoseObject.setPose(estimated_pose.estimatedPose.toPose2d())
-                else:
-                    self.estimator_field.getObject(estimator.camera.getName()).setPose(
-                        Pose2d()
-                    )  # reset camera pose if not used
 
         SmartDashboard.putNumberArray(
             "Drive Pose",
             [
-                self.estimatorPose.x,
-                self.estimatorPose.y,
-                self.estimatorPose.rotation().radians(),
+                self.swerve_estimator_pose.x,
+                self.swerve_estimator_pose.y,
+                self.swerve_estimator_pose.rotation().radians(),
             ],
         )
         SmartDashboard.putNumber(
-            "Pose Rotation", self.estimatorPose.rotation().degrees()
+            "Pose Rotation", self.swerve_estimator_pose.rotation().degrees()
         )
 
         # run periodic method of the superclass, in this case SwerveChassis.periodic()
