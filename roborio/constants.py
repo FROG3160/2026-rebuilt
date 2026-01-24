@@ -90,10 +90,12 @@ kTrackWidthMeters = inchesToMeters(22.750)
 kWheelBaseMeters = inchesToMeters(25.750)
 
 kMaxMetersPerSecond = feetToMeters(16)  # 16 feet per second
-kMaxChassisRadiansPerSec = 2 * math.tau  # revolutions per sec * tau
+kMaxChassisRadiansPerSec = 8 * math.tau  # revolutions per sec * tau
 
-kProfiledRotationMaxVelocity = 1.5 * math.tau  # 1.5 rotations per second
-kProfiledRotationMaxAccel = 2 * math.tau  # 2 rotations per second per second
+kProfiledRotationMaxVelocity = kMaxChassisRadiansPerSec
+kProfiledRotationMaxAccel = (
+    kMaxChassisRadiansPerSec * 2
+)  # 2 rotations per second per second
 
 kProfiledRotationP = 0.4
 kProfiledRotationI = 0.0
