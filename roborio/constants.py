@@ -76,6 +76,13 @@ kLiftS = 0.0
 kLiftV = 0.0
 kLiftG = 0.0
 
+# flywheel gains
+kFlywheelP = 0.1
+kFlywheelI = 0.0
+kFlywheelD = 0.0
+kFlywheelS = 0.05
+kFlywheelV = 0.0002
+kFlywheelA = 0.00002
 
 ## CAN ID assignments
 ########################################
@@ -103,6 +110,8 @@ kIntakeMotorID = 40
 kClimberDeployMotorID = 50
 kClimberLeftLiftMotorID = 51
 kClimberRightLiftMotorID = 52
+kShooterLeftFlywheelID = 60
+kShooterRightFlywheelID = 61
 
 
 # ROGOT CHARACTERISTICS
