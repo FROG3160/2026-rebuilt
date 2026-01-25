@@ -205,6 +205,17 @@ class FROGTalonFXConfig(TalonFXConfiguration):
         self.id = id
         return self
 
+    def with_motor_name(self, name: str):
+        """Sets the motor name for this motor configuration.
+
+        Args:
+            name (str): The motor name to set.
+        Returns:
+            FROGTalonFXConfig: The updated motor configuration.
+        """
+        self.motor_name = name
+        return self
+
 
 class FROGTalonFX(TalonFX):
     """FROG custom TalonFX that takes parameters during instantiation."""
