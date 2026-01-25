@@ -456,6 +456,21 @@ class Drive(SwerveChassis, Subsystem):
             estimated_pose3d, self.loopTime, self.simulateTargets()
         )
 
+    def getMotionAdjustedTarget(self, target_pose: Pose2d) -> Pose2d:
+        # get the robot's current chassis speeds
+        if RobotBase.isSimulation():
+            chassis_speeds = self.chassisSpeeds
+        else:
+            chassis_speeds = self._actualChassisSpeeds
+        robot_vector = Translation2d(chassis_speeds.vx, chassis_speeds.vy)
+        # use the robot's rotation to convert robot-relative vector to field-relative
+        field_vector = robot_vector.rotateBy(self.getRotation2d())
+        # move the translation of the target by the field-relative vector
+        adjusted_translation = target_pose.translation() - field_vector
+        # compose a new pose with the adjusted translation and original rotation
+        new_target = Pose2d(adjusted_translation, target_pose.rotation())
+        return new_target
+
     def periodic(self):
         # update estimator with chassis data
         self.swerve_estimator_pose = self.swerve_estimator.update(

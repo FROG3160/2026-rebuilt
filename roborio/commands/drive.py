@@ -108,15 +108,9 @@ class ManualDriveAndAim(Command):
         vX = self.controller.getSlewLimitedFieldForward()
         vY = self.controller.getSlewLimitedFieldLeft()
 
-        # get the robot's current chassis speeds
-        chassis_speeds = self.drive.chassisSpeeds
-        robot_vector = Translation2d(chassis_speeds.vx, chassis_speeds.vy)
-        # use the robot's rotation to convert robot-relative vector to field-relative
-        field_vector = robot_vector.rotateBy(self.drive.getRotation2d())
-        # move the translation of the target by the field-relative vector
-        adjusted_translation = self.target.translation() - field_vector
-        # compose a new pose with the adjusted translation and original rotation
-        new_target = Pose2d(adjusted_translation, self.target.rotation())
+        # get target adjusted for robot movement
+        new_target = self.drive.getMotionAdjustedTarget(self.target)
+
         # calculate the required rotational velocity to face the new target
         vT = self.drive.profiledRotationController.calculate(
             self.drive.getRotation2d().radians(),
