@@ -34,7 +34,6 @@ deploy_motor_config = FROGTalonFXConfig(
     slot0=deploy_slot0,
 )
 lift_motor_config = FROGTalonFXConfig(
-    id=constants.kClimberLeftLiftMotorID,
     can_bus="rio",
     motor_name="LeftLift",
     parent_nt="Climber",
