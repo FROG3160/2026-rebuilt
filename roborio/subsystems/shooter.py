@@ -9,6 +9,7 @@ from FROGlib.ctre import (
 import constants
 from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_BRAKE, MOTOR_OUTPUT_CCWP_BRAKE
+from subsystems.drive import Drive
 
 flywheel_slot0 = FROGSlotConfig(
     k_s=constants.kFlywheelS,
@@ -41,3 +42,12 @@ class Flywheel:
 
     def _stop_motor(self):
         self.motor.stopMotor()
+
+
+class Shooter:
+    def __init__(self, drive: Drive):
+        self.drive = drive
+        self.left_flywheel = Flywheel(constants.kShooterLeftFlywheelID, "Left Flywheel")
+        self.right_flywheel = Flywheel(
+            constants.kShooterRightFlywheelID, "Right Flywheel"
+        )
