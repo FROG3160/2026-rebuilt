@@ -242,7 +242,7 @@ class Drive(SwerveChassis, Subsystem):
 
         # initializing the estimator to 0, 0, 0
         self.swerve_estimator_pose = Pose2d(0, 0, Rotation2d(0))
-        self.pose_set = False
+        self.initial_pose_set = False
 
         # self.positioning = positioning
 
@@ -471,6 +471,9 @@ class Drive(SwerveChassis, Subsystem):
         new_target = Pose2d(adjusted_translation, target_pose.rotation())
         return new_target
 
+    def reset_initial_pose(self):
+        self.initial_pose_set = False
+
     def periodic(self):
         # update estimator with chassis data
         self.swerve_estimator_pose = self.swerve_estimator.update(
@@ -510,18 +513,24 @@ class Drive(SwerveChassis, Subsystem):
                     .translation()
                     .distance(self.swerve_estimator_pose.translation())
                 )
-                print(
-                    f"Pose delta for {estimator.camera.getName()}: {pose_delta:.2f} m"
-                )
-                print(f"Tunable Max Delta: {self.vision_tunables.max_delta:.2f} m")
+                # print(
+                #     f"Pose delta for {estimator.camera.getName()}: {pose_delta:.2f} m"
+                # )
+                # print(f"Tunable Max Delta: {self.vision_tunables.max_delta:.2f} m")
+
                 # only add vision measurement if within 1 meter of current estimate
                 # put camera pose on the dashboard field
                 cameraPoseObject = self.estimator_field.getObject(
                     estimator.camera.getName()
                 )
                 cameraPoseObject.setPose(vision_estimated_pose.estimatedPose.toPose2d())
-                if pose_delta < self.vision_tunables.max_delta:
-
+                # if the initial pose hasn't been set yet, set it to the first valid vision pose
+                if not self.initial_pose_set:
+                    self.initial_pose_set = True
+                    self.resetPose(
+                        vision_estimated_pose.estimatedPose.toPose2d(),
+                    )
+                elif pose_delta < self.vision_tunables.max_delta:
                     self.swerve_estimator.addVisionMeasurement(
                         vision_estimated_pose.estimatedPose.toPose2d(),
                         vision_estimated_pose.timestampSeconds,
