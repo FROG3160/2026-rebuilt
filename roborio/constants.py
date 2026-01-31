@@ -6,7 +6,7 @@ from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d,
 # Camera Configs
 kCameraConfigs = (
     FROGCameraConfig(
-        "Arducam_OV9281_Apriltag_1",
+        "Arducam_OV9281_Apriltag_2",
         Transform3d(
             Translation3d(
                 inchesToMeters(7.45),  # 7.1998),  # Forward from center
@@ -17,7 +17,7 @@ kCameraConfigs = (
         ),
     ),
     FROGCameraConfig(
-        "Arducam_OV9281_Apriltag_2",
+        "Arducam_OV9281_Apriltag_1",
         Transform3d(
             Translation3d(
                 inchesToMeters(7.0),  # 7.0625),  # Forward from center
