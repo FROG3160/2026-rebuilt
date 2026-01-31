@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.54922891566265,
-        "y": 7.433518072289157
+        "x": 3.5820120481927713,
+        "y": 7.488156626506025
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.549228915662652,
-        "y": 7.433518072289157
+        "x": 4.582012048192773,
+        "y": 7.488156626506025
       },
       "isLocked": false,
       "linkedName": "BlueTop"
     },
     {
       "anchor": {
-        "x": 0.4457590361445781,
-        "y": 6.9964096385542165
+        "x": 0.45668674698795175,
+        "y": 6.887132530120482
       },
       "prevControl": {
-        "x": 0.5768915662650599,
-        "y": 7.739493975903614
+        "x": 0.5878192771084335,
+        "y": 7.63021686746988
       },
       "nextControl": null,
       "isLocked": false,
@@ -55,7 +55,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -87.45519562018688
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }
