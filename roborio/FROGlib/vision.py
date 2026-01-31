@@ -73,6 +73,12 @@ class FROGPoseEstimator:
             if estPose is None:
                 estPose = self.estimator.estimateLowestAmbiguityPose(result)
 
+        # if we have an estimated Pose, publish it, otherwise publish a bad Pose2d
+        if estPose:
+            self._latest_pose_pub.set(estPose.estimatedPose.toPose2d())
+        else:
+            self._latest_pose_pub.set(Pose2d(-1, -1, 0))
+
         return estPose
 
         # estimated_pose = self.update()
