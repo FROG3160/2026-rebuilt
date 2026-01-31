@@ -55,6 +55,9 @@ class RobotContainer:
                 constants.kBlueHub, self.driver_xbox, self.drive, "DriveAndAim"
             )
         )
+        self.driver_xbox.start().onTrue(
+            self.drive.runOnce(self.drive.reset_initial_pose)
+        )
 
     def configure_tactical_controls(self):
         # Configure operator controls
