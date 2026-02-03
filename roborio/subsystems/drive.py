@@ -177,7 +177,7 @@ class VisionTunables(Sendable):
             lambda value: setattr(self, "max_translationStdDev", value),
         )
         builder.addDoubleProperty(
-            "Rotation Std Dev",
+            "Max Translation Distance",
             lambda: self.max_translationDistance,
             lambda value: setattr(self, "max_translationDistance", value),
         )
@@ -254,8 +254,8 @@ class Drive(SwerveChassis, Subsystem):
         autobuilder_config = RobotConfig.fromGUISettings()
 
         self.holonomic_drive_ctrl = PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
-            PIDConstants(1.0, 0.0, 0.0),  # Translation PID constants
-            PIDConstants(1.0, 0.0, 0.0),  # Rotation PID constants
+            PIDConstants(4.0, 0.0, 0.0),  # Translation PID constants
+            PIDConstants(4.0, 0.0, 0.0),  # Rotation PID constants
         )
 
         AutoBuilder.configure(
@@ -471,6 +471,9 @@ class Drive(SwerveChassis, Subsystem):
         new_target = Pose2d(adjusted_translation, target_pose.rotation())
         return new_target
 
+    def getPathPlannerPath(self, pathname: str) -> PathPlannerPath:
+        return PathPlannerPath.fromPathFile(pathname)
+
     def reset_initial_pose(self):
         self.initial_pose_set = False
 
@@ -491,14 +494,14 @@ class Drive(SwerveChassis, Subsystem):
                 vision_estimated_pose = estimator.get_estimate()
             if type(vision_estimated_pose) is EstimatedRobotPose:
                 # use distance to the target tags to calculate standard deviations
-                distance = (
+                tag_distance = (
                     vision_estimated_pose.targetsUsed[0]
                     .bestCameraToTarget.translation()
                     .toTranslation2d()
                     .norm()
                 )
                 translation_stddev = remap(
-                    distance,
+                    tag_distance,
                     0,
                     self.vision_tunables.max_translationDistance,
                     self.vision_tunables.min_translationStdDev,
@@ -530,7 +533,10 @@ class Drive(SwerveChassis, Subsystem):
                     self.resetPose(
                         vision_estimated_pose.estimatedPose.toPose2d(),
                     )
-                elif pose_delta < self.vision_tunables.max_delta:
+                elif (
+                    pose_delta < self.vision_tunables.max_delta
+                    and tag_distance < self.vision_tunables.max_translationDistance
+                ):
                     self.swerve_estimator.addVisionMeasurement(
                         vision_estimated_pose.estimatedPose.toPose2d(),
                         vision_estimated_pose.timestampSeconds,
