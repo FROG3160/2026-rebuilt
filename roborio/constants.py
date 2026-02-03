@@ -122,7 +122,7 @@ kTrackWidthMeters = inchesToMeters(22.750)
 kWheelBaseMeters = inchesToMeters(25.750)
 
 kMaxMetersPerSecond = feetToMeters(16)  # 16 feet per second
-kMaxChassisRadiansPerSec = 8 * math.tau  # revolutions per sec * tau
+kMaxChassisRadiansPerSec = 2 * math.tau  # revolutions per sec * tau
 
 kProfiledRotationMaxVelocity = kMaxChassisRadiansPerSec
 kProfiledRotationMaxAccel = (
@@ -152,3 +152,7 @@ kRotSlew = 2
 # Field Positions
 kBlueHub = Pose2d(4.626, 4.035, Rotation2d(0))  # Facing away from blue hub
 kRedHub = Pose2d(11.915, 4.035, Rotation2d(0))
+kBlueRightTrench = Pose2d(4.692, 0.635, Rotation2d(0))
+kBlueLeftTrench = Pose2d(4.692, 7.489, Rotation2d(0))
+kRedRightTrench = Pose2d(11.849, 0.635, Rotation2d(math.pi))
+kRedLeftTrench = Pose2d(11.849, 7.489, Rotation2d(math.pi))
