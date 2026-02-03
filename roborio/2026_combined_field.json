@@ -1,6 +1,6 @@
 {
   "tags": [
-      {
+    {
       "ID": 1,
       "pose": {
         "translation": {
@@ -16,7 +16,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "TRENCH - Red alliance side, near audience wall (high Y), facing blue alliance (180°)"
     },
     {
       "ID": 2,
@@ -34,7 +35,8 @@
             "Z": 0.7071067811865476
           }
         }
-      }
+      },
+      "comment": "HUB - Red alliance side face, offset AprilTag (likely facing one direction, 90° rotation)"
     },
     {
       "ID": 3,
@@ -52,7 +54,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "HUB - Red alliance side face, centered AprilTag (facing blue alliance, 180°)"
     },
     {
       "ID": 4,
@@ -70,7 +73,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "HUB - Red alliance side face, centered AprilTag (facing blue alliance, 180°)"
     },
     {
       "ID": 5,
@@ -88,7 +92,8 @@
             "Z": 0.7071067811865476
           }
         }
-      }
+      },
+      "comment": "HUB - Red alliance side face, offset AprilTag (likely facing opposite direction, -90°)"
     },
     {
       "ID": 6,
@@ -106,7 +111,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "TRENCH - Red alliance side, near driver station wall (low Y), facing blue alliance (180°)"
     },
     {
       "ID": 7,
@@ -124,7 +130,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "TRENCH - Red alliance side, near driver station wall (low Y), facing red alliance (0°)"
     },
     {
       "ID": 8,
@@ -142,7 +149,8 @@
             "Z": 0.7071067811865476
           }
         }
-      }
+      },
+      "comment": "HUB - Red alliance side face, offset AprilTag (likely facing opposite direction)"
     },
     {
       "ID": 9,
@@ -160,7 +168,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "HUB - Red alliance side face, centered AprilTag (facing red alliance, 0°)"
     },
     {
       "ID": 10,
@@ -178,7 +187,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "HUB - Red alliance side face, centered AprilTag (facing red alliance, 0°)"
     },
     {
       "ID": 11,
@@ -196,7 +206,8 @@
             "Z": 0.7071067811865476
           }
         }
-      }
+      },
+      "comment": "HUB - Red alliance side face, offset AprilTag (likely facing one direction, 90°)"
     },
     {
       "ID": 12,
@@ -214,7 +225,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "TRENCH - Red alliance side, near audience wall (high Y), facing red alliance (0°)"
     },
     {
       "ID": 13,
@@ -232,7 +244,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "OUTPOST - Red alliance side, near audience wall (high Y), centered with chute/corrals, facing blue (180°)"
     },
     {
       "ID": 14,
@@ -250,7 +263,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "OUTPOST - Red alliance side, near audience wall (high Y), offset AprilTag, facing blue (180°)"
     },
     {
       "ID": 15,
@@ -268,7 +282,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "TOWER WALL - Red alliance side, centered AprilTag, facing blue alliance (180°)"
     },
     {
       "ID": 16,
@@ -286,7 +301,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "TOWER WALL - Red alliance side, offset AprilTag, facing blue alliance (180°)"
     },
     {
       "ID": 17,
@@ -304,7 +320,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "TRENCH - Blue alliance side, near driver station wall (low Y), facing red alliance (0°)"
     },
     {
       "ID": 18,
@@ -322,7 +339,8 @@
             "Z": 0.7071067811865476
           }
         }
-      }
+      },
+      "comment": "HUB - Blue alliance side face, offset AprilTag (likely facing opposite direction)"
     },
     {
       "ID": 19,
@@ -340,7 +358,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "HUB - Blue alliance side face, centered AprilTag (facing blue alliance, 0°? wait, likely facing alliance)"
     },
     {
       "ID": 20,
@@ -358,7 +377,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "HUB - Blue alliance side face, centered AprilTag (facing blue alliance)"
     },
     {
       "ID": 21,
@@ -376,7 +396,8 @@
             "Z": 0.7071067811865476
           }
         }
-      }
+      },
+      "comment": "HUB - Blue alliance side face, offset AprilTag (likely facing one direction, 90°)"
     },
     {
       "ID": 22,
@@ -394,7 +415,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "TRENCH - Blue alliance side, near audience wall (high Y), facing red alliance (0°)"
     },
     {
       "ID": 23,
@@ -412,7 +434,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "TRENCH - Blue alliance side, near audience wall (high Y), facing blue alliance (180°)"
     },
     {
       "ID": 24,
@@ -430,7 +453,8 @@
             "Z": 0.7071067811865476
           }
         }
-      }
+      },
+      "comment": "HUB - Blue alliance side face, offset AprilTag (likely facing one direction, 90°)"
     },
     {
       "ID": 25,
@@ -448,7 +472,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "HUB - Blue alliance side face, centered AprilTag (facing blue alliance, 180°)"
     },
     {
       "ID": 26,
@@ -466,7 +491,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "HUB - Blue alliance side face, centered AprilTag (facing blue alliance, 180°)"
     },
     {
       "ID": 27,
@@ -484,7 +510,8 @@
             "Z": 0.7071067811865476
           }
         }
-      }
+      },
+      "comment": "HUB - Blue alliance side face, offset AprilTag (likely facing opposite direction)"
     },
     {
       "ID": 28,
@@ -502,7 +529,8 @@
             "Z": 1.0
           }
         }
-      }
+      },
+      "comment": "TRENCH - Blue alliance side, near driver station wall (low Y), facing blue alliance (180°)"
     },
     {
       "ID": 29,
@@ -520,7 +548,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "OUTPOST - Blue alliance side, near driver station wall (low Y), centered with chute/corrals, facing red (0°)"
     },
     {
       "ID": 30,
@@ -538,7 +567,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "OUTPOST - Blue alliance side, near driver station wall (low Y), offset AprilTag, facing red (0°)"
     },
     {
       "ID": 31,
@@ -556,7 +586,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "TOWER WALL - Blue alliance side, centered AprilTag, facing red alliance (0°)"
     },
     {
       "ID": 32,
@@ -574,7 +605,8 @@
             "Z": 0.0
           }
         }
-      }
+      },
+      "comment": "TOWER WALL - Blue alliance side, offset AprilTag, facing red alliance (0°)"
     },
     {
       "ID": 101,
