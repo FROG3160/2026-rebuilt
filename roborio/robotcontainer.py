@@ -58,6 +58,9 @@ class RobotContainer:
         self.driver_xbox.start().onTrue(
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
+        self.driver_xbox.y().whileTrue(
+            AutoBuilder.followPath(self.drive.getPathPlannerPath("Test to Wall"))
+        )
 
     def configure_tactical_controls(self):
         # Configure operator controls
