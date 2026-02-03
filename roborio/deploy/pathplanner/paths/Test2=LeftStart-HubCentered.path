@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.095843373493977,
-        "y": 6.952698795180723
+        "x": 2.0296678529062877,
+        "y": 6.493475682087782
       },
       "isLocked": false,
       "linkedName": "BlueTop"
     },
     {
       "anchor": {
-        "x": 3.54922891566265,
-        "y": 4.035
+        "x": 3.5,
+        "y": 4.0
       },
       "prevControl": {
-        "x": 3.254180722891565,
-        "y": 4.668807228915663
+        "x": 3.204949482334461,
+        "y": 4.633806146632022
       },
       "nextControl": null,
       "isLocked": false,
@@ -35,8 +35,8 @@
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
-    "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 720.0,
+    "maxAngularVelocity": 720.0,
+    "maxAngularAcceleration": 1440.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
