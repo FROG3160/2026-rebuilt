@@ -124,3 +124,40 @@ class ManualDriveAndAim(Command):
             vT,
             self.controller.getFieldThrottle(),
         )
+
+
+class DrivePathAndAim(Command):
+    def __init__(
+        self,
+        aim_point: Pose2d,
+        path_name: str,
+        drive: Drive,
+        table: str = "Undefined",
+    ) -> None:
+        self.target = aim_point
+        self.drive = drive
+        self.path = self.drive.getPathPlannerPath(path_name)
+        self.addRequirements(self.drive)
+        self.nt_table = f"{table}/{type(self).__name__}"
+        self._calculated_vTPub = (
+            NetworkTableInstance.getDefault()
+            .getFloatTopic(f"{self.nt_table}/calculated_vT")
+            .publish()
+        )
+
+    def getRotationSpeed(self) -> float:
+        new_target = self.drive.getMotionAdjustedTarget(self.target)
+        return self.drive.profiledRotationController.calculate(
+            self.drive.getRotation2d().radians(),
+            self.drive.calculateHeadingToTarget(new_target),
+        )
+
+    def initialize(self):
+        self.drive.holonomic_drive_ctrl.overrideRotationFeedback(self.getRotationSpeed)
+        self.drive.resetRotationController()
+
+    def execute(self) -> None:
+        pass
+
+    def end(self, interrupted: bool) -> None:
+        self.drive.holonomic_drive_ctrl.clearRotationFeedbackOverride()
