@@ -28,7 +28,7 @@ kCameraConfigs = (
         ),
     ),
 )
-kDetectorConfigs = (FROGCameraConfig("Arducam_OV9282_Obj_Detection", Transform3d()),)
+kDetectorConfigs = (FROGCameraConfig("Arducam_OV9782_Obj_Detection", Transform3d()),)
 
 ## CANCoder offsets
 ########################################
