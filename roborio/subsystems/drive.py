@@ -65,7 +65,12 @@ from FROGlib.ctre import (
     MOTOR_OUTPUT_CWP_BRAKE,
 )
 from FROGlib.sds import MK4C_L3_GEARING, MK5I_R3_GEARING, WHEEL_DIAMETER
-from FROGlib.vision import FROGCameraConfig, FROGPoseEstimator
+from FROGlib.vision import (
+    DetectorTunables,
+    FROGCameraConfig,
+    FROGDetector,
+    FROGPoseEstimator,
+)
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from copy import deepcopy
@@ -240,6 +245,8 @@ class Drive(SwerveChassis, Subsystem):
                 )
             )
 
+        self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
+
         # initializing the estimator to 0, 0, 0
         self.swerve_estimator_pose = Pose2d(0, 0, Rotation2d(0))
         self.initial_pose_set = False
@@ -284,6 +291,7 @@ class Drive(SwerveChassis, Subsystem):
         )
         self.vision_tunables = VisionTunables()
         SmartDashboard.putData("Vision Tunables", self.vision_tunables)
+        SmartDashboard.putData("Drive Subsystem", self)
 
     # Tell SysId how to plumb the driving voltage to the motors.
     def sysid_drive(self, voltage: volts) -> None:
@@ -477,6 +485,9 @@ class Drive(SwerveChassis, Subsystem):
     def reset_initial_pose(self):
         self.initial_pose_set = False
 
+    def get_fuel_target(self):
+        return self.fuel_detector.detection_target
+
     def periodic(self):
         # update estimator with chassis data
         self.swerve_estimator_pose = self.swerve_estimator.update(
@@ -547,6 +558,9 @@ class Drive(SwerveChassis, Subsystem):
                     self._useVisionMeasurementsPub.set(False)
 
                     # put camera pose on the estimator field2d
+
+        # update fuel detection data
+        self.fuel_detector.get_targets()
 
         SmartDashboard.putNumberArray(
             "Drive Pose",
