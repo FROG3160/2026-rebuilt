@@ -2,7 +2,7 @@ from pathplannerlib.auto import NamedCommands, AutoBuilder
 from wpilib import SmartDashboard
 from wpimath.geometry import Pose2d
 
-from commands.drive import ManualDrive, ManualDriveAndAim
+from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
@@ -59,7 +59,9 @@ class RobotContainer:
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
         self.driver_xbox.y().whileTrue(
-            AutoBuilder.followPath(self.drive.getPathPlannerPath("Test to Wall"))
+            ManualDriveAndClusterAim(
+                constants.kBlueHub, self.driver_xbox, self.drive, "DriveAndClusterAim"
+            )
         )
 
     def configure_tactical_controls(self):

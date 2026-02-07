@@ -3,6 +3,8 @@ from ntcore import NetworkTableInstance
 from FROGlib.xbox import FROGXboxDriver
 from subsystems.drive import Drive
 from wpimath.geometry import Pose2d, Translation2d
+from wpimath.units import degreesToRadians
+import time
 
 
 class ManualDrive(Command):
@@ -115,6 +117,72 @@ class ManualDriveAndAim(Command):
         vT = self.drive.profiledRotationController.calculate(
             self.drive.getRotation2d().radians(),
             self.drive.calculateHeadingToTarget(new_target),
+        )
+        self._calculated_vTPub.set(vT)
+
+        self.drive.fieldOrientedAutoRotateDrive(
+            vX,
+            vY,
+            vT,
+            self.controller.getFieldThrottle(),
+        )
+
+
+class ManualDriveAndClusterAim(Command):
+    def __init__(
+        self,
+        aim_point: Pose2d,
+        controller: FROGXboxDriver,
+        drive: Drive,
+        table: str = "Undefined",
+    ) -> None:
+        """Allows manual control of the drivetrain through use of the specified
+        controller, with automatic aiming at detected fuel clusters.
+
+        Args:
+            aim_point (Pose2d): The target the robot should aim at.
+            controller (FROGXboxDriver): The controller used to control the drive.
+            drive (DriveTrain): The drive to be controlled.
+            table (str): The name of the network table telemetry data will go into
+        """
+        self.controller = controller
+        self.drive = drive
+        self.addRequirements(self.drive)
+        self.nt_table = f"{table}/{type(self).__name__}"
+        self._calculated_vTPub = (
+            NetworkTableInstance.getDefault()
+            .getFloatTopic(f"{self.nt_table}/calculated_vT")
+            .publish()
+        )
+
+    def initialize(self):
+        self.drive.resetRotationController()
+
+    def execute(self) -> None:
+
+        vX = self.controller.getSlewLimitedFieldForward()
+        vY = self.controller.getSlewLimitedFieldLeft()
+
+        # calculate the cluster center
+        start_time = time.perf_counter()
+        self.drive.fuel_detector.get_alt_detection_results()  # or get_alt_detection_results
+        end_time = time.perf_counter()
+        print(f"Calculation time: {(end_time - start_time) * 1000:.2f}ms")
+        # invert the yaw value of the detection target and convert to radians
+        if self.drive.fuel_detector.detection_target:
+            rotation_offset = degreesToRadians(
+                -self.drive.fuel_detector.detection_target.target_yaw
+            )
+        else:
+            rotation_offset = 0
+            print("No target detected, defaulting to 0 rotation offset")
+
+        current_rotation = self.drive.getRotation2d().radians()
+
+        # calculate the required rotational velocity to face the new target
+        vT = self.drive.profiledRotationController.calculate(
+            current_rotation,
+            current_rotation + rotation_offset,
         )
         self._calculated_vTPub.set(vT)
 
