@@ -237,7 +237,14 @@ class FROGDetector(PhotonCamera):
     ) -> Optional[DetectionResult] | None:
 
         if self.targets:
-            self.detection_target = self._get_fuel_concentration_target()
+            # self.detection_target = self._get_fuel_concentration_target()
+            self.detection_target = self.get_best_cluster(
+                self.targets,
+                min_confidence=self.fuel_detector_tunables.min_confidence,
+                cluster_radius_deg=self.fuel_detector_tunables.cluster_radius_deg,
+                min_neighbors=self.fuel_detector_tunables.min_neighbors,
+                use_area_weighting=self.fuel_detector_tunables.use_area_weighting,
+            )
         else:
             return None
         return self.detection_target
@@ -254,6 +261,60 @@ class FROGDetector(PhotonCamera):
         else:
             return None
         return self.detection_target
+
+    def get_best_cluster(
+        self,
+        targets: List[PhotonTrackedTarget],
+        min_confidence: float = 0.5,
+        cluster_radius_deg: float = 12.0,
+        min_neighbors: int = 2,
+        use_area_weighting: bool = True,
+    ) -> Optional[DetectionResult]:
+        # 1. Filter by confidence
+        valid = [t for t in targets if t.objDetectConf >= min_confidence]
+        if not valid:
+            return None
+
+        y = np.array([t.yaw for t in valid])
+        p = np.array([t.pitch for t in valid])
+        a = np.array([t.area for t in valid])
+
+        # 2. Calculate Distance Matrix (Broadcasting)
+        dist_sq = (y[:, np.newaxis] - y[np.newaxis, :]) ** 2 + (
+            p[:, np.newaxis] - p[np.newaxis, :]
+        ) ** 2
+        adj = dist_sq <= (cluster_radius_deg**2)
+
+        # 3. Score neighborhoods based on density
+        if use_area_weighting:
+            scores = adj @ a
+        else:
+            scores = adj.sum(axis=1)
+
+        best_idx = np.argmax(scores)
+
+        # 4. Validate against minimum neighbors
+        num_neighbors = int(adj[best_idx].sum())
+        if num_neighbors < min_neighbors:
+            return None
+
+        # 5. Extract the winning cluster and calculate centroid
+        cluster_mask = adj[best_idx]
+
+        if use_area_weighting:
+            weights = a[cluster_mask]
+            target_yaw = np.sum(y[cluster_mask] * weights) / weights.sum()
+            target_pitch = np.sum(p[cluster_mask] * weights) / weights.sum()
+        else:
+            target_yaw = np.mean(y[cluster_mask])
+            target_pitch = np.mean(p[cluster_mask])
+
+        return DetectionResult(
+            target_yaw=float(target_yaw),
+            target_pitch=float(target_pitch),
+            concentration_score=float(scores[best_idx]),
+            num_detections=num_neighbors,
+        )
 
     def _get_fuel_concentration_target(self) -> Optional[DetectionResult] | None:
         """

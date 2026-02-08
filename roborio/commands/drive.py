@@ -165,7 +165,7 @@ class ManualDriveAndClusterAim(Command):
 
         # calculate the cluster center
         start_time = time.perf_counter()
-        self.drive.fuel_detector.get_alt_detection_results()  # or get_alt_detection_results
+        self.drive.fuel_detector.get_detection_results()  # or get_alt_detection_results
         end_time = time.perf_counter()
         print(f"Calculation time: {(end_time - start_time) * 1000:.2f}ms")
         # invert the yaw value of the detection target and convert to radians
