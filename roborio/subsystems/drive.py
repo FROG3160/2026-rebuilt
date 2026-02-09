@@ -241,8 +241,6 @@ class Drive(SwerveChassis, Subsystem):
                 )
             )
 
-        self.fuel_detector = fuel_detector
-
         # initializing the estimator to 0, 0, 0
         self.swerve_estimator_pose = Pose2d(0, 0, Rotation2d(0))
         self.initial_pose_set = False
