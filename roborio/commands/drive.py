@@ -1,6 +1,7 @@
 from commands2 import Command
 from ntcore import NetworkTableInstance
 from FROGlib.xbox import FROGXboxDriver
+from FROGlib.vision import FROGDetector
 from subsystems.drive import Drive
 from wpimath.geometry import Pose2d, Translation2d
 from wpimath.units import degreesToRadians
@@ -131,9 +132,9 @@ class ManualDriveAndAim(Command):
 class ManualDriveAndClusterAim(Command):
     def __init__(
         self,
-        aim_point: Pose2d,
         controller: FROGXboxDriver,
         drive: Drive,
+        fuel_detector: FROGDetector,
         table: str = "Undefined",
     ) -> None:
         """Allows manual control of the drivetrain through use of the specified
@@ -147,6 +148,7 @@ class ManualDriveAndClusterAim(Command):
         """
         self.controller = controller
         self.drive = drive
+        self.fuel_detector = fuel_detector
         self.addRequirements(self.drive)
         self.nt_table = f"{table}/{type(self).__name__}"
         self._calculated_vTPub = (
@@ -165,7 +167,7 @@ class ManualDriveAndClusterAim(Command):
 
         # calculate the cluster center
         start_time = time.perf_counter()
-        self.drive.fuel_detector.get_detection_results()  # or get_alt_detection_results
+        self.fuel_detector.get_detection_results()  # or get_alt_detection_results
         end_time = time.perf_counter()
         print(f"Calculation time: {(end_time - start_time) * 1000:.2f}ms")
         # invert the yaw value of the detection target and convert to radians

@@ -3,6 +3,7 @@ from wpilib import SmartDashboard
 from wpimath.geometry import Pose2d
 
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
+from FROGlib.vision import FROGDetector
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
@@ -20,6 +21,7 @@ class RobotContainer:
 
     def __init__(self):
         self.alliance = None
+        self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
         self.drive = Drive()
         self.driver_xbox = FROGXboxDriver(
             constants.kDriverControllerPort,
@@ -60,7 +62,10 @@ class RobotContainer:
         )
         self.driver_xbox.y().whileTrue(
             ManualDriveAndClusterAim(
-                constants.kBlueHub, self.driver_xbox, self.drive, "DriveAndClusterAim"
+                self.driver_xbox,
+                self.drive,
+                self.fuel_detector,
+                "DriveAndClusterAim",
             )
         )
 

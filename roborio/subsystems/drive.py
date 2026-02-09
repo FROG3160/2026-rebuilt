@@ -199,11 +199,7 @@ class Drive(SwerveChassis, Subsystem):
 
     """
 
-    def __init__(
-        self,
-        # positioningCameras: list[VisionPose],
-        # positioning=Position(),
-    ):
+    def __init__(self):
         super().__init__(
             swerve_module_configs=(
                 SwerveModuleConfig(**front_left_module_config),
@@ -245,7 +241,7 @@ class Drive(SwerveChassis, Subsystem):
                 )
             )
 
-        self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
+        self.fuel_detector = fuel_detector
 
         # initializing the estimator to 0, 0, 0
         self.swerve_estimator_pose = Pose2d(0, 0, Rotation2d(0))
@@ -485,9 +481,6 @@ class Drive(SwerveChassis, Subsystem):
     def reset_initial_pose(self):
         self.initial_pose_set = False
 
-    def get_fuel_target(self):
-        return self.fuel_detector.detection_target
-
     def periodic(self):
         # update estimator with chassis data
         self.swerve_estimator_pose = self.swerve_estimator.update(
@@ -558,9 +551,6 @@ class Drive(SwerveChassis, Subsystem):
                     self._useVisionMeasurementsPub.set(False)
 
                     # put camera pose on the estimator field2d
-
-        # update fuel detection data
-        self.fuel_detector.get_targets()
 
         SmartDashboard.putNumberArray(
             "Drive Pose",
