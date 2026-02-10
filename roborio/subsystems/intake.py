@@ -21,7 +21,7 @@ intake_motor_config = FROGTalonFXConfig(
     can_bus="rio",
     motor_name="Intake",
     parent_nt="Intake",
-    motor_output=MOTOR_OUTPUT_CWP_COAST,
+    motor_output=MOTOR_OUTPUT_CCWP_COAST,
     feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=1.0),
     slot0=intake_slot0,
 )
@@ -32,7 +32,12 @@ class Intake(Subsystem):
         super().__init__()
         self.motor = FROGTalonFX(motor_config=intake_motor_config)
         self._default_voltage = 4
-        self._is_sim = wpilib.RobotBase.isSimulation()
+        if wpilib.RobotBase.isSimulation():
+            self._sim_velocity = 0.0
+            # if motor output is inverted (i.e. = 1)
+            self._velocity_sign_multiplier = [1, -1][
+                self.motor.config.motor_output.inverted.value
+            ]
 
     def _run_intake_motor_forward(self):
         self.motor.set_control(
@@ -87,18 +92,26 @@ class Intake(Subsystem):
         )
 
     def simulationPeriodic(self):
-        if self._is_sim:
-            self.motor.sim_state.set_supply_voltage(
-                wpilib.RobotController.getBatteryVoltage()
-            )
-            # Simple simulation of motor velocity based on applied voltage
-            applied_voltage = self.motor.get_motor_voltage().value
-            # Assume a simple linear model: velocity proportional to voltage
-            max_velocity = 5000  # RPM, arbitrary max for simulation
-            velocity = (
-                applied_voltage / 12.0
-            ) * max_velocity  # Assuming 12V full speed
-            self.motor.sim_state.set_rotor_velocity(velocity)
-            self.motor.sim_state.add_rotor_position(
-                velocity * 0.02 / 60.0
-            )  # Convert RPM to rotations per 20ms
+        self.motor.sim_state.set_supply_voltage(
+            wpilib.RobotController.getBatteryVoltage()
+        )
+        # Simple simulation of motor velocity based on applied voltage
+        applied_voltage = self.motor.get_motor_voltage().value
+        # Assume a simple linear model: velocity proportional to voltage
+        max_velocity_rot_per_sec = 83.33  # ← CHANGE THIS TO MATCH YOUR MECHANISM
+        target_velocity = (
+            applied_voltage / 12.0
+        ) * max_velocity_rot_per_sec  # Assuming 12V full speed
+
+        # Apply smoothing (simulates inertia/friction ramp)
+        self._sim_velocity += 0.3 * (target_velocity - self._sim_velocity)
+
+        # IMPORTANT: Apply direction sign from motor config
+        directed_velocity = 1 * self._sim_velocity
+
+        self.motor.sim_state.set_rotor_velocity(directed_velocity)
+
+        # Integrate to update position (dt ≈ 0.020 s in TimedRobot)
+        dt = 0.020
+        position_change = directed_velocity * dt
+        self.motor.sim_state.add_rotor_position(position_change)
