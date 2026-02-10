@@ -59,6 +59,9 @@ kVoltageDriveA = 0.027631
 # intake gains
 kVoltageIntakeS = 0.12
 
+# hopper gains
+kVoltageHopperS = 0.12
+
 # climber gains
 kDeployP = 1.0
 kDeployI = 0.0
@@ -105,6 +108,7 @@ kBackRightSensorID = 34
 kGyroID = 39
 
 kIntakeMotorID = 40
+kHopperMotorID = 41
 kClimberDeployMotorID = 50
 kClimberLeftLiftMotorID = 51
 kClimberRightLiftMotorID = 52
