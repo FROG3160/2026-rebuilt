@@ -232,6 +232,21 @@ class FROGDetector(PhotonCamera):
             print("No new camera results")
             self.targets = []
 
+        # Filter by confidence
+        valid = [
+            t
+            for t in self.targets
+            if t.objDetectConf >= self.fuel_detector_tunables.min_confidence
+        ]
+
+        # Extract to numpy for other clustering and other analysis methods
+        if valid:
+            self._yaws = np.fromiter((t.yaw for t in valid), dtype=float)
+            self._pitches = np.fromiter((t.pitch for t in valid), dtype=float)
+            self._areas = np.fromiter((t.area for t in valid), dtype=float)
+        else:
+            self._yaws = self._pitches = self._areas = np.array([])
+
     def get_detection_results(
         self,
     ) -> Optional[DetectionResult] | None:
