@@ -99,3 +99,6 @@ class Intake(Subsystem):
                 applied_voltage / 12.0
             ) * max_velocity  # Assuming 12V full speed
             self.motor.sim_state.set_rotor_velocity(velocity)
+            self.motor.sim_state.add_rotor_position(
+                velocity * 0.02 / 60.0
+            )  # Convert RPM to rotations per 20ms

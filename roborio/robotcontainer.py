@@ -4,6 +4,7 @@ from wpimath.geometry import Pose2d
 
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
 from FROGlib.vision import FROGDetector
+from subsystems.hopper import Hopper
 from subsystems.intake import Intake
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
@@ -25,6 +26,7 @@ class RobotContainer:
         self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
         self.drive = Drive()
         self.intake = Intake()
+        self.hopper = Hopper()
         self.driver_xbox = FROGXboxDriver(
             constants.kDriverControllerPort,
             constants.kDeadband,
@@ -70,8 +72,12 @@ class RobotContainer:
                 "DriveAndClusterAim",
             )
         )
-        self.driver_xbox.x().whileTrue(self.intake.runBackward())
-        self.driver_xbox.b().whileTrue(self.intake.runForward())
+        self.driver_xbox.x().whileTrue(
+            self.intake.runBackward().alongWith(self.hopper.runBackward())
+        )
+        self.driver_xbox.b().whileTrue(
+            self.intake.runForward().alongWith(self.hopper.runForward())
+        )
 
     def configure_tactical_controls(self):
         # Configure operator controls
