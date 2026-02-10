@@ -32,20 +32,18 @@ kDetectorConfigs = (FROGCameraConfig("Arducam_OV9782_Obj_Detection", Transform3d
 
 ## CANCoder offsets
 ########################################
-kFrontLeftOffset = 0.168701  # -0.246338
-kFrontRightOffset = -0.260986  # 0.036377
-kBackLeftOffset = 0.383057  # 0.478027
-kBackRightOffset = -0.244141  # 0.207031
-KShoulderOffset = (
-    0.124267875  # 0.123047  # -0.05859375  # offset with arm parallel to the floor
-)
+kFrontLeftOffset = 0.042480
+kFrontRightOffset = 0.250244
+kBackLeftOffset = -0.236572
+kBackRightOffset = -0.448486
+
 
 ## Swerve Drive Gains
 ########################################
 # steer motor gains
 kSteerP = 39.236  # 2.402346
 kSteerI = 0  # 0.200195\
-kSteerS = 0.15
+kSteerS = 0.215
 kSteerV = 0.10583
 
 # drive motor gains
@@ -53,9 +51,9 @@ kDriveFeedForward = 0.53
 kDutyCycleDriveV = 0.00916
 kDutyCycleDriveS = 0.01125
 
-kVoltageDriveV = 1.928
-kVoltageDriveS = 0.14
-kVoltageDriveP = 2.0
+kVoltageDriveV = 1.795
+kVoltageDriveS = 0.211
+kVoltageDriveP = 0.5
 kVoltageDriveA = 0.027631
 
 # intake gains
@@ -118,8 +116,8 @@ kShooterRightFlywheelID = 61
 #########################################
 
 # Swerve Drive Physical Attributes
-kTrackWidthMeters = inchesToMeters(22.750)
-kWheelBaseMeters = inchesToMeters(25.750)
+kTrackWidthMeters = inchesToMeters(24.25)  # 0.62
+kWheelBaseMeters = inchesToMeters(19.75)  # 0.5
 
 kMaxMetersPerSecond = feetToMeters(16)  # 16 feet per second
 kMaxChassisRadiansPerSec = 2 * math.tau  # revolutions per sec * tau

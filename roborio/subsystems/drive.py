@@ -79,7 +79,7 @@ from copy import deepcopy
 # from subsystems.vision import VisionPose
 
 # TODO: #3 Switch gear_stages to correct swerve module gearing when available
-drivetrain = DriveTrain(gear_stages=MK4C_L3_GEARING, wheel_diameter=WHEEL_DIAMETER)
+drivetrain = DriveTrain(gear_stages=MK5I_R3_GEARING, wheel_diameter=WHEEL_DIAMETER)
 
 drive_slot0 = FROGSlotConfig(
     k_s=constants.kVoltageDriveS,
@@ -114,7 +114,7 @@ steer_config = FROGTalonFXConfig(
 front_left_module_config = {
     "name": "FrontLeft",
     "location": Translation2d(
-        constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters
+        constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters / 2
     ),
     "drive_motor_config": deepcopy(drive_config.with_id(constants.kFrontLeftDriveID)),
     "steer_motor_config": deepcopy(steer_config.with_id(constants.kFrontLeftSteerID)),
@@ -126,7 +126,7 @@ front_left_module_config = {
 front_right_module_config = {
     "name": "FrontRight",
     "location": Translation2d(
-        constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters
+        constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters / 2
     ),
     "drive_motor_config": deepcopy(drive_config.with_id(constants.kFrontRightDriveID)),
     "steer_motor_config": deepcopy(steer_config.with_id(constants.kFrontRightSteerID)),
@@ -138,7 +138,7 @@ front_right_module_config = {
 back_left_module_config = {
     "name": "BackLeft",
     "location": Translation2d(
-        -constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters
+        -constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters / 2
     ),
     "drive_motor_config": deepcopy(drive_config.with_id(constants.kBackLeftDriveID)),
     "steer_motor_config": deepcopy(steer_config.with_id(constants.kBackLeftSteerID)),
@@ -150,7 +150,7 @@ back_left_module_config = {
 back_right_module_config = {
     "name": "BackRight",
     "location": Translation2d(
-        -constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters
+        -constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters / 2
     ),
     "drive_motor_config": deepcopy(drive_config.with_id(constants.kBackRightDriveID)),
     "steer_motor_config": deepcopy(steer_config.with_id(constants.kBackRightSteerID)),
