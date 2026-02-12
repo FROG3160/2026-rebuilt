@@ -112,8 +112,9 @@ kHopperMotorID = 41
 kClimberDeployMotorID = 50
 kClimberLeftLiftMotorID = 51
 kClimberRightLiftMotorID = 52
-kShooterLeftFlywheelID = 60
-kShooterRightFlywheelID = 61
+kFeedMotorID = 60
+kShooterLeftFlywheelID = 61
+kShooterRightFlywheelID = 62
 
 
 # ROGOT CHARACTERISTICS
