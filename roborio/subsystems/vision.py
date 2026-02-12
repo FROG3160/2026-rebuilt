@@ -12,4 +12,5 @@ class FuelDetector(FROGDetector, Subsystem):
     def periodic(self) -> None:
         # update fuel detection data
         self.get_targets()
+        self.process_targets()
         super().periodic()
