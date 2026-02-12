@@ -78,6 +78,9 @@ class RobotContainer:
         self.driver_xbox.b().whileTrue(
             self.intake.runForward().alongWith(self.hopper.runForward())
         )
+        self.fuel_detector.get_trigger_targets_close().whileTrue(
+            self.intake.runForward().alongWith(self.hopper.runForward())
+        )
 
     def configure_tactical_controls(self):
         # Configure operator controls
