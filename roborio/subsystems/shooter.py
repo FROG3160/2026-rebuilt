@@ -41,20 +41,27 @@ feed_motor_config = FROGTalonFXConfig(
 )
 
 
-class Flywheel:
-    def __init__(self, id: int, name: str):
+class Shooter(Subsystem):
+    def __init__(self, drive: Drive):
         self.right_motor = FROGTalonFX(
             motor_config=deepcopy(flywheel_motor_config)
-            .with_id(id)
-            .with_motor_name(name)
+            .with_id(constants.kShooterRightFlywheelID)
+            .with_motor_name("RightFlywheel")
         )
         self.left_motor = FROGTalonFX(
             motor_config=deepcopy(flywheel_motor_config)
-            .with_id(id + 1)
-            .with_motor_name(name.replace("Right", "Left"))
+            .with_id(constants.kShooterLeftFlywheelID)
+            .with_motor_name("LeftFlywheel")
             .with_motor_output(MOTOR_OUTPUT_CWP_COAST)
         )
         self.left_motor.set_control(controls.Follower(self.right_motor.device_id, True))
+
+        self.drive = drive
+        self.feed_motor = FROGTalonFX(
+            motor_config=FROGTalonFXConfig(feed_motor_config)
+            .with_id(constants.kFeedMotorID)
+            .with_motor_name("FeedMotor")
+        )
 
     def _set_speed(self, speed: float):
         self.right_motor.set_control(controls.VelocityVoltage(speed))
@@ -62,22 +69,9 @@ class Flywheel:
     def _stop_motor(self):
         self.right_motor.stopMotor()
 
-
-class Shooter(Subsystem):
-    def __init__(self, drive: Drive):
-        self.drive = drive
-        self.flywheel = Flywheel(constants.kShooterLeftFlywheelID, "Flywheel")
-        self.feed_motor = FROGTalonFX(
-            motor_config=FROGTalonFXConfig(feed_motor_config)
-            .with_id(constants.kFeedMotorID)
-            .with_motor_name("FeedMotor")
-        )
-
     # boolean to indicate if flywheel is at target speed
-    def _is_flywheel_at_speed(
-        self, target_speed: float, tolerance: float = 50.0
-    ) -> bool:
-        current_rps = self.flywheel.right_motor.get_velocity().value
+    def _flywheel_at_speed(self, target_speed: float, tolerance: float = 50.0) -> bool:
+        current_rps = self.right_motor.get_velocity().value
         return abs(current_rps - target_speed) <= tolerance
 
     # method to run feed motor forward
@@ -93,6 +87,6 @@ class Shooter(Subsystem):
     # generate a command to run the flywheel at a target speed
     def run_flywheel_at_speed(self, target_speed: float):
         return self.startEnd(
-            lambda: self.flywheel._set_speed(target_speed),
-            self.flywheel._stop_motor,
+            lambda: self._set_speed(target_speed),
+            self._stop_motor,
         )
