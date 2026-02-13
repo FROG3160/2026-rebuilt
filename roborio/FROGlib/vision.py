@@ -219,6 +219,9 @@ class FROGDetector(PhotonCamera):
         self.targets: List[PhotonTrackedTarget] = []
         self.detection_target: Optional[DetectionResult] = None
         # self.alt_detection_target: Optional[DetectionResult] = None
+        self._yaws: np.ndarray = np.array([])
+        self._pitches: np.ndarray = np.array([])
+        self._areas: np.ndarray = np.array([])
 
     def get_targets(self):
         if results := self.getAllUnreadResults():
