@@ -9,6 +9,7 @@ from FROGlib.ctre import (
 )
 import constants
 from phoenix6 import controls
+from commands2.button import Trigger
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
 from subsystems.drive import Drive
 
@@ -90,3 +91,7 @@ class Shooter(Subsystem):
             lambda: self._set_speed(target_speed),
             self._stop_motor,
         )
+
+    # return a Trigger that is active when the flywheel is at the target speed
+    def flywheel_at_speed_trigger(self, target_speed: float, tolerance: float = 50.0):
+        return Trigger(lambda: self._flywheel_at_speed(target_speed, tolerance))
