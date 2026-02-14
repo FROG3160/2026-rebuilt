@@ -286,6 +286,7 @@ class Drive(SwerveChassis, Subsystem):
         self.vision_tunables = VisionTunables()
         SmartDashboard.putData("Vision Tunables", self.vision_tunables)
         SmartDashboard.putData("Drive Subsystem", self)
+        self.firing_target = None
 
     # Tell SysId how to plumb the driving voltage to the motors.
     def sysid_drive(self, voltage: volts) -> None:
@@ -465,13 +466,21 @@ class Drive(SwerveChassis, Subsystem):
         else:
             chassis_speeds = self._actualChassisSpeeds
         robot_vector = Translation2d(chassis_speeds.vx, chassis_speeds.vy)
+        robot_pose = self.getPose()
         # use the robot's rotation to convert robot-relative vector to field-relative
-        field_vector = robot_vector.rotateBy(self.getRotation2d())
+        field_vector = robot_vector.rotateBy(robot_pose.rotation())
         # move the translation of the target by the field-relative vector
         adjusted_translation = target_pose.translation() - field_vector
         # compose a new pose with the adjusted translation and original rotation
         new_target = Pose2d(adjusted_translation, target_pose.rotation())
+        self._firing_target = new_target
+        self._distance_to_target = robot_pose.translation().distance(
+            new_target.translation()
+        )
         return new_target
+
+    def get_distance_to_target(self):
+        return self._distance_to_target
 
     def getPathPlannerPath(self, pathname: str) -> PathPlannerPath:
         return PathPlannerPath.fromPathFile(pathname)
