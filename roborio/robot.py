@@ -59,3 +59,7 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def testPeriodic(self) -> None:
         pass
+
+    def robotPeriodic(self):
+        self.container.shift_tracker.update()
+        self.container.shift_tracker.put_to_dashboard()

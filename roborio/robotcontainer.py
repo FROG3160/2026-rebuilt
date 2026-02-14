@@ -4,6 +4,7 @@ from wpimath.geometry import Pose2d
 
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
 from FROGlib.vision import FROGDetector
+from subsystems.feedback import ShiftTracker
 from subsystems.shooter import Shooter
 from subsystems.hopper import Hopper
 from subsystems.intake import Intake
@@ -37,6 +38,7 @@ class RobotContainer:
             constants.kTranslationSlew,
             constants.kRotSlew,
         )
+        self.shift_tracker = ShiftTracker()
 
         self.register_named_commands()
         self.configure_button_bindings()
@@ -87,6 +89,14 @@ class RobotContainer:
         self.fuel_detector.get_trigger_targets_close().whileTrue(
             self.intake.runForward().alongWith(self.hopper.runForward())
         )
+        # self.driver_xbox.leftBumper().and_(
+        #     self.shooter.trigger_flywheel_at_speed()
+        # ).whileTrue(
+        #     self.shooter.run_feed_motor_forward().alongWith(self.hopper.runForward())
+        # )
+        self.driver_xbox.leftBumper().whileTrue(
+            self.shooter.fire_command().alongWith(self.hopper.runForward())
+        )  # max speed with 4" wheel is 33.8 m/s
 
     def configure_tactical_controls(self):
         # Configure operator controls
