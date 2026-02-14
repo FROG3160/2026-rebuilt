@@ -12,7 +12,7 @@ from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
 from subsystems.drive import Drive
 from phoenix6.configs import SlotConfigs
-from wpiutil import SendableBuilder
+from wpiutil import Sendable, SendableBuilder
 import wpilib
 
 flywheel_slot0 = FROGSlotConfig(
@@ -44,6 +44,28 @@ feed_motor_config = FROGTalonFXConfig(
 )
 
 
+class FlywheelTunables(Sendable):
+    """Sendable exposing only flywheel slot0 gains for dashboard tuning."""
+
+    def __init__(self, shooter: "Shooter"):
+        self.shooter = shooter
+
+    def initSendable(self, builder: SendableBuilder) -> None:
+        builder.setSmartDashboardType("Flywheel Tunables")
+
+        def get_param(param: str) -> float:
+            # Safe access to the configured slot0
+            return getattr(self.shooter.right_motor.config.slot0, param)
+
+        for param in ["k_s", "k_v", "k_a", "k_p", "k_i", "k_d"]:
+            # Clean names since it's a dedicated tuning widget
+            builder.addDoubleProperty(
+                param.upper(),
+                lambda p=param: get_param(p),
+                lambda v, p=param: self.shooter._updateFlywheelSlot0(**{p: v}),
+            )
+
+
 class Shooter(Subsystem):
     def __init__(self, drive: Drive):
         self.right_motor = FROGTalonFX(
@@ -65,6 +87,8 @@ class Shooter(Subsystem):
             .with_id(constants.kFeedMotorID)
             .with_motor_name("FeedMotor")
         )
+
+        self.tunables = FlywheelTunables(self)
 
         if wpilib.RobotBase.isSimulation():
             self._flywheel_right_sim_velocity = 0.0
@@ -129,15 +153,28 @@ class Shooter(Subsystem):
                 setattr(slot0, k, v)
             motor.configurator.apply(slot0)
 
+    def _get_slot0_param(self, param: str) -> float:
+        # Use .configs for a cached/snapshot view (safer in Sendable callbacks)
+        return getattr(self.right_motor.config.slot0, param)
+
     def initSendable(self, builder: SendableBuilder) -> None:
         super().initSendable(builder)
-        # Get current values from one of the motors (they should be synced)
-        slot0_getter = lambda param: getattr(self.right_motor.config.slot0, param)
+        builder.setSmartDashboardType("Shooter")  # or "Flywheel Tunables" etc.
+
+        # Read-only telemetry (shown in main widget)
+        builder.addDoubleProperty(
+            "Flywheel RPS",
+            lambda: self.right_motor.get_velocity().value_as_double,
+            None,
+        )
+        builder.addBooleanProperty(
+            "At Speed", lambda: self._flywheel_at_speed(self.target_speed or 0), None
+        )  # if you track target
+
+        # Tunable gains – these are editable
         for param in ["k_s", "k_v", "k_a", "k_p", "k_i", "k_d"]:
-            # Display name like "Flywheel K_S", etc.
             builder.addDoubleProperty(
                 f"Flywheel {param.upper()}",
-                lambda p=param: slot0_getter(p),
+                lambda p=param: self._get_slot0_param(p),
                 lambda v, p=param: self._updateFlywheelSlot0(**{p: v}),
             )
-        wpilib.SmartDashboard.putData("ShooterObj", self)

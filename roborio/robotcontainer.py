@@ -11,6 +11,7 @@ from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
 from commands2.sysid import SysIdRoutine
+from wpilib.shuffleboard import Shuffleboard
 import constants
 
 
@@ -42,7 +43,10 @@ class RobotContainer:
         self.configure_automation_bindings()
 
         self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
+        Shuffleboard.getTab("Subsystems").add("Shooter", self.shooter)
+        #   → /Subsystems/Shooter : shows subsystem status/command
 
+        Shuffleboard.getTab("Tuning").add("Flywheel Gains", self.shooter)
         # Set up PathPlanner autos and publish to dashboard
         # self.autochooser = AutoBuilder.buildAutoChooser()
         # SmartDashboard.putData("PathPlanner Autos", self.autochooser)
