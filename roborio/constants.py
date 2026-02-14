@@ -85,6 +85,9 @@ kFlywheelS = 0.05
 kFlywheelV = 0.0002
 kFlywheelA = 0.00002
 
+# tolerances
+kFlywheelTolerance = 10.0  # RPM tolerance for "at speed" check
+
 ## CAN ID assignments
 ########################################
 # TODO: Update these CAN IDs to match the robot
