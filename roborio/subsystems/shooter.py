@@ -1,5 +1,6 @@
 from copy import deepcopy
 from commands2 import Subsystem
+from wpimath.units import inchesToMeters
 from phoenix6.hardware import TalonFX
 from FROGlib.ctre import (
     FROGSlotConfig,
@@ -10,10 +11,16 @@ from FROGlib.ctre import (
 import constants
 from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
+from FROGlib.utils import DriveTrain
 from subsystems.drive import Drive
 from phoenix6.configs import SlotConfigs
 from wpiutil import Sendable, SendableBuilder
 import wpilib
+from commands2.button import Trigger
+
+flywheel_gearing = DriveTrain(
+    gear_stages=[], wheel_diameter=inchesToMeters(4.0)
+)  # for velocity conversions, etc.
 
 flywheel_slot0 = FROGSlotConfig(
     k_s=constants.kFlywheelS,
@@ -31,7 +38,9 @@ flywheel_motor_config = FROGTalonFXConfig(
     can_bus="rio",
     parent_nt="Shooter",
     motor_output=MOTOR_OUTPUT_CCWP_COAST,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=1.0),
+    feedback=FROGFeedbackConfig(
+        sensor_to_mechanism_ratio=flywheel_gearing.system_reduction
+    ),
     slot0=flywheel_slot0,
 )
 
@@ -88,7 +97,9 @@ class Shooter(Subsystem):
             .with_motor_name("FeedMotor")
         )
 
-        self.tunables = FlywheelTunables(self)
+        self._flywheel_tolerance = (
+            constants.kFlywheelTolerance
+        )  # RPM tolerance for "at speed" check
 
         if wpilib.RobotBase.isSimulation():
             self._flywheel_right_sim_velocity = 0.0
@@ -96,15 +107,40 @@ class Shooter(Subsystem):
             self._feed_sim_velocity = 0.0
 
     def _set_speed(self, speed: float):
-        self.right_motor.set_control(controls.VelocityVoltage(speed))
+        self.right_motor.set_control(
+            controls.VelocityVoltage(self.get_speed_from_distance())
+        )
 
-    def _stop_motor(self):
+    def get_speed_from_distance(self) -> float:
+        """
+        Linearly interpolates speed based on distance.
+
+        Given:
+        - 1 meter → 7 units speed
+        - 4 meters → 30 units speed
+
+        Returns speed as a float.
+        Uses exact fraction: speed = (23 * distance - 2) / 3
+        """
+        return (23 * self.drive.get_distance_to_target() - 2) / 3
+
+    # starts the flywheel and runs the feed motor forward when the flywheel is at speed
+    def _fire(self):
+        self._set_speed(15)  # max speed with 4" wheel is 33.8 m/s
+        if self._flywheel_at_speed():
+            self._run_feed_motor_forward()
+        else:
+            self._stop_feed_motor()
+
+    def _stop_motors(self):
         self.right_motor.stopMotor()
+        self.feed_motor.stopMotor()
 
     # boolean to indicate if flywheel is at target speed
-    def _flywheel_at_speed(self, target_speed: float, tolerance: float = 50.0) -> bool:
-        current_rps = self.right_motor.get_velocity().value
-        return abs(current_rps - target_speed) <= tolerance
+    def _flywheel_at_speed(self) -> bool:
+        error = self.right_motor.get_closed_loop_error().value
+        speed = self._get_flywheel_velocity()
+        return abs(error) <= self._flywheel_tolerance and speed > 0
 
     # method to run feed motor forward
     def _run_feed_motor_forward(self):
@@ -116,17 +152,17 @@ class Shooter(Subsystem):
     def _stop_feed_motor(self):
         self.feed_motor.stopMotor()
 
-    # generate a command to run the flywheel at a target speed
-    def run_flywheel_at_speed(self, target_speed: float):
-        return self.startEnd(
-            lambda: self._set_speed(target_speed),
-            self._stop_motor,
+    # generate a command to fire
+    def fire_command(self):
+        return self.runEnd(
+            self._fire,
+            self._stop_motors,
         )
 
     def simulationPeriodic(self):
 
         dt = 0.020
-        max_rps = 100.0
+        max_vel = 33.8  # m/s with 4" wheel at 12V, for reference in sim calculations
         battery_v = wpilib.RobotController.getBatteryVoltage()
 
         for motor, sim_vel_attr in [
@@ -136,9 +172,9 @@ class Shooter(Subsystem):
         ]:
             motor.sim_state.set_supply_voltage(battery_v)
             applied_v = motor.get_motor_voltage().value
-            target_vel = (applied_v / 12.0) * max_rps
+            target_vel = (applied_v / 12.0) * max_vel
             sim_vel = getattr(self, sim_vel_attr)
-            sim_vel += 0.3 * (target_vel - sim_vel)
+            sim_vel += 0.1 * (target_vel - sim_vel)
             setattr(self, sim_vel_attr, sim_vel)
             directed_vel = sim_vel
             motor.sim_state.set_rotor_velocity(directed_vel)
@@ -157,19 +193,27 @@ class Shooter(Subsystem):
         # Use .configs for a cached/snapshot view (safer in Sendable callbacks)
         return getattr(self.right_motor.config.slot0, param)
 
+    def _get_flywheel_velocity(self) -> float:
+        return self.right_motor.get_velocity().value
+
     def initSendable(self, builder: SendableBuilder) -> None:
         super().initSendable(builder)
         builder.setSmartDashboardType("Shooter")  # or "Flywheel Tunables" etc.
 
         # Read-only telemetry (shown in main widget)
         builder.addDoubleProperty(
-            "Flywheel RPS",
-            lambda: self.right_motor.get_velocity().value_as_double,
-            None,
+            "Flywheel Velocity",
+            lambda: self._get_flywheel_velocity(),
+            lambda: None,
         )
-        builder.addBooleanProperty(
-            "At Speed", lambda: self._flywheel_at_speed(self.target_speed or 0), None
-        )  # if you track target
+        builder.addDoubleProperty(
+            "Flywheel Commanded Velocity",
+            lambda: self.right_motor.get_closed_loop_reference().value,
+            lambda: None,
+        )
+        # builder.addBooleanProperty(
+        #     "At Speed", lambda: self._flywheel_at_speed(), None
+        # )  # if you track target
 
         # Tunable gains – these are editable
         for param in ["k_s", "k_v", "k_a", "k_p", "k_i", "k_d"]:
