@@ -4,6 +4,7 @@ from wpimath.geometry import Pose2d
 
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
 from FROGlib.vision import FROGDetector
+from subsystems.shooter import Shooter
 from subsystems.hopper import Hopper
 from subsystems.intake import Intake
 from subsystems.drive import Drive
@@ -27,6 +28,7 @@ class RobotContainer:
         self.drive = Drive()
         self.intake = Intake()
         self.hopper = Hopper()
+        self.shooter = Shooter(self.drive)
         self.driver_xbox = FROGXboxDriver(
             constants.kDriverControllerPort,
             constants.kDeadband,

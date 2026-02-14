@@ -9,9 +9,11 @@ from FROGlib.ctre import (
 )
 import constants
 from phoenix6 import controls
-from commands2.button import Trigger
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
 from subsystems.drive import Drive
+from phoenix6.configs import SlotConfigs
+from wpiutil import SendableBuilder
+import wpilib
 
 flywheel_slot0 = FROGSlotConfig(
     k_s=constants.kFlywheelS,
@@ -64,6 +66,11 @@ class Shooter(Subsystem):
             .with_motor_name("FeedMotor")
         )
 
+        if wpilib.RobotBase.isSimulation():
+            self._flywheel_right_sim_velocity = 0.0
+            self._flywheel_left_sim_velocity = 0.0
+            self._feed_sim_velocity = 0.0
+
     def _set_speed(self, speed: float):
         self.right_motor.set_control(controls.VelocityVoltage(speed))
 
@@ -92,6 +99,45 @@ class Shooter(Subsystem):
             self._stop_motor,
         )
 
-    # return a Trigger that is active when the flywheel is at the target speed
-    def flywheel_at_speed_trigger(self, target_speed: float, tolerance: float = 50.0):
-        return Trigger(lambda: self._flywheel_at_speed(target_speed, tolerance))
+    def simulationPeriodic(self):
+
+        dt = 0.020
+        max_rps = 100.0
+        battery_v = wpilib.RobotController.getBatteryVoltage()
+
+        for motor, sim_vel_attr in [
+            (self.right_motor, "_flywheel_right_sim_velocity"),
+            (self.left_motor, "_flywheel_left_sim_velocity"),
+            (self.feed_motor, "_feed_sim_velocity"),
+        ]:
+            motor.sim_state.set_supply_voltage(battery_v)
+            applied_v = motor.get_motor_voltage().value
+            target_vel = (applied_v / 12.0) * max_rps
+            sim_vel = getattr(self, sim_vel_attr)
+            sim_vel += 0.3 * (target_vel - sim_vel)
+            setattr(self, sim_vel_attr, sim_vel)
+            directed_vel = sim_vel
+            motor.sim_state.set_rotor_velocity(directed_vel)
+            pos_change = directed_vel * dt
+            motor.sim_state.add_rotor_position(pos_change)
+
+    def _updateFlywheelSlot0(self, **kwargs):
+        for motor in [self.right_motor, self.left_motor]:
+            slot0 = SlotConfigs()
+            motor.configurator.refresh(slot0)
+            for k, v in kwargs.items():
+                setattr(slot0, k, v)
+            motor.configurator.apply(slot0)
+
+    def initSendable(self, builder: SendableBuilder) -> None:
+        super().initSendable(builder)
+        # Get current values from one of the motors (they should be synced)
+        slot0_getter = lambda param: getattr(self.right_motor.config.slot0, param)
+        for param in ["k_s", "k_v", "k_a", "k_p", "k_i", "k_d"]:
+            # Display name like "Flywheel K_S", etc.
+            builder.addDoubleProperty(
+                f"Flywheel {param.upper()}",
+                lambda p=param: slot0_getter(p),
+                lambda v, p=param: self._updateFlywheelSlot0(**{p: v}),
+            )
+        wpilib.SmartDashboard.putData("ShooterObj", self)
