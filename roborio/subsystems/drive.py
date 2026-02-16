@@ -287,6 +287,7 @@ class Drive(SwerveChassis, Subsystem):
         SmartDashboard.putData("Vision Tunables", self.vision_tunables)
         SmartDashboard.putData("Drive Subsystem", self)
         self.firing_target = None
+        self._distance_to_target = None
 
     # Tell SysId how to plumb the driving voltage to the motors.
     def sysid_drive(self, voltage: volts) -> None:
