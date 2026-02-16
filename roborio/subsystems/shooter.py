@@ -1,8 +1,9 @@
 from copy import deepcopy
 import numpy as np
-from commands2 import Subsystem
+from commands2 import Command, Subsystem
 from wpimath.units import inchesToMeters
 from phoenix6.hardware import TalonFX
+from phoenix6.configs import SoftwareLimitSwitchConfigs
 from FROGlib.ctre import (
     FROGSlotConfig,
     FROGTalonFX,
@@ -11,7 +12,11 @@ from FROGlib.ctre import (
 )
 import constants
 from phoenix6 import controls
-from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
+from FROGlib.ctre import (
+    MOTOR_OUTPUT_CWP_COAST,
+    MOTOR_OUTPUT_CCWP_COAST,
+    MOTOR_OUTPUT_CCWP_BRAKE,
+)
 from FROGlib.utils import DriveTrain
 from subsystems.drive import Drive
 from phoenix6.configs import SlotConfigs
@@ -24,6 +29,7 @@ import math
 from wpilib.simulation import DCMotorSim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpimath.units import radiansToRotations
+from commands2 import cmd
 
 flywheel_gearing = DriveTrain(
     gear_stages=[], wheel_diameter=inchesToMeters(4.0)
@@ -40,6 +46,9 @@ flywheel_slot0 = FROGSlotConfig(
 feed_slot0 = FROGSlotConfig(
     k_s=constants.kVoltageHopperS,
 )
+hood_slot0 = FROGSlotConfig(
+    k_s=constants.kHoodS,
+)
 
 flywheel_motor_config = FROGTalonFXConfig(
     can_bus="rio",
@@ -54,10 +63,30 @@ flywheel_motor_config = FROGTalonFXConfig(
 feed_motor_config = FROGTalonFXConfig(
     can_bus="rio",
     parent_nt="Shooter",
-    motor_output=MOTOR_OUTPUT_CCWP_COAST,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=1.0),
+    motor_output=MOTOR_OUTPUT_CWP_COAST,
+    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=5.0),
     slot0=feed_slot0,
 )
+
+hood_motor_config = FROGTalonFXConfig(
+    can_bus="rio",
+    parent_nt="Shooter",
+    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
+    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=60.0),
+    slot0=feed_slot0,
+)
+
+hood_software_limits = (
+    SoftwareLimitSwitchConfigs()
+    .with_forward_soft_limit_threshold(constants.kHoodForwardLimit)
+    .with_reverse_soft_limit_threshold(constants.kHoodReverseLimit)
+    .with_forward_soft_limit_enable(True)
+    .with_forward_soft_limit_enable(True)
+)
+
+
+class MockMoterAlignmentValue:
+    value = 1
 
 
 class Shooter(Subsystem):
@@ -66,7 +95,7 @@ class Shooter(Subsystem):
             motor_config=deepcopy(flywheel_motor_config)
             .with_id(constants.kShooterLeftFlywheelID)
             .with_motor_name("LeftFlywheel")
-            .with_motor_output(MOTOR_OUTPUT_CWP_COAST)
+            .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
         )
         self._flywheel_follower = FROGTalonFX(
             motor_config=deepcopy(flywheel_motor_config)
@@ -75,14 +104,20 @@ class Shooter(Subsystem):
             .with_slot0(FROGSlotConfig())
         )
         self._flywheel_follower.set_control(
-            controls.Follower(self.flywheel_motor.device_id, True)
+            controls.Follower(self.flywheel_motor.device_id, MockMoterAlignmentValue)
         )
 
         self.drive = drive
         self.feed_motor = FROGTalonFX(
             motor_config=FROGTalonFXConfig(feed_motor_config)
             .with_id(constants.kFeedMotorID)
-            .with_motor_name("FeedMotor")
+            .with_motor_name("Feed Motor")
+        )
+
+        self.hood_motor = FROGTalonFX(
+            motor_config=FROGTalonFXConfig(hood_motor_config)
+            .with_id(constants.kHoodMotorID)
+            .with_motor_name("Hood Motor")
         )
 
         self._flywheel_tolerance = (
@@ -93,7 +128,7 @@ class Shooter(Subsystem):
         # these attributes won't show as being referenced in the code,
         # but they're referenced by name as a string in simulationPeriodic.
         self._commanded_flywheel_speed = 0.0
-        self._feed_speed = 0.5  # in volts for now
+        self._feed_speed = 4.0  # in volts for now
         if wpilib.RobotBase.isSimulation():
             self.simulationInit()
 
@@ -177,6 +212,23 @@ class Shooter(Subsystem):
         return self.runEnd(
             self._fire,
             self._stop_motors,
+        )
+
+    def _set_hood_position(self):
+        self.hood_motor.set_position(0)
+        self.hood_motor.config.software_limit_switch = hood_software_limits
+        self.hood_motor.configurator.apply(self.hood_motor.config)
+
+    def zero_hood_command(self):
+        return (
+            self.runOnce(
+                lambda: self.hood_motor.set_control(controls.VoltageOut(-0.18))
+            )
+            .andThen(
+                cmd.waitUntil(lambda: self.hood_motor.get_stator_current().value < -4.5)  # type: ignore
+            )
+            .andThen(self.runOnce(self.hood_motor.stopMotor()))
+            .andThen(self._set_hood_position())
         )
 
     def simulationInit(self):
