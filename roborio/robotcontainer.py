@@ -13,6 +13,8 @@ from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
 from commands2.sysid import SysIdRoutine
 from wpilib.shuffleboard import Shuffleboard
+from commands2.button import Trigger
+from commands2 import StartEndCommand
 import constants
 
 
@@ -121,4 +123,44 @@ class RobotContainer:
         )
         self.driver_xbox.y().whileTrue(
             self.drive.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse)
+        )
+
+    def configureComponentTestBindings(self):
+        """Button bindings for manual component testing in test mode.
+        Each press toggles the motor on/off (runs until toggled off or interrupted).
+        """
+
+        # Intake toggle forward
+        self.driver_xbox.a().toggleOnTrue(
+            self.intake.runForward().withName("Toggle Intake Forward")
+        )
+
+        # intake reverse toggles
+        self.driver_xbox.b().toggleOnTrue(
+            self.intake.runBackward().withName("Toggle Intake Reverse")
+        )
+
+        # Hopper toggles - forward
+        self.driver_xbox.x().toggleOnTrue(
+            self.hopper.runForward().withName("Toggle Hopper Forward")
+        )
+        # reverse
+        self.driver_xbox.y().toggleOnTrue(
+            self.hopper.runBackward().withName("Toggle Hopper Reverse")
+        )
+
+        # Shooter feed toggle
+        self.driver_xbox.leftBumper().toggleOnTrue(
+            StartEndCommand(
+                self.shooter._run_feed_motor, lambda: self.shooter._stop_feed_motor
+            ).withName("Run Shooter Feed")
+        )
+
+        # Flywheel: Using triggers as hold-to-run (common for speed control).
+        # If you really want toggle on flywheel, we can use a button instead or add logic.
+        self.driver_xbox.leftTrigger().whileTrue(
+            StartEndCommand(
+                self.shooter._apply_commanded_speed,
+                self.shooter._stop_flywheel,
+            ).withName("Run Flywheel")
         )

@@ -6,15 +6,8 @@
 #
 
 import commands2
-from wpilib import DriverStation
-
-from FROGlib.xbox import FROGXboxDriver
+from wpilib import DriverStation, SendableChooser, SmartDashboard
 from robotcontainer import RobotContainer
-import constants
-
-
-# from components.component1 import Component1
-# from components.component2 import Component2
 
 
 class FROGBot(commands2.TimedCommandRobot):
@@ -26,15 +19,11 @@ class FROGBot(commands2.TimedCommandRobot):
 
         self.container = RobotContainer()
 
-        # self.component1_motor = wpilib.Talon(1)
-        # self.some_motor = wpilib.Talon(2)
-
-        # self.joystick = wpilib.Joystick(0)
-
-    #
-    # No autonomous routine boilerplate required here, anything in the
-    # autonomous folder will automatically get added to a list
-    #
+        # Add SendableChooser for test modes
+        self.test_chooser = SendableChooser()
+        self.test_chooser.setDefaultOption("SysId Characterization", "sysid")
+        self.test_chooser.addOption("Component Tests", "components")
+        SmartDashboard.putData("Test Mode Chooser", self.test_chooser)
 
     def setAlliance(self):
         self.alliance = DriverStation.getAlliance()
@@ -53,9 +42,15 @@ class FROGBot(commands2.TimedCommandRobot):
         pass
 
     def testInit(self) -> None:
-        self.container.configureSysIDButtonBindings()
         # self.container.drive.removeDefaultCommand()
         self.container.drive.enable()
+
+        # Configure bindings based on chosen test mode
+        selected = self.test_chooser.getSelected()
+        if selected == "sysid":
+            self.container.configureSysIDButtonBindings()
+        elif selected == "components":
+            self.container.configureComponentTestBindings()
 
     def testPeriodic(self) -> None:
         pass
