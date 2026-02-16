@@ -92,21 +92,27 @@ class Shooter(Subsystem):
         # used in simulationPeriodic to track simulated velocity
         # these attributes won't show as being referenced in the code,
         # but they're referenced by name as a string in simulationPeriodic.
-        self._commanded_speed = 0.0
+        self._commanded_flywheel_speed = 0.0
+        self._feed_speed = 0.5  # in volts for now
         if wpilib.RobotBase.isSimulation():
             self.simulationInit()
 
     def _set_speed_by_distance(self):
-        if speed := self.get_speed_from_distance():
-            self._set_speed(speed)
+        if speed := self._get_speed_from_distance():
+            self._set_commanded_speed(speed)
         else:
-            self._set_speed(0.0)
+            self._set_commanded_speed(0.0)
+        self._apply_commanded_speed()
 
-    def _set_speed(self, speed: float):
-        self._commanded_speed = speed
-        self.flywheel_motor.set_control(controls.VelocityVoltage(speed))
+    def _set_commanded_speed(self, speed: float):
+        self._commanded_flywheel_speed = speed
 
-    def get_speed_from_distance(self) -> float | None:
+    def _apply_commanded_speed(self):
+        self.flywheel_motor.set_control(
+            controls.VelocityVoltage(self._commanded_flywheel_speed)
+        )
+
+    def _get_speed_from_distance(self) -> float | None:
         """
         Linearly interpolates speed based on distance.
 
@@ -123,19 +129,29 @@ class Shooter(Subsystem):
             return None
 
     def get_commanded_speed(self) -> float:
-        return self._commanded_speed
+        return self._commanded_flywheel_speed
 
     # starts the flywheel and runs the feed motor forward when the flywheel is at speed
     def _fire(self):
-        self._set_speed_by_distance()  # max speed with 4" wheel is 33.8 m/s
+        self._set_speed_by_distance()
+        self._apply_commanded_speed()  # max speed with 4" wheel is 33.8 m/s
         if self._flywheel_at_speed():
-            self._run_feed_motor_forward()
+            self._run_feed_motor()
+
+        else:
+            self._stop_feed_motor()
+
+    def _fire_at_fixed_speed(self, speed: float):
+        self._set_commanded_speed(speed)
+        self._apply_commanded_speed()
+        if self._flywheel_at_speed():
+            self._run_feed_motor()
         else:
             self._stop_feed_motor()
 
     def _stop_motors(self):
-        self.flywheel_motor.stopMotor()
-        self.feed_motor.stopMotor()
+        self._stop_feed_motor()
+        self._stop_flywheel()
 
     # boolean to indicate if flywheel is at target speed
     def _flywheel_at_speed(self) -> bool:
@@ -144,14 +160,17 @@ class Shooter(Subsystem):
         return abs(error) <= self._flywheel_tolerance and speed > 0
 
     # method to run feed motor forward
-    def _run_feed_motor_forward(self):
+    def _run_feed_motor(self):
         self.feed_motor.set_control(
-            controls.VoltageOut(constants.kVoltageHopperS, enable_foc=False)
+            controls.VoltageOut(self._feed_speed, enable_foc=False)
         )
 
     # method to stop feed motor
     def _stop_feed_motor(self):
         self.feed_motor.stopMotor()
+
+    def _stop_flywheel(self):
+        self.flywheel_motor.stopMotor()
 
     # generate a command to fire
     def fire_command(self):
@@ -283,8 +302,13 @@ class Shooter(Subsystem):
         )
         builder.addDoubleProperty(
             "Flywheel Commanded Speed",
-            lambda: self.get_commanded_speed(),
-            lambda: None,
+            lambda: self._commanded_flywheel_speed,
+            lambda value: setattr(self, "_commanded_flywheel_speed", value),
+        )
+        builder.addDoubleProperty(
+            "Feed Speed",
+            lambda: self._feed_speed,
+            lambda value: setattr(self, "_feed_speed", value),
         )
         builder.addBooleanProperty(
             "At Speed", lambda: self._flywheel_at_speed(), lambda: None
