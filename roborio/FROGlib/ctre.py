@@ -52,6 +52,9 @@ MAGNET_CONFIG_CONTWRAP_CCWP = (
     .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
 )
 
+MAX_FALCON_RPM = 6380  # maximum free speed of a Falcon 500
+MAX_KRAKEN_X60_RPM = 6000  # estimated maximum free speed of a Kraken X60
+
 
 class FROGMotorOutputConfig(MotorOutputConfigs):
     """FROG custom MotorOutputConfig that takes parameters during instantiation."""
