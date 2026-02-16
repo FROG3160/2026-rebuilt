@@ -112,12 +112,13 @@ kGyroID = 39
 
 kIntakeMotorID = 40
 kHopperMotorID = 41
+kFeedMotorID = 42
+kShooterLeftFlywheelID = 43
+kShooterRightFlywheelID = 44
+kHoodMotorID = 45
 kClimberDeployMotorID = 50
 kClimberLeftLiftMotorID = 51
 kClimberRightLiftMotorID = 52
-kFeedMotorID = 60
-kShooterLeftFlywheelID = 61
-kShooterRightFlywheelID = 62
 
 
 # ROGOT CHARACTERISTICS
