@@ -77,20 +77,27 @@ kLiftS = 0.0
 kLiftV = 0.0
 kLiftG = 0.0
 
+# Feed/transfer motor gains
+kFeedS = 0.2
+
 # flywheel gains
 kFlywheelP = 0.1
 kFlywheelI = 0.0
 kFlywheelD = 0.0
-kFlywheelS = 0.05
+kFlywheelS = 0.19  # determined with follower helping
 kFlywheelV = 0.0002
 kFlywheelA = 0.00002
 
+# Hood motor gains
+kHoodS = 0.15
+kHoodForwardLimit = 0.07646483
+kHoodReverseLimit = 0.0
+
 # tolerances
-kFlywheelTolerance = 10.0  # RPM tolerance for "at speed" check
+kFlywheelTolerance = 1.0  # tolerance in m/s
 
 ## CAN ID assignments
 ########################################
-# TODO: Update these CAN IDs to match the robot
 # Swerve Drive Motor/Encoder IDs
 kFrontLeftDriveID = 11
 kFrontLeftSteerID = 21
@@ -116,6 +123,7 @@ kFeedMotorID = 42
 kShooterLeftFlywheelID = 43
 kShooterRightFlywheelID = 44
 kHoodMotorID = 45
+
 kClimberDeployMotorID = 50
 kClimberLeftLiftMotorID = 51
 kClimberRightLiftMotorID = 52
