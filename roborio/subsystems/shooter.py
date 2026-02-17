@@ -86,10 +86,6 @@ hood_software_limits = (
 )
 
 
-class MockMoterAlignmentValue:
-    value = 1
-
-
 class Shooter(Subsystem):
     def __init__(self, drive: Drive):
         self.flywheel_motor = FROGTalonFX(
