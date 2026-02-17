@@ -81,12 +81,12 @@ kLiftG = 0.0
 kFeedS = 0.2
 
 # flywheel gains
-kFlywheelP = 0.1
+kFlywheelP = 0
 kFlywheelI = 0.0
 kFlywheelD = 0.0
 kFlywheelS = 0.19  # determined with follower helping
-kFlywheelV = 0.0002
-kFlywheelA = 0.00002
+kFlywheelV = 0.351
+kFlywheelA = 0
 
 # Hood motor gains
 kHoodS = 0.15
