@@ -528,11 +528,7 @@ class Drive(SwerveChassis, Subsystem):
                     .translation()
                     .distance(self.swerve_estimator_pose.translation())
                 )
-                # print(
-                #     f"Pose delta for {estimator.camera.getName()}: {pose_delta:.2f} m"
-                # )
-                # print(f"Tunable Max Delta: {self.vision_tunables.max_delta:.2f} m")
-
+              
                 # only add vision measurement if within 1 meter of current estimate
                 # put camera pose on the dashboard field
                 cameraPoseObject = self.estimator_field.getObject(

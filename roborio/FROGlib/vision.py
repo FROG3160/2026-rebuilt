@@ -233,7 +233,6 @@ class FROGDetector(PhotonCamera):
             else:
                 self.targets = result.getTargets()
         else:
-            print("No new camera results")
             self.targets = []
 
     def process_targets(self):
