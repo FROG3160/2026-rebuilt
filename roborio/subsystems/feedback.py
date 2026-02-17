@@ -14,13 +14,29 @@ class ShiftTracker:
         self.our_alliance = None  # Alliance.RED / BLUE / None
         self.first_inactive_alliance = None
 
-        # Shift durations in seconds
-        self.shift_durations = [25, 45, float("inf")]  # shift 1, 2, last
+        # Teleop duration in seconds
+        self.teleop_duration = 140.0
+
+        # Period durations in seconds
+        self.transition_duration = 10.0
+        self.alliance_shift_durations = [25.0] * 4
+        self.endgame_duration = 30.0
+
+        # Calculate start times for alliance shifts (relative to teleop start)
+        self.alliance_shift_starts = [self.transition_duration]
+        for i in range(1, 4):
+            self.alliance_shift_starts.append(
+                self.alliance_shift_starts[-1] + self.alliance_shift_durations[i - 1]
+            )
+        self.endgame_start = (
+            self.alliance_shift_starts[-1] + self.alliance_shift_durations[-1]
+        )
 
         # Cache some values
         self.last_known_match_time = -1
         self.current_shift_start_time = -1
-        self.current_shift_number = -1
+        self.current_shift_duration = -1
+        self.current_shift_number = 0  # 0: transition, 1-4: alliance shifts, 5: endgame
 
     def update(self):
         """Call this periodically (e.g. every loop in robotPeriodic / teleopPeriodic)"""
@@ -51,12 +67,16 @@ class ShiftTracker:
             return False  # safest default
 
         # If first inactive = opponent → we are active first → our hub is active
-        opponent_char = "B" if self.our_alliance == DriverStation.Alliance.kRed else "R"
+        our_char = "R" if self.our_alliance == DriverStation.Alliance.kRed else "B"
 
-        if self.first_inactive_alliance == opponent_char:
+        if self.current_shift_number == 0 or self.current_shift_number == 5:
             return True
         else:
-            return False
+            # If we are the first inactive alliance, inactive on odd shifts, active on even
+            if self.first_inactive_alliance == our_char:
+                return self.current_shift_number % 2 == 0
+            else:
+                return self.current_shift_number % 2 == 1
 
     def update_shift_info(self):
         """Update which shift we think we are in + when it started"""
@@ -69,20 +89,38 @@ class ShiftTracker:
         self.last_known_match_time = match_time_remaining
 
         # Time already passed in teleop
-        teleop_time_elapsed = 120 - match_time_remaining  # 2:00 teleop
+        teleop_time_elapsed = self.teleop_duration - match_time_remaining
 
-        shift_start_times = [0, 25, 70]  # start of shift 1,2,3 (seconds into teleop)
+        # Determine current shift
+        new_shift_number = 0
+        new_start_time = 0.0
+        new_duration = 0.0
 
-        current_shift = 1
-        for i, start in enumerate(shift_start_times):
-            if teleop_time_elapsed >= start:
-                current_shift = i + 1
-            else:
-                break
+        if teleop_time_elapsed < 0:
+            # Not in teleop yet
+            return
 
-        if current_shift != self.current_shift_number:
-            self.current_shift_number = current_shift
-            self.current_shift_start_time = shift_start_times[current_shift - 1]
+        if teleop_time_elapsed < self.transition_duration:
+            new_shift_number = 0
+            new_start_time = 0.0
+            new_duration = self.transition_duration
+        elif teleop_time_elapsed < self.endgame_start:
+            for i in range(4):
+                start = self.alliance_shift_starts[i]
+                if teleop_time_elapsed < start + self.alliance_shift_durations[i]:
+                    new_shift_number = i + 1
+                    new_start_time = start
+                    new_duration = self.alliance_shift_durations[i]
+                    break
+        else:
+            new_shift_number = 5
+            new_start_time = self.endgame_start
+            new_duration = float("inf")  # or self.endgame_duration if finite preferred
+
+        if new_shift_number != self.current_shift_number:
+            self.current_shift_number = new_shift_number
+            self.current_shift_start_time = new_start_time
+            self.current_shift_duration = new_duration
 
     def time_remaining_in_current_shift(self) -> float:
         """Returns seconds remaining in current shift (or very large number on last shift)"""
@@ -90,20 +128,21 @@ class ShiftTracker:
             return -1.0
 
         match_time_remaining = DriverStation.getMatchTime()
-        teleop_time_elapsed = 120 - match_time_remaining
+        teleop_time_elapsed = self.teleop_duration - match_time_remaining
 
-        if self.current_shift_number == 1:
-            return 25 - teleop_time_elapsed
-
-        elif self.current_shift_number == 2:
-            return 70 - teleop_time_elapsed  # 25 + 45 = 70
-
-        else:  # shift 3 → end of match
-            return match_time_remaining
+        if self.current_shift_number == 5:
+            return float("inf")
+        else:
+            return (
+                self.current_shift_start_time
+                + self.current_shift_duration
+                - teleop_time_elapsed
+            )
 
     # ─────────────── Convenience / Dashboard methods ───────────────
     def put_to_dashboard(self):
         if self.has_good_data():
+            SmartDashboard.putString("Hub/Status", "Recived game data")
             SmartDashboard.putBoolean("Hub/Our HUB Active", self.our_hub_is_active())
             SmartDashboard.putString("Hub/First Inactive", self.first_inactive_alliance)
 
