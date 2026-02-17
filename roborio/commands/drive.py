@@ -171,7 +171,7 @@ class ManualDriveAndClusterAim(Command):
             self.fuel_detector.get_detection_results()
         )  # or get_alt_detection_results
         end_time = time.perf_counter()
-        print(f"Calculation time: {(end_time - start_time) * 1000:.2f}ms")
+       
         # invert the yaw value of the detection target and convert to radians
         if detection:
             rotation_offset = degreesToRadians(
@@ -179,8 +179,7 @@ class ManualDriveAndClusterAim(Command):
             )
         else:
             rotation_offset = 0
-            print("No target detected, defaulting to 0 rotation offset")
-
+        
         current_rotation = self.drive.getRotation2d().radians()
 
         # calculate the required rotational velocity to face the new target
