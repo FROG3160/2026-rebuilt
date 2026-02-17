@@ -30,6 +30,7 @@ from wpilib.simulation import DCMotorSim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpimath.units import radiansToRotations
 from commands2 import cmd
+from phoenix6.signals import MotorAlignmentValue
 
 flywheel_gearing = DriveTrain(
     gear_stages=[], wheel_diameter=inchesToMeters(4.0)
@@ -104,7 +105,9 @@ class Shooter(Subsystem):
             .with_slot0(FROGSlotConfig())
         )
         self._flywheel_follower.set_control(
-            controls.Follower(self.flywheel_motor.device_id, MockMoterAlignmentValue)
+            controls.Follower(
+                self.flywheel_motor.device_id, MotorAlignmentValue.OPPOSED
+            )
         )
 
         self.drive = drive
