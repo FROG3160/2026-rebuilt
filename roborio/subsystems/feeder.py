@@ -52,14 +52,14 @@ class Feeder(Subsystem):
         self.motor.stopMotor()
 
     def simulationInit(self):
-        # Feed motor simulation
+        # create motor physics simulation
         feed_gearbox = DCMotor.falcon500(1)
         J_feed = 0.0002
         feed_gearing = 1.0
 
         feed_plant = LinearSystemId.DCMotorSystem(feed_gearbox, J_feed, feed_gearing)
-        self.sim = DCMotorSim(feed_plant, feed_gearbox, [0.0, 0.0])
-        self.sim.setState(0.0, 0.0)
+        self.motor_physim = DCMotorSim(feed_plant, feed_gearbox, [0.0, 0.0])
+        self.motor_physim.setState(0.0, 0.0)
 
     def simulationPeriodic(self):
         unmanaged.feed_enable(0.100)
@@ -69,11 +69,11 @@ class Feeder(Subsystem):
         self.motor.sim_state.set_supply_voltage(battery_v)
 
         feed_applied_v = self.motor.get_motor_voltage().value
-        self.sim.setInputVoltage(feed_applied_v)
-        self.sim.update(dt)
+        self.motor_physim.setInputVoltage(feed_applied_v)
+        self.motor_physim.update(dt)
 
-        feed_pos_rot = self.sim.getAngularPositionRotations()
-        feed_vel_rps = radiansToRotations(self.sim.getAngularVelocity())
+        feed_pos_rot = self.motor_physim.getAngularPositionRotations()
+        feed_vel_rps = radiansToRotations(self.motor_physim.getAngularVelocity())
 
         self.motor.sim_state.set_raw_rotor_position(feed_pos_rot)
         self.motor.sim_state.set_rotor_velocity(feed_vel_rps)
@@ -83,7 +83,7 @@ class Feeder(Subsystem):
         builder.setSmartDashboardType("Feeder")
 
         builder.addDoubleProperty(
-            "Feed Speed",
+            "tunable/Feed Speed",
             lambda: self._feed_speed,
             lambda value: setattr(self, "_feed_speed", value),
         )

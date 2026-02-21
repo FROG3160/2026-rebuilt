@@ -100,11 +100,13 @@ class RobotContainer:
         #     self.shooter.run_feed_motor_forward().alongWith(self.hopper.runForward())
         # )
         self.driver_xbox.leftBumper().whileTrue(
-            self.shooter.fire_command().alongWith(
+            self.shooter.cmd_fire_at_set_speed()
+            .alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
                     self.hopper.runForward().alongWith(self.feeder.runForward())
                 )
             )
+            .withName("Fire Command")
         )  # max speed with 4" wheel is 33.8 m/s
 
     def configure_tactical_controls(self):

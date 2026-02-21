@@ -36,7 +36,7 @@ def test_shooter_fire_command_logic():
     shooter = Shooter(mock_drive)
 
     # Get the command
-    fire_cmd = shooter.fire_command()
+    fire_cmd = shooter.cmd_fire_with_distance()
 
     # Initialize the command
     fire_cmd.initialize()
@@ -56,7 +56,7 @@ def test_shooter_fire_command_no_target():
     mock_drive.get_distance_to_target.return_value = None
 
     shooter = Shooter(mock_drive)
-    fire_cmd = shooter.fire_command()
+    fire_cmd = shooter.cmd_fire_with_distance()
 
     fire_cmd.initialize()
     fire_cmd.execute()
