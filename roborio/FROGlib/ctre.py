@@ -20,6 +20,7 @@ from phoenix6.signals.spn_enums import (
     StaticFeedforwardSignValue,
 )
 from wpimath.geometry import Rotation2d
+from phoenix6.canbus import CANBus
 
 
 # Motor output config for ClockWise Positive rotation and Brake neutral mode
@@ -232,7 +233,7 @@ class FROGTalonFX(TalonFX):
         Args:
             motor_config (FROGTalonFXConfig): The configuration to apply to the motor. Defaults to a default FROGTalonFXConfig.
         """
-        super().__init__(device_id=motor_config.id, canbus=motor_config.can_bus)
+        super().__init__(device_id=motor_config.id, canbus=CANBus(motor_config.can_bus))
         self.config = motor_config
         self.configurator.apply(self.config)
 
