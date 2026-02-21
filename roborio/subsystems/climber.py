@@ -1,5 +1,5 @@
 from copy import deepcopy
-from commands2 import Subsystem
+from commands2 import Subsystem, Command
 from phoenix6.hardware import TalonFX
 from FROGlib.ctre import (
     FROGSlotConfig,
@@ -47,6 +47,7 @@ lift_motor_config = FROGTalonFXConfig(
 
 class Climber(Subsystem):
     def __init__(self):
+        """Initialize the Climber subsystem."""
         self.deploy_motor = FROGTalonFX(motor_config=deploy_motor_config)
         self.left_lift_motor = FROGTalonFX(
             motor_config=deepcopy(lift_motor_config).with_id(
@@ -64,33 +65,40 @@ class Climber(Subsystem):
             )
         )
 
-    def _deploy_position(self, position: float):
+    def _deploy_position(self, position: float) -> None:
+        """Run the deploy motor to the specified position."""
         self.deploy_motor.set_control(
             controls.PositionVoltage(position, enable_foc=False)
         )
 
-    def _stop_deploy(self):
+    def _stop_deploy(self) -> None:
+        """Stop the deploy motor."""
         self.deploy_motor.stopMotor()
 
-    def _lift_position(self, position: float):
+    def _lift_position(self, position: float) -> None:
+        """Run the lift motor to the specified position."""
         self.left_lift_motor.set_control(
             controls.PositionVoltage(position, enable_foc=False)
         )
 
-    def _stop_lift(self):
+    def _stop_lift(self) -> None:
+        """Stop the lift motor."""
         self.left_lift_motor.stopMotor()
 
     def _is_at_deploy_target(self) -> bool:
+        """Check if the deploy motor is at the target position within tolerance."""
         tolerance = 0.5  # Adjust tolerance as needed
         current_position = self.deploy_motor.get_position().value
         target_position = self.deploy_motor.get_closed_loop_reference().value
         return abs(current_position - target_position) < tolerance
 
     # returns inline command to deploy climber to a position
-    def deploy_to_position(self, position: float):
+    def deploy_to_position(self, position: float) -> Command:
+        """Return a command to deploy the climber to the specified position."""
         return self.runOnce(lambda: self._deploy_position(position))
 
     # returns inline command to lift climber to a position
-    def lift_to_position(self, position: float):
+    def lift_to_position(self, position: float) -> Command:
+        """Return a command to lift the climber to the specified position."""
         return self.runOnce(lambda: self._lift_position(position))
         # No need to wait for lift to reach position since it's follower

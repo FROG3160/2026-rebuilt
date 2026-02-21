@@ -60,17 +60,19 @@ class RobotContainer:
         # self.autochooser = AutoBuilder.buildAutoChooser()
         # SmartDashboard.putData("PathPlanner Autos", self.autochooser)
 
-    def configure_automation_bindings(self):
+    def configure_automation_bindings(self) -> None:
+        """Configure automation bindings for the robot."""
         # Configure automation bindings
         pass
 
-    def configure_button_bindings(self):
+    def configure_button_bindings(self) -> None:
+        """Configure button bindings for the xboxcontrollers."""
         self.configure_driver_controls()
         self.configure_tactical_controls()
         # Bind buttons to commands
 
-    def configure_driver_controls(self):
-        # Configure driver controls
+    def configure_driver_controls(self) -> None:
+        """Configure button bindings for the driver controller."""
         self.driver_xbox.a().whileTrue(
             ManualDriveAndAim(
                 constants.kBlueHub, self.driver_xbox, self.drive, "DriveAndAim"
@@ -111,16 +113,19 @@ class RobotContainer:
             .withName("Fire Command")
         )  # max speed with 4" wheel is 33.8 m/s
 
-    def configure_tactical_controls(self):
+    def configure_tactical_controls(self) -> None:
+        """Configure button bindings for the tactical controller."""
         # Configure operator controls
         pass
 
-    def register_named_commands(self):
+    def register_named_commands(self) -> None:
+        """Register named commands for use in autonomous routines."""
         # Register named commands
         # NamedCommands.registerCommand("shoot", ShootCommand(self.shooter))
         pass
 
-    def configureSysIDButtonBindings(self):
+    def configureSysIDButtonBindings(self) -> None:
+        """Configure button bindings for SysId routine tests."""
         # Bind full set of SysId routine tests to buttons; a complete routine should run each of these
         # once.
         self.driver_xbox.a().whileTrue(
@@ -136,7 +141,7 @@ class RobotContainer:
             self.drive.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse)
         )
 
-    def configureComponentTestBindings(self):
+    def configureComponentTestBindings(self) -> None:
         """Button bindings for manual component testing in test mode.
         Each press toggles the motor on/off (runs until toggled off or interrupted).
         """
