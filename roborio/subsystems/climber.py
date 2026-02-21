@@ -1,4 +1,5 @@
 from copy import deepcopy
+from commands2 import Subsystem
 from phoenix6.hardware import TalonFX
 from FROGlib.ctre import (
     FROGSlotConfig,
@@ -44,7 +45,7 @@ lift_motor_config = FROGTalonFXConfig(
 )
 
 
-class Climber:
+class Climber(Subsystem):
     def __init__(self):
         self.deploy_motor = FROGTalonFX(motor_config=deploy_motor_config)
         self.left_lift_motor = FROGTalonFX(
@@ -87,15 +88,9 @@ class Climber:
 
     # returns inline command to deploy climber to a position
     def deploy_to_position(self, position: float):
-        return self.cmd.sequence(
-            self.cmd.runOnce(lambda: self._deploy_position(position)),
-            self.cmd.waitUntil(lambda: self._is_at_deploy_target()),
-            self.cmd.runOnce(lambda: self._stop_deploy()),
-        )
+        return self.runOnce(lambda: self._deploy_position(position))
 
     # returns inline command to lift climber to a position
     def lift_to_position(self, position: float):
-        return self.cmd.sequence(
-            self.cmd.runOnce(lambda: self._lift_position(position)),
-            # No need to wait for lift to reach position since it's follower
-        )
+        return self.runOnce(lambda: self._lift_position(position))
+        # No need to wait for lift to reach position since it's follower
