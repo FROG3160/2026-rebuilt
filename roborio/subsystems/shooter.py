@@ -94,9 +94,9 @@ class Shooter(Subsystem):
         self.drive = drive
 
         self.hood_motor = FROGTalonFX(
-            motor_config=FROGTalonFXConfig(hood_motor_config)
-            .with_id(constants.kHoodMotorID)
-            .with_motor_name("Hood Motor")
+            motor_config=hood_motor_config.with_id(
+                constants.kHoodMotorID
+            ).with_motor_name("Hood Motor")
         )
 
         self._flywheel_tolerance = (

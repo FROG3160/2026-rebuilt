@@ -33,9 +33,9 @@ class Feeder(Subsystem):
     def __init__(self):
         super().__init__()
         self.motor = FROGTalonFX(
-            motor_config=FROGTalonFXConfig(feed_motor_config)
-            .with_id(constants.kFeedMotorID)
-            .with_motor_name("Feed Motor")
+            motor_config=feed_motor_config.with_id(
+                constants.kFeedMotorID
+            ).with_motor_name("Feed Motor")
         )
         self._feed_speed = 4.0  # in volts for now
 
