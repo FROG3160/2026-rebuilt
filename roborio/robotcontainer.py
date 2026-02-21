@@ -2,6 +2,7 @@ from pathplannerlib.auto import NamedCommands, AutoBuilder
 from wpilib import SmartDashboard
 from wpimath.geometry import Pose2d
 
+from subsystems.climber import Climber
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
 from FROGlib.vision import FROGDetector
 from subsystems.feedback import ShiftTracker
@@ -29,6 +30,7 @@ class RobotContainer:
 
     def __init__(self):
         self.alliance = None
+        self.climber = Climber()
         self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
         self.drive = Drive()
         self.intake = Intake()
