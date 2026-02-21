@@ -8,13 +8,14 @@ from subsystems.feedback import ShiftTracker
 from subsystems.shooter import Shooter
 from subsystems.hopper import Hopper
 from subsystems.intake import Intake
+from subsystems.feeder import Feeder
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
 from commands2.sysid import SysIdRoutine
 from wpilib.shuffleboard import Shuffleboard
 from commands2.button import Trigger
-from commands2 import StartEndCommand
+from commands2 import StartEndCommand, cmd
 import constants
 
 
@@ -33,6 +34,7 @@ class RobotContainer:
         self.intake = Intake()
         self.hopper = Hopper()
         self.shooter = Shooter(self.drive)
+        self.feeder = Feeder()
         self.driver_xbox = FROGXboxDriver(
             constants.kDriverControllerPort,
             constants.kDeadband,
@@ -48,6 +50,7 @@ class RobotContainer:
 
         self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
         Shuffleboard.getTab("Subsystems").add("Shooter", self.shooter)
+        Shuffleboard.getTab("Subsystems").add("Feeder", self.feeder)
         #   → /Subsystems/Shooter : shows subsystem status/command
 
         Shuffleboard.getTab("Tuning").add("Flywheel Gains", self.shooter)
@@ -97,7 +100,11 @@ class RobotContainer:
         #     self.shooter.run_feed_motor_forward().alongWith(self.hopper.runForward())
         # )
         self.driver_xbox.leftBumper().whileTrue(
-            self.shooter.fire_command().alongWith(self.hopper.runForward())
+            self.shooter.fire_command().alongWith(
+                cmd.waitUntil(self.shooter.is_at_speed).andThen(
+                    self.hopper.runForward().alongWith(self.feeder.runForward())
+                )
+            )
         )  # max speed with 4" wheel is 33.8 m/s
 
     def configure_tactical_controls(self):
@@ -151,9 +158,7 @@ class RobotContainer:
 
         # Shooter feed toggle
         self.driver_xbox.leftBumper().toggleOnTrue(
-            StartEndCommand(
-                self.shooter._run_feed_motor, lambda: self.shooter._stop_feed_motor
-            ).withName("Run Shooter Feed")
+            self.feeder.runForward().withName("Run Feeder")
         )
 
         # Flywheel: Using triggers as hold-to-run (common for speed control).
