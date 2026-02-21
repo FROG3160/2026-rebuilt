@@ -9,6 +9,7 @@ from FROGlib.ctre import (
 import constants
 from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_BRAKE, MOTOR_OUTPUT_CCWP_BRAKE
+from phoenix6.signals import MotorAlignmentValue
 
 deploy_slot0 = FROGSlotConfig(
     k_s=constants.kDeployS,
@@ -57,7 +58,9 @@ class Climber:
             .with_motor_output(MOTOR_OUTPUT_CWP_BRAKE)
         )
         self.right_lift_motor.set_control(
-            controls.Follower(self.left_lift_motor.device_id, False)
+            controls.Follower(
+                self.left_lift_motor.device_id, MotorAlignmentValue.OPPOSED
+            )
         )
 
     def _deploy_position(self, position: float):
@@ -75,3 +78,24 @@ class Climber:
 
     def _stop_lift(self):
         self.left_lift_motor.stopMotor()
+
+    def _is_at_deploy_target(self) -> bool:
+        tolerance = 0.5  # Adjust tolerance as needed
+        current_position = self.deploy_motor.get_position().value
+        target_position = self.deploy_motor.get_closed_loop_reference().value
+        return abs(current_position - target_position) < tolerance
+
+    # returns inline command to deploy climber to a position
+    def deploy_to_position(self, position: float):
+        return self.cmd.sequence(
+            self.cmd.runOnce(lambda: self._deploy_position(position)),
+            self.cmd.waitUntil(lambda: self._is_at_deploy_target()),
+            self.cmd.runOnce(lambda: self._stop_deploy()),
+        )
+
+    # returns inline command to lift climber to a position
+    def lift_to_position(self, position: float):
+        return self.cmd.sequence(
+            self.cmd.runOnce(lambda: self._lift_position(position)),
+            # No need to wait for lift to reach position since it's follower
+        )
