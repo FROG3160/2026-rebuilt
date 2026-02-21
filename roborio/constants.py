@@ -89,7 +89,8 @@ kFlywheelV = 0.351
 kFlywheelA = 0
 
 # Hood motor gains
-kHoodS = 0.15
+kHoodS = 0.155
+kHoodP = 24.0
 kHoodForwardLimit = 0.07646483
 kHoodReverseLimit = 0.0
 
