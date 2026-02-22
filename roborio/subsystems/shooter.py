@@ -237,7 +237,7 @@ class Shooter(Subsystem):
         self._follower.sim_state.set_rotor_velocity(flywheel_vel_rps)
 
     def _updateFlywheelSlot0(self, **kwargs):
-        slot0 = SlotConfigs()
+        slot0 = FROGSlotConfig()
         self.motor.configurator.refresh(slot0)
         for k, v in kwargs.items():
             setattr(slot0, k, v)
@@ -245,7 +245,9 @@ class Shooter(Subsystem):
 
     def _get_slot0_param(self, param: str) -> float:
         # Use .configs for a cached/snapshot view (safer in Sendable callbacks)
-        return getattr(self.motor.config.slot0, param)
+        slot0 = FROGSlotConfig()
+        self.motor.configurator.refresh(slot0)
+        return getattr(slot0, param)
 
     def _get_flywheel_velocity(self) -> float:
         return self.motor.get_velocity().value
