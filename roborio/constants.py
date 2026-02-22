@@ -51,10 +51,10 @@ kDriveFeedForward = 0.53
 kDutyCycleDriveV = 0.00916
 kDutyCycleDriveS = 0.01125
 
-kVoltageDriveV = 1.795
-kVoltageDriveS = 0.211
-kVoltageDriveP = 0.5
-kVoltageDriveA = 0.027631
+kVoltageDriveV = 2.0164  # 1.795
+kVoltageDriveS = 0.060831  # 0.211
+kVoltageDriveP = 2.9646  # 0.5
+kVoltageDriveA = 0.14705  # 0.027631
 
 # intake gains
 kVoltageIntakeS = 0.12
@@ -87,11 +87,11 @@ kLiftRatio = 45 / (
 kFeedS = 0.2
 
 # flywheel gains
-kFlywheelP = 0
+kFlywheelP = 0.1
 kFlywheelI = 0.0
 kFlywheelD = 0.0
 kFlywheelS = 0.19  # determined with follower helping
-kFlywheelV = 0.351
+kFlywheelV = 0.342  # 0.351
 kFlywheelA = 0
 
 # Hood motor gains
