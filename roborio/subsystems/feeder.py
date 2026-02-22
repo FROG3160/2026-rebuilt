@@ -7,12 +7,9 @@ from FROGlib.ctre import (
     FROGFeedbackConfig,
     MOTOR_OUTPUT_CWP_COAST,
 )
-from phoenix6 import controls, unmanaged
+from phoenix6 import controls
 import constants
 import wpilib
-from wpimath.system.plant import DCMotor, LinearSystemId
-from wpilib.simulation import DCMotorSim
-from wpimath.units import radiansToRotations
 from wpiutil import SendableBuilder
 
 
@@ -39,9 +36,6 @@ class Feeder(Subsystem):
         )
         self._feed_speed = 4.0  # in volts for now
 
-        if wpilib.RobotBase.isSimulation():
-            self.simulationInit()
-
     def _runForward(self):
         self.motor.set_control(controls.VoltageOut(self._feed_speed, enable_foc=False))
 
@@ -51,32 +45,12 @@ class Feeder(Subsystem):
     def stop(self):
         self.motor.stopMotor()
 
-    def simulationInit(self):
-        # create motor physics simulation
-        feed_gearbox = DCMotor.falcon500(1)
-        J_feed = 0.0002
-        feed_gearing = 1.0
-
-        feed_plant = LinearSystemId.DCMotorSystem(feed_gearbox, J_feed, feed_gearing)
-        self.motor_physim = DCMotorSim(feed_plant, feed_gearbox, [0.0, 0.0])
-        self.motor_physim.setState(0.0, 0.0)
-
     def simulationPeriodic(self):
-        unmanaged.feed_enable(0.100)
         dt = 0.020
         battery_v = wpilib.RobotController.getBatteryVoltage()
-
-        self.motor.sim_state.set_supply_voltage(battery_v)
-
-        feed_applied_v = self.motor.get_motor_voltage().value
-        self.motor_physim.setInputVoltage(feed_applied_v)
-        self.motor_physim.update(dt)
-
-        feed_pos_rot = self.motor_physim.getAngularPositionRotations()
-        feed_vel_rps = radiansToRotations(self.motor_physim.getAngularVelocity())
-
-        self.motor.sim_state.set_raw_rotor_position(feed_pos_rot)
-        self.motor.sim_state.set_rotor_velocity(feed_vel_rps)
+        self.motor.simulation_update(
+            dt, battery_v, max_velocity_rps=83.33, velocity_sign_multiplier=1
+        )
 
     def initSendable(self, builder: SendableBuilder) -> None:
         super().initSendable(builder)

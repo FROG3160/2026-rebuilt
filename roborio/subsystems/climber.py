@@ -8,15 +8,11 @@ from FROGlib.ctre import (
     FROGFeedbackConfig,
 )
 import constants
+from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_BRAKE, MOTOR_OUTPUT_CCWP_BRAKE
 from phoenix6.signals import MotorAlignmentValue
 import wpilib
-from wpilib.simulation import DCMotorSim
-from wpimath.system.plant import DCMotor, LinearSystemId
-from wpimath.units import radiansToRotations
-from phoenix6 import unmanaged
-import numpy as np
 
 deploy_slot0 = FROGSlotConfig(
     k_s=constants.kDeployS,
@@ -72,7 +68,21 @@ class Climber(Subsystem):
         )
 
         if wpilib.RobotBase.isSimulation():
-            self.simulationInit()
+            deploy_gearbox = DCMotor.falcon500(1)
+            J_deploy = 0.001
+            gearing_deploy = 1.0
+            deploy_plant = LinearSystemId.DCMotorSystem(
+                deploy_gearbox, J_deploy, gearing_deploy
+            )
+            self.deploy_motor.simulation_init(deploy_plant, deploy_gearbox)
+
+            lift_gearbox = DCMotor.falcon500(1)
+            J_lift = 0.001
+            gearing_lift = 1.0
+            lift_plant = LinearSystemId.DCMotorSystem(
+                lift_gearbox, J_lift, gearing_lift
+            )
+            self.left_lift_motor.simulation_init(lift_plant, lift_gearbox)
 
     def _deploy_position(self, position: float) -> None:
         """Run the deploy motor to the specified position."""
@@ -112,58 +122,9 @@ class Climber(Subsystem):
         return self.runOnce(lambda: self._lift_position(position))
         # No need to wait for lift to reach position since it's follower
 
-    def simulationInit(self) -> None:
-        """Initialize simulation models for the climber motors."""
-        # Deploy motor simulation
-        deploy_gearbox = DCMotor.falcon500(1)
-        J_deploy = 0.001  # kg·m² — tune based on real system
-        gearing_deploy = 1.0
-        deploy_plant = LinearSystemId.DCMotorSystem(
-            deploy_gearbox, J_deploy, gearing_deploy
-        )
-        self.deploy_physim = DCMotorSim(
-            deploy_plant, deploy_gearbox, np.array([0.0, 0.0])
-        )
-        self.deploy_physim.setState(0.0, 0.0)
-
-        # Lift motor simulation (leader)
-        lift_gearbox = DCMotor.falcon500(1)
-        J_lift = 0.001  # kg·m² — tune based on real system
-        gearing_lift = 1.0
-        lift_plant = LinearSystemId.DCMotorSystem(lift_gearbox, J_lift, gearing_lift)
-        self.lift_physim = DCMotorSim(lift_plant, lift_gearbox, np.array([0.0, 0.0]))
-        self.lift_physim.setState(0.0, 0.0)
-
     def simulationPeriodic(self) -> None:
         """Update simulation state for the climber motors."""
-        unmanaged.feed_enable(0.100)  # Required for Phoenix sim
-
-        dt = 0.020  # WPILib sim timestep
-
+        dt = 0.020
         battery_v = wpilib.RobotController.getBatteryVoltage()
-
-        # Set supply voltage on all motors
-        self.deploy_motor.sim_state.set_supply_voltage(battery_v)
-        self.left_lift_motor.sim_state.set_supply_voltage(battery_v)
-        self.right_lift_motor.sim_state.set_supply_voltage(battery_v)
-
-        # Deploy motor
-        deploy_applied_v = self.deploy_motor.get_motor_voltage().value
-        self.deploy_physim.setInputVoltage(deploy_applied_v)
-        self.deploy_physim.update(dt)
-        deploy_pos_rot = self.deploy_physim.getAngularPositionRotations()
-        deploy_vel_rps = radiansToRotations(self.deploy_physim.getAngularVelocity())
-        self.deploy_motor.sim_state.set_raw_rotor_position(deploy_pos_rot)
-        self.deploy_motor.sim_state.set_rotor_velocity(deploy_vel_rps)
-
-        # Lift motor (leader)
-        lift_applied_v = self.left_lift_motor.get_motor_voltage().value
-        self.lift_physim.setInputVoltage(lift_applied_v)
-        self.lift_physim.update(dt)
-        lift_pos_rot = self.lift_physim.getAngularPositionRotations()
-        lift_vel_rps = radiansToRotations(self.lift_physim.getAngularVelocity())
-        self.left_lift_motor.sim_state.set_raw_rotor_position(lift_pos_rot)
-        self.left_lift_motor.sim_state.set_rotor_velocity(lift_vel_rps)
-        # Follower motor (right lift) - same state as leader
-        self.right_lift_motor.sim_state.set_raw_rotor_position(lift_pos_rot)
-        self.right_lift_motor.sim_state.set_rotor_velocity(lift_vel_rps)
+        self.deploy_motor.simulation_update(dt, battery_v)
+        self.left_lift_motor.simulation_update(dt, battery_v, [self.right_lift_motor])

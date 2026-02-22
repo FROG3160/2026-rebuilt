@@ -1,7 +1,7 @@
 from copy import deepcopy
-import numpy as np
 from commands2 import Command, Subsystem
 from wpimath.units import inchesToMeters
+from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6.hardware import TalonFX
 from phoenix6.configs import SoftwareLimitSwitchConfigs
 from FROGlib.ctre import (
@@ -24,11 +24,6 @@ from wpiutil import Sendable, SendableBuilder
 import wpilib
 from commands2.button import Trigger
 from FROGlib.ctre import MAX_FALCON_RPM, MAX_KRAKEN_X60_RPM
-from phoenix6 import unmanaged
-import math
-from wpilib.simulation import DCMotorSim
-from wpimath.system.plant import DCMotor, LinearSystemId
-from wpimath.units import radiansToRotations
 from commands2 import cmd
 from phoenix6.signals import MotorAlignmentValue
 
@@ -91,6 +86,8 @@ class Shooter(Subsystem):
             controls.Follower(self.motor.device_id, MotorAlignmentValue.OPPOSED)
         )
 
+        self._slot0 = deepcopy(flywheel_slot0)
+
         self.drive = drive
 
         self.hood_motor = FROGTalonFX(
@@ -108,7 +105,13 @@ class Shooter(Subsystem):
         # but they're referenced by name as a string in simulationPeriodic.
         self._commanded_flywheel_speed = 0.0
         if wpilib.RobotBase.isSimulation():
-            self.simulationInit()
+            flywheel_gearbox = DCMotor.falcon500(2)
+            J_flywheel = 0.001
+            gearing = 1.0
+            flywheel_plant = LinearSystemId.DCMotorSystem(
+                flywheel_gearbox, J_flywheel, gearing
+            )
+            self.motor.simulation_init(flywheel_plant, flywheel_gearbox)
 
     def _apply_speed_by_distance(self):
         """Gets speed from the distance to the target, then applies the speed to the flywheel motors"""
@@ -176,78 +179,18 @@ class Shooter(Subsystem):
             .andThen(self.runOnce(self._set_hood_position))
         )
 
-    def simulationInit(self):
-        flywheel_gearbox = DCMotor.falcon500(
-            2
-        )  # 2 motors → doubles torque, halves current per motor
-
-        # Create the linear plant (dynamics model)
-        # Parameters: gearbox, J (inertia kg·m²), gearing (reduction ratio, >1 if motor spins faster than mechanism)
-        #   - Use your actual reflected inertia at the rotor (including flywheel mass, radius^2, etc.)
-        #   - Gearing: rotor revolutions per mechanism revolution (often ~1–2 for shooters)
-        J_flywheel = 0.001  # kg·m² — tune this based on real ramp-up time
-        gearing = 1.0
-
-        flywheel_plant = LinearSystemId.DCMotorSystem(
-            flywheel_gearbox,  # DCMotor with count=2
-            J_flywheel,  # moment of inertia
-            gearing,  # reduction ratio
-        )
-
-        # Now instantiate DCMotorSim with required args
-        # measurementStdDevs = [pos_noise_std, vel_noise_std] — use zeros for clean/no noise
-        self.motor_physim = DCMotorSim(
-            flywheel_plant,
-            flywheel_gearbox,  # same gearbox object
-            np.array(
-                [0.0, 0.0]
-            ),  # or [0.01, 0.2] for realistic sensor noise if desired
-        )
-
-        self.motor_physim.setState(0.0, 0.0)  # pos (rad), vel (rad/s)
-
     def simulationPeriodic(self):
-        unmanaged.feed_enable(0.100)  # Required for Phoenix sim
-
-        dt = 0.020  # WPILib sim timestep
-
+        dt = 0.020
         battery_v = wpilib.RobotController.getBatteryVoltage()
-
-        # Set supply voltage on all motors
-        self.motor.sim_state.set_supply_voltage(battery_v)
-        self._follower.sim_state.set_supply_voltage(battery_v)
-
-        # Flywheel: since left follows right, use leader's (right) voltage for the combined model
-        flywheel_applied_v = (
-            self.motor.get_motor_voltage().value
-        )  # volts (follower should match)
-
-        # Advance flywheel physics (combined 2-motor model)
-        self.motor_physim.setInputVoltage(flywheel_applied_v)
-        self.motor_physim.update(dt)
-
-        # Extract states (convert rad → rotations, rad/s → rps)
-        flywheel_pos_rot = self.motor_physim.getAngularPositionRotations()
-        flywheel_vel_rps = radiansToRotations(self.motor_physim.getAngularVelocity())
-
-        # Feed back same states to BOTH flywheel motors' sim_states (coupled mechanism)
-        self.motor.sim_state.set_raw_rotor_position(flywheel_pos_rot)
-        self.motor.sim_state.set_rotor_velocity(flywheel_vel_rps)
-        self._follower.sim_state.set_raw_rotor_position(flywheel_pos_rot)
-        self._follower.sim_state.set_rotor_velocity(flywheel_vel_rps)
+        self.motor.simulation_update(dt, battery_v, [self._follower])
 
     def _updateFlywheelSlot0(self, **kwargs):
-        slot0 = FROGSlotConfig()
-        self.motor.configurator.refresh(slot0)
         for k, v in kwargs.items():
-            setattr(slot0, k, v)
-        self.motor.configurator.apply(slot0)
+            setattr(self._slot0, k, v)
+        self.motor.configurator.apply(self._slot0)
 
     def _get_slot0_param(self, param: str) -> float:
-        # Use .configs for a cached/snapshot view (safer in Sendable callbacks)
-        slot0 = FROGSlotConfig()
-        self.motor.configurator.refresh(slot0)
-        return getattr(slot0, param)
+        return getattr(self._slot0, param)
 
     def _get_flywheel_velocity(self) -> float:
         return self.motor.get_velocity().value
