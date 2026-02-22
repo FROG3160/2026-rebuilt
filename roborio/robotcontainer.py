@@ -103,7 +103,7 @@ class RobotContainer:
         # ).whileTrue(
         #     self.shooter.run_feed_motor_forward().alongWith(self.hopper.runForward())
         # )
-        self.driver_xbox.leftBumper().whileTrue(
+        self.driver_xbox.rightBumper().whileTrue(
             self.shooter.cmd_fire_at_set_speed()
             .alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
@@ -112,6 +112,11 @@ class RobotContainer:
             )
             .withName("Fire Command")
         )  # max speed with 4" wheel is 33.8 m/s
+
+        self.driver_xbox.leftBumper().whileTrue(self.climber.deploy_to_position(0.0))
+        self.driver_xbox.leftTrigger().whileTrue(
+            self.climber.lift_to_position(10.0)
+        )  # 10.0 inches is arbitrary for now, will need to be tuned based on actual robot
 
     def configure_tactical_controls(self) -> None:
         """Configure button bindings for the tactical controller."""
