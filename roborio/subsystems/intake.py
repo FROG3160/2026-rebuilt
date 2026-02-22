@@ -35,9 +35,8 @@ class Intake(Subsystem):
         if wpilib.RobotBase.isSimulation():
             self._sim_velocity = 0.0
             # if motor output is inverted (i.e. = 1)
-            self._velocity_sign_multiplier = [1, -1][
-                self.motor.config.motor_output.inverted.value
-            ]
+            inverted = bool(self.motor.config.motor_output.inverted.value)
+            self._velocity_sign_multiplier = -1 if inverted else 1
 
     def _run_intake_motor_forward(self):
         self.motor.set_control(
