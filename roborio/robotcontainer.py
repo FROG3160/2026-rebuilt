@@ -47,7 +47,6 @@ class RobotContainer:
         self.shift_tracker = ShiftTracker()
 
         self.register_named_commands()
-        self.configure_button_bindings()
         self.configure_automation_bindings()
 
         self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
@@ -65,7 +64,7 @@ class RobotContainer:
         # Configure automation bindings
         pass
 
-    def configure_button_bindings(self) -> None:
+    def configure_xbox_bindings(self) -> None:
         """Configure button bindings for the xboxcontrollers."""
         self.configure_driver_controls()
         self.configure_tactical_controls()

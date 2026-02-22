@@ -36,6 +36,7 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def teleopInit(self) -> None:
         self.setAlliance()
+        self.container.configure_xbox_bindings()
         self.container.drive.enable()
 
     def teleopPeriodic(self):
