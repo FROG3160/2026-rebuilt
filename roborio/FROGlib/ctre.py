@@ -22,6 +22,12 @@ from phoenix6.signals.spn_enums import (
 from wpimath.geometry import Rotation2d
 from phoenix6.canbus import CANBus
 
+import numpy as np
+from wpilib.simulation import DCMotorSim
+from wpimath.system.plant import DCMotor, LinearSystemId
+from wpimath.units import radiansToRotations
+from phoenix6 import unmanaged
+
 
 # Motor output config for ClockWise Positive rotation and Brake neutral mode
 MOTOR_OUTPUT_CWP_BRAKE = (
@@ -263,6 +269,68 @@ class FROGTalonFX(TalonFX):
     def logData(self):
         """Logs data to network tables for this motor"""
         self._motorVelocityPub.set(self.get_velocity().value)
+
+    def simulation_init(self, plant, gearbox, measurement_std_devs=None):
+        """Initialize physics-based simulation for this motor.
+
+        Args:
+            plant: LinearSystemId plant (e.g., DCMotorSystem)
+            gearbox: DCMotor object
+            measurement_std_devs: List of [pos_std, vel_std] for noise, defaults to [0.0, 0.0]
+        """
+        if measurement_std_devs is None:
+            measurement_std_devs = [0.0, 0.0]
+        self.physim = DCMotorSim(plant, gearbox, np.array(measurement_std_devs))
+        self.physim.setState(0.0, 0.0)
+
+    def simulation_update(
+        self,
+        dt,
+        battery_v,
+        coupled_motors=None,
+        max_velocity_rps=None,
+        velocity_sign_multiplier=1,
+    ):
+        """Update simulation for this motor and optionally coupled motors.
+
+        If physim is present, uses physics-based simulation.
+        Otherwise, uses simple voltage-based simulation.
+
+        Args:
+            dt: Time step
+            battery_v: Battery voltage
+            coupled_motors: List of FROGTalonFX to set same sim state (for followers, physics only)
+            max_velocity_rps: Max velocity at 12V (simple sim only)
+            velocity_sign_multiplier: Direction multiplier (simple sim only)
+        """
+        if hasattr(self, "physim"):
+            # Physics-based simulation
+            unmanaged.feed_enable(0.100)
+            self.sim_state.set_supply_voltage(battery_v)
+            applied_v = self.get_motor_voltage().value
+            self.physim.setInputVoltage(applied_v)
+            self.physim.update(dt)
+            pos_rot = self.physim.getAngularPositionRotations()
+            vel_rps = radiansToRotations(self.physim.getAngularVelocity())
+            self.sim_state.set_raw_rotor_position(pos_rot)
+            self.sim_state.set_rotor_velocity(vel_rps)
+            if coupled_motors:
+                for m in coupled_motors:
+                    m.sim_state.set_supply_voltage(battery_v)
+                    m.sim_state.set_raw_rotor_position(pos_rot)
+                    m.sim_state.set_rotor_velocity(vel_rps)
+        else:
+            # Simple voltage-based simulation
+            self.sim_state.set_supply_voltage(battery_v)
+            applied_voltage = self.get_motor_voltage().value
+            target_velocity = (applied_voltage / 12.0) * max_velocity_rps
+            if not hasattr(self, "_sim_velocity"):
+                self._sim_velocity = 0.0
+            self._sim_velocity += 0.3 * (target_velocity - self._sim_velocity)
+            directed_velocity = velocity_sign_multiplier * self._sim_velocity
+            self.sim_state.set_rotor_velocity(directed_velocity)
+            position_change = directed_velocity * dt
+            self.sim_state.add_rotor_position(position_change)
 
 
 # TODO: #7 Refactor gyro class as a subclass of Pigeon2
