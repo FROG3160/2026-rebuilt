@@ -38,7 +38,7 @@ deploy_motor_config = FROGTalonFXConfig(
     motor_name="Deploy",
     parent_nt="Climber",
     motor_output=MOTOR_OUTPUT_CWP_BRAKE,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=1.0),
+    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=constants.kDeployRatio),
     slot0=deploy_slot0,
 )
 lift_motor_config = FROGTalonFXConfig(
@@ -46,7 +46,7 @@ lift_motor_config = FROGTalonFXConfig(
     motor_name="LeftLift",
     parent_nt="Climber",
     motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=1.0),
+    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=constants.kLiftRatio),
     slot0=lift_slot0,
 )
 
@@ -73,6 +73,44 @@ class Climber(Subsystem):
 
         if wpilib.RobotBase.isSimulation():
             self.simulationInit()
+
+    def _deploy_position(self, position: float) -> None:
+        """Run the deploy motor to the specified position."""
+        self.deploy_motor.set_control(
+            controls.PositionVoltage(position, enable_foc=False)
+        )
+
+    def _stop_deploy(self) -> None:
+        """Stop the deploy motor."""
+        self.deploy_motor.stopMotor()
+
+    def _lift_position(self, position: float) -> None:
+        """Run the lift motor to the specified position."""
+        self.left_lift_motor.set_control(
+            controls.PositionVoltage(position, enable_foc=False)
+        )
+
+    def _stop_lift(self) -> None:
+        """Stop the lift motor."""
+        self.left_lift_motor.stopMotor()
+
+    def _is_at_deploy_target(self) -> bool:
+        """Check if the deploy motor is at the target position within tolerance."""
+        tolerance = 0.5  # Adjust tolerance as needed
+        current_position = self.deploy_motor.get_position().value
+        target_position = self.deploy_motor.get_closed_loop_reference().value
+        return abs(current_position - target_position) < tolerance
+
+    # returns inline command to deploy climber to a position
+    def deploy_to_position(self, position: float) -> Command:
+        """Return a command to deploy the climber to the specified position."""
+        return self.runOnce(lambda: self._deploy_position(position))
+
+    # returns inline command to lift climber to a position
+    def lift_to_position(self, position: float) -> Command:
+        """Return a command to lift the climber to the specified position."""
+        return self.runOnce(lambda: self._lift_position(position))
+        # No need to wait for lift to reach position since it's follower
 
     def simulationInit(self) -> None:
         """Initialize simulation models for the climber motors."""
@@ -129,41 +167,3 @@ class Climber(Subsystem):
         # Follower motor (right lift) - same state as leader
         self.right_lift_motor.sim_state.set_raw_rotor_position(lift_pos_rot)
         self.right_lift_motor.sim_state.set_rotor_velocity(lift_vel_rps)
-
-    def _deploy_position(self, position: float) -> None:
-        """Run the deploy motor to the specified position."""
-        self.deploy_motor.set_control(
-            controls.PositionVoltage(position, enable_foc=False)
-        )
-
-    def _stop_deploy(self) -> None:
-        """Stop the deploy motor."""
-        self.deploy_motor.stopMotor()
-
-    def _lift_position(self, position: float) -> None:
-        """Run the lift motor to the specified position."""
-        self.left_lift_motor.set_control(
-            controls.PositionVoltage(position, enable_foc=False)
-        )
-
-    def _stop_lift(self) -> None:
-        """Stop the lift motor."""
-        self.left_lift_motor.stopMotor()
-
-    def _is_at_deploy_target(self) -> bool:
-        """Check if the deploy motor is at the target position within tolerance."""
-        tolerance = 0.5  # Adjust tolerance as needed
-        current_position = self.deploy_motor.get_position().value
-        target_position = self.deploy_motor.get_closed_loop_reference().value
-        return abs(current_position - target_position) < tolerance
-
-    # returns inline command to deploy climber to a position
-    def deploy_to_position(self, position: float) -> Command:
-        """Return a command to deploy the climber to the specified position."""
-        return self.runOnce(lambda: self._deploy_position(position))
-
-    # returns inline command to lift climber to a position
-    def lift_to_position(self, position: float) -> Command:
-        """Return a command to lift the climber to the specified position."""
-        return self.runOnce(lambda: self._lift_position(position))
-        # No need to wait for lift to reach position since it's follower
