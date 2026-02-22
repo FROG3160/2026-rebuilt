@@ -186,7 +186,8 @@ class Shooter(Subsystem):
 
     def _updateFlywheelSlot0(self, **kwargs):
         for k, v in kwargs.items():
-            setattr(self._slot0, k, v)
+            if hasattr(self._slot0, k):
+                setattr(self._slot0, k, v)
         self.motor.configurator.apply(self._slot0)
 
     def _get_slot0_param(self, param: str) -> float:
