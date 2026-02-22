@@ -79,9 +79,9 @@ kLiftS = 0.0
 kLiftV = 0.0
 kLiftG = 0.0
 
-kLiftRatio = (
-    45 / 3.5
-)  # (gear reduction (45) / sprocket teeth (14) * 0.25 inches per tooth)
+kLiftRatio = 45 / (
+    14 * 0.25
+)  # (gear reduction (45) / (sprocket teeth (14) * pitch (0.25 inches per tooth)))
 
 # Feed/transfer motor gains
 kFeedS = 0.2
