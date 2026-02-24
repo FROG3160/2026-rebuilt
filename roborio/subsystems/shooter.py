@@ -1,6 +1,6 @@
 from copy import deepcopy
 from commands2 import Command, Subsystem
-from wpimath.units import inchesToMeters
+from wpimath.units import inchesToMeters, volts
 from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6.hardware import TalonFX
 from phoenix6.configs import SoftwareLimitSwitchConfigs
@@ -11,7 +11,7 @@ from FROGlib.ctre import (
     FROGFeedbackConfig,
 )
 import constants
-from phoenix6 import controls
+from phoenix6 import controls, SignalLogger
 from FROGlib.ctre import (
     MOTOR_OUTPUT_CWP_COAST,
     MOTOR_OUTPUT_CCWP_COAST,
@@ -26,6 +26,8 @@ from commands2.button import Trigger
 from FROGlib.ctre import MAX_FALCON_RPM, MAX_KRAKEN_X60_RPM
 from commands2 import cmd
 from phoenix6.signals import MotorAlignmentValue
+from commands2.sysid import SysIdRoutine
+from wpilib.sysid import SysIdRoutineLog
 
 flywheel_gearing = DriveTrain(
     gear_stages=[], wheel_diameter=inchesToMeters(4.0)
@@ -112,6 +114,29 @@ class Shooter(Subsystem):
                 flywheel_gearbox, J_flywheel, gearing
             )
             self.motor.simulation_init(flywheel_plant, flywheel_gearbox)
+
+        # Set up SysID routine for the shooter
+        self.sys_id_routine = SysIdRoutine(
+            SysIdRoutine.Config(
+                stepVoltage=4.0,
+                recordState=lambda state: SignalLogger.write_string(
+                    "state", SysIdRoutineLog.stateEnumToString(state)
+                ),
+            ),
+            SysIdRoutine.Mechanism(
+                lambda voltage: self.motor.set_control(
+                    controls.VoltageOut(voltage, enable_foc=False)
+                ),
+                None,
+                self,
+            ),
+        )
+
+    def sysIdQuasistatic(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine.quasistatic(direction)
+
+    def sysIdDynamic(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine.dynamic(direction)
 
     def _apply_speed_by_distance(self):
         """Gets speed from the distance to the target, then applies the speed to the flywheel motors"""
