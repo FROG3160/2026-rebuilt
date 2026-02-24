@@ -127,7 +127,7 @@ class Shooter(Subsystem):
                 lambda voltage: self.motor.set_control(
                     controls.VoltageOut(voltage, enable_foc=False)
                 ),
-                None,
+                lambda log: None,
                 self,
             ),
         )
