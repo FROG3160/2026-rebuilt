@@ -29,9 +29,10 @@ feed_velocity_slot = FROGSlotConfig(
 # Slot 1: position control for back-off move
 feed_position_slot = FROGSlotConfig(
     k_s=constants.kFeedS,
-    k_p=constants.kFeedP,
-    k_i=constants.kFeedI,
-    k_d=constants.kFeedD,
+    k_v=constants.kFeedV,
+    k_p=constants.kFeedPositionP,
+    k_i=constants.kFeedPositionI,
+    k_d=constants.kFeedPositionD,
 )
 
 feed_motor_config = FROGTalonFXConfig(

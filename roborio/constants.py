@@ -84,14 +84,15 @@ kLiftRatio = 45 / (
 )  # (gear reduction (45) / (sprocket teeth (14) * pitch (0.25 inches per tooth)))
 
 # Feed/transfer motor gains
-kFeedS = 0.2
-kFeedV = 0.12  # velocity feedforward
-kFeedVelocityP = 0.1  # velocity PID
+kFeedS = 0.24257
+kFeedV = 0.55678
+kFeedA = 0.034161
+kFeedVelocityP = 0.8629  # velocity PID
 kFeedVelocityI = 0.0
 kFeedVelocityD = 0.0
-kFeedP = 0.5  # position PID
-kFeedI = 0.0
-kFeedD = 0.0
+kFeedPositionP = 9.9692
+kFeedPositionI = 0.0
+kFeedPositionD = 0.62293
 
 # flywheel gains
 kFlywheelP = 0.50197
