@@ -85,6 +85,13 @@ kLiftRatio = 45 / (
 
 # Feed/transfer motor gains
 kFeedS = 0.2
+kFeedV = 0.12  # velocity feedforward
+kFeedVelocityP = 0.1  # velocity PID
+kFeedVelocityI = 0.0
+kFeedVelocityD = 0.0
+kFeedP = 0.5  # position PID
+kFeedI = 0.0
+kFeedD = 0.0
 
 # flywheel gains
 kFlywheelP = 0.1

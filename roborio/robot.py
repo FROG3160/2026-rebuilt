@@ -21,7 +21,10 @@ class FROGBot(commands2.TimedCommandRobot):
 
         # Add SendableChooser for test modes
         self.test_chooser = SendableChooser()
-        self.test_chooser.setDefaultOption("SysId Characterization", "sysid")
+        self.test_chooser.setDefaultOption(
+            "SysId Drive Characterization", "sysid_drive"
+        )
+        self.test_chooser.addOption("SysId Feeder Characterization", "sysid_feeder")
         self.test_chooser.addOption("Component Tests", "components")
         SmartDashboard.putData("Test Mode Chooser", self.test_chooser)
 
@@ -48,8 +51,10 @@ class FROGBot(commands2.TimedCommandRobot):
 
         # Configure bindings based on chosen test mode
         selected = self.test_chooser.getSelected()
-        if selected == "sysid":
+        if selected == "sysid_drive":
             self.container.configureSysIDButtonBindings()
+        elif selected == "sysid_feeder":
+            self.container.configureSysIDFeederButtonBindings()
         elif selected == "components":
             self.container.configureComponentTestBindings()
 
