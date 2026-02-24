@@ -265,12 +265,12 @@ class FROGTalonFX(TalonFX):
 
 
 # TODO: #7 Refactor gyro class as a subclass of Pigeon2
-class FROGPigeonGyro:
+class FROGPigeonGyro(Pigeon2):
     "Gyro class that creates an instance of the Pigeon 2.0 Gyro"
 
     def __init__(self, can_id: int):
-        self.gyro = Pigeon2(can_id)
-        self.gyro.reset()
+        super().__init__(can_id)
+        self.reset()
 
     def getAngleCCW(self) -> float:
         # returns gyro heading
@@ -280,25 +280,25 @@ class FROGPigeonGyro:
         return self.getYaw()
 
     def getYaw(self) -> float:
-        return self.gyro.get_yaw().value
+        return self.get_yaw().value
 
     def getRoll(self) -> float:
-        return self.gyro.get_roll().value
+        return self.get_roll().value
 
     def getPitch(self) -> float:
-        return self.gyro.get_pitch().value
+        return self.get_pitch().value
 
     def getDegreesPerSecCCW(self) -> float:
-        return self.gyro.get_angular_velocity_z_world().value
+        return self.get_angular_velocity_z_world().value
 
     def getRadiansPerSecCCW(self) -> float:
         return math.radians(self.getDegreesPerSecCCW())
 
     def getRotation2d(self) -> Rotation2d:
-        return self.gyro.getRotation2d()
+        return self.getRotation2d()
 
     def setAngleAdjustment(self, angle):
-        self.gyro.set_yaw(angle)
+        self.set_yaw(angle)
 
 
 class FROGCANCoderConfig(CANcoderConfiguration):
