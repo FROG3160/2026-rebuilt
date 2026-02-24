@@ -1,5 +1,10 @@
-from commands2 import Subsystem
-from phoenix6.hardware import TalonFX
+from commands2 import Subsystem, Command
+from commands2.sysid import SysIdRoutine
+from wpilib.sysid import SysIdRoutineLog
+from wpimath.units import volts
+from wpimath.system.plant import DCMotor, LinearSystemId
+from wpilib import SmartDashboard
+from phoenix6.controls import VoltageOut
 from FROGlib.ctre import (
     FROGSlotConfig,
     FROGTalonFX,
@@ -12,18 +17,34 @@ import constants
 import wpilib
 from wpiutil import SendableBuilder
 
-
-feed_slot0 = FROGSlotConfig(
+# Slot 0: velocity control for normal run forward/backward
+feed_velocity_slot = FROGSlotConfig(
     k_s=constants.kFeedS,
+    k_v=constants.kFeedV,
+    k_p=constants.kFeedVelocityP,
+    k_i=constants.kFeedVelocityI,
+    k_d=constants.kFeedVelocityD,
+)
+
+# Slot 1: position control for back-off move
+feed_position_slot = FROGSlotConfig(
+    k_s=constants.kFeedS,
+    k_p=constants.kFeedP,
+    k_i=constants.kFeedI,
+    k_d=constants.kFeedD,
 )
 
 feed_motor_config = FROGTalonFXConfig(
     can_bus="rio",
-    parent_nt="Feeder",
+    parent_nt=f"{constants.kComponentSubtableName}/Feeder",
     motor_output=MOTOR_OUTPUT_CWP_COAST,
     feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=5.0),
-    slot0=feed_slot0,
+    slot0=feed_velocity_slot,
+    slot1=feed_position_slot,
 )
+
+kBackOffRotations = 0.15  # rotations to retract from flywheel
+kBackOffTolerance = 0.02  # rotations
 
 
 class Feeder(Subsystem):
@@ -34,13 +55,77 @@ class Feeder(Subsystem):
                 constants.kFeedMotorID
             ).with_motor_name("Feed Motor")
         )
-        self._feed_speed = 4.0  # in volts for now
+        self._feed_velocity = 20.0 / 3  # rotations per second
+        self._back_off_target = 0.0
+
+        # Set up SysID routine for the feeder
+        self.sys_id_routine = SysIdRoutine(
+            SysIdRoutine.Config(),
+            SysIdRoutine.Mechanism(self._sysid_drive, self._sysid_log, self),
+        )
+
+        if wpilib.RobotBase.isSimulation():
+            feed_gearbox = DCMotor.falcon500(1)
+            J_feed = 0.001  # kg·m², feed roller moment of inertia
+            gearing = (
+                self.motor.config.feedback.sensor_to_mechanism_ratio
+            )  # matches sensor_to_mechanism_ratio
+            feed_plant = LinearSystemId.DCMotorSystem(
+                feed_gearbox,
+                J_feed,
+                gearing,
+            )
+            self.motor.simulation_init(feed_plant, feed_gearbox)
+
+        SmartDashboard.putData("Feeder", self)
+
+    # tells SysID how to control the feed motor during SysID routines
+    def _sysid_drive(self, voltage: volts) -> None:
+        self.motor.set_control(VoltageOut(output=voltage, enable_foc=False))
+
+    # tells SysID how to log data during SysID routines
+    def _sysid_log(self, sys_id_routine: SysIdRoutineLog) -> None:
+        sys_id_routine.motor("Feed Motor").voltage(
+            self.motor.get_motor_voltage().value
+        ).position(self.motor.get_position().value).velocity(
+            self.motor.get_velocity().value
+        )
+
+    def sysIdQuasistatic(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine.quasistatic(direction)
+
+    def sysIdDynamic(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine.dynamic(direction)
 
     def _runForward(self):
-        self.motor.set_control(controls.VoltageOut(self._feed_speed, enable_foc=False))
+        self.motor.set_control(controls.VelocityVoltage(self._feed_velocity, slot=0))
+
+    def _runBackward(self):
+        self.motor.set_control(controls.VelocityVoltage(-self._feed_velocity, slot=0))
+
+    def _startBackOff(self):
+        self._back_off_target = self.motor.get_position().value - kBackOffRotations
+
+    def _applyBackOff(self):
+        self.motor.set_control(controls.PositionVoltage(self._back_off_target, slot=1))
+
+    def _atBackOffTarget(self) -> bool:
+        return (
+            abs(self.motor.get_position().value - self._back_off_target)
+            < kBackOffTolerance
+        )
 
     def runForward(self):
-        return self.startEnd(self._runForward, self.stop)
+        return self.runEnd(self._runForward, self.stop)
+
+    def runBackward(self):
+        return self.runEnd(self._runBackward, self.stop)
+
+    def backOffCmd(self):
+        """Back the feeder off 0.15 rotations away from the flywheel using position control."""
+        return self.runOnce(self._startBackOff).andThen(
+            self.run(self._applyBackOff).until(self._atBackOffTarget)
+        )
 
     def stop(self):
         self.motor.stopMotor()
@@ -48,16 +133,14 @@ class Feeder(Subsystem):
     def simulationPeriodic(self):
         dt = 0.020
         battery_v = wpilib.RobotController.getBatteryVoltage()
-        self.motor.simulation_update(
-            dt, battery_v, max_velocity_rps=83.33, velocity_sign_multiplier=1
-        )
+        self.motor.simulation_update(dt, battery_v)
 
     def initSendable(self, builder: SendableBuilder) -> None:
         super().initSendable(builder)
         builder.setSmartDashboardType("Feeder")
 
         builder.addDoubleProperty(
-            "tunable/Feed Speed",
-            lambda: self._feed_speed,
-            lambda value: setattr(self, "_feed_speed", value),
+            "tunable/Feed Velocity",
+            lambda: self._feed_velocity,
+            lambda value: setattr(self, "_feed_velocity", value),
         )

@@ -128,6 +128,21 @@ class RobotContainer:
         # NamedCommands.registerCommand("shoot", ShootCommand(self.shooter))
         pass
 
+    def configureSysIDFeederButtonBindings(self) -> None:
+        """Configure button bindings for Feeder SysId routine tests."""
+        self.driver_xbox.a().whileTrue(
+            self.feeder.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.b().whileTrue(
+            self.feeder.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.x().whileTrue(
+            self.feeder.sysIdDynamic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.y().whileTrue(
+            self.feeder.sysIdDynamic(SysIdRoutine.Direction.kReverse)
+        )
+
     def configureSysIDButtonBindings(self) -> None:
         """Configure button bindings for SysId routine tests."""
         # Bind full set of SysId routine tests to buttons; a complete routine should run each of these
