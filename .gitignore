@@ -210,3 +210,10 @@ roborio/simgui-ds.json
 roborio/simgui-window.json
 roborio/simgui.json
 roborio/ctre_sim/
+.gemini/
+CLAUDE.md
+start_agent.bat
+.agent/
+.claude/
+.github/
+background_agent.py
