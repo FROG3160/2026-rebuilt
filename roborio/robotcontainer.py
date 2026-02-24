@@ -14,6 +14,7 @@ from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
 from commands2.sysid import SysIdRoutine
+from phoenix6 import SignalLogger
 from wpilib.shuffleboard import Shuffleboard
 from commands2.button import Trigger
 from commands2 import StartEndCommand, cmd
@@ -142,6 +143,23 @@ class RobotContainer:
         self.driver_xbox.y().whileTrue(
             self.feeder.sysIdDynamic(SysIdRoutine.Direction.kReverse)
         )
+
+    def configureSysIDShooterButtonBindings(self) -> None:
+        """Configure button bindings for Shooter SysId routine tests."""
+        self.driver_xbox.a().whileTrue(
+            self.shooter.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.b().whileTrue(
+            self.shooter.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.x().whileTrue(
+            self.shooter.sysIdDynamic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.y().whileTrue(
+            self.shooter.sysIdDynamic(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
+        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
     def configureSysIDButtonBindings(self) -> None:
         """Configure button bindings for SysId routine tests."""

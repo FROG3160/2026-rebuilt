@@ -25,6 +25,7 @@ class FROGBot(commands2.TimedCommandRobot):
             "SysId Drive Characterization", "sysid_drive"
         )
         self.test_chooser.addOption("SysId Feeder Characterization", "sysid_feeder")
+        self.test_chooser.addOption("SysId Shooter Characterization", "sysid_shooter")
         self.test_chooser.addOption("Component Tests", "components")
         SmartDashboard.putData("Test Mode Chooser", self.test_chooser)
 
@@ -55,6 +56,8 @@ class FROGBot(commands2.TimedCommandRobot):
             self.container.configureSysIDButtonBindings()
         elif selected == "sysid_feeder":
             self.container.configureSysIDFeederButtonBindings()
+        elif selected == "sysid_shooter":
+            self.container.configureSysIDShooterButtonBindings()
         elif selected == "components":
             self.container.configureComponentTestBindings()
 
