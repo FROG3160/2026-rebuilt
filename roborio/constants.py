@@ -94,12 +94,12 @@ kFeedI = 0.0
 kFeedD = 0.0
 
 # flywheel gains
-kFlywheelP = 0.1
+kFlywheelP = 0.50197
 kFlywheelI = 0.0
 kFlywheelD = 0.0
-kFlywheelS = 0.19  # determined with follower helping
-kFlywheelV = 0.342  # 0.351
-kFlywheelA = 0
+kFlywheelS = 0.095535  # determined with follower helping
+kFlywheelV = 0.34733  # 0.342  # 0.351
+kFlywheelA = 0.018088
 
 # Hood motor gains
 kHoodS = 0.155
