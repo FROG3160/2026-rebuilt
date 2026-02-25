@@ -127,8 +127,12 @@ class RobotContainer:
         self.driver_xbox.b().whileTrue(
             self.feeder.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
         )
-        self.driver_xbox.x().whileTrue(self.climber.deploy_to_position(1.5))
-        self.driver_xbox.y().whileTrue(self.climber.lift_to_position(7.3))
+        self.driver_xbox.x().whileTrue(
+            self.feeder.sysIdDynamic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.y().whileTrue(
+            self.feeder.sysIdDynamic(SysIdRoutine.Direction.kReverse)
+        )
 
     def configureSysIDButtonBindings(self) -> None:
         """Configure button bindings for SysId routine tests."""
