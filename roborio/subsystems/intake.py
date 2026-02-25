@@ -6,14 +6,11 @@ from FROGlib.ctre import (
     FROGFeedbackConfig,
 )
 import constants
-from phoenix6 import controls, SignalLogger
+from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
-from commands2 import Subsystem, Command
-from commands2.sysid import SysIdRoutine
-from wpilib.sysid import SysIdRoutineLog
+from commands2 import Subsystem
 import wpilib
 from wpiutil import SendableBuilder
-from wpimath.units import volts
 
 
 intake_slot0 = FROGSlotConfig(
@@ -36,22 +33,6 @@ class Intake(Subsystem):
         super().__init__()
         self.motor = FROGTalonFX(motor_config=intake_motor_config)
         self._default_voltage = 4
-
-        # Set up SysID routine for the intake
-        self.sys_id_routine = SysIdRoutine(
-            SysIdRoutine.Config(
-                recordState=lambda state: SignalLogger.write_string(
-                    "state-intake", SysIdRoutineLog.stateEnumToString(state)
-                )
-            ),
-            SysIdRoutine.Mechanism(
-                lambda voltage: self.motor.set_control(
-                    controls.VoltageOut(voltage, enable_foc=False)
-                ),
-                None,
-                self,
-            ),
-        )
 
         if wpilib.RobotBase.isSimulation():
             self._sim_velocity = 0.0
@@ -79,12 +60,6 @@ class Intake(Subsystem):
     # ────────────────────────────────────────────────
     #          Command Factory Methods
     # ────────────────────────────────────────────────
-
-    def sysIdQuasistatic(self, direction: SysIdRoutine.Direction) -> Command:
-        return self.sys_id_routine.quasistatic(direction)
-
-    def sysIdDynamic(self, direction: SysIdRoutine.Direction) -> Command:
-        return self.sys_id_routine.dynamic(direction)
 
     def runForward(self):
         """Runs the intake forward at default voltage until interrupted."""

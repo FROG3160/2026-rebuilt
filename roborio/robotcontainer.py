@@ -154,40 +154,6 @@ class RobotContainer:
         self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
         self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
-    def configureSysIDIntakeButtonBindings(self) -> None:
-        """Configure button bindings for Intake SysId routine tests."""
-        self.driver_xbox.a().whileTrue(
-            self.intake.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
-        )
-        self.driver_xbox.b().whileTrue(
-            self.intake.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
-        )
-        self.driver_xbox.x().whileTrue(
-            self.intake.sysIdDynamic(SysIdRoutine.Direction.kForward)
-        )
-        self.driver_xbox.y().whileTrue(
-            self.intake.sysIdDynamic(SysIdRoutine.Direction.kReverse)
-        )
-        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
-        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
-
-    def configureSysIDHopperButtonBindings(self) -> None:
-        """Configure button bindings for Hopper SysId routine tests."""
-        self.driver_xbox.a().whileTrue(
-            self.hopper.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
-        )
-        self.driver_xbox.b().whileTrue(
-            self.hopper.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
-        )
-        self.driver_xbox.x().whileTrue(
-            self.hopper.sysIdDynamic(SysIdRoutine.Direction.kForward)
-        )
-        self.driver_xbox.y().whileTrue(
-            self.hopper.sysIdDynamic(SysIdRoutine.Direction.kReverse)
-        )
-        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
-        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
-
     def configureSysIDClimberButtonBindings(self) -> None:
         """Configure button bindings for Climber SysId routine tests."""
         # Deploy routines on A/B/X/Y
