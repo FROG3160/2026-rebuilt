@@ -46,7 +46,7 @@ When implementing SysId characterization for subsystems (especially those using 
     - Use `SysIdRoutine.Config(stepVoltage=4.0, recordState=...)`.
     - Always use `SysIdRoutineLog.stateEnumToString(state)` in the `recordState` lambda to ensure analysis tool compatibility.
 - **Mechanism**: Use lambdas for the voltage application (e.g., `lambda voltage: self.motor.set_control(controls.VoltageOut(voltage, enable_foc=False))`).
-- **Data Capture**: Pass `None` for the `SysIdRoutineLog` parameter in the `Mechanism` constructor when using `SignalLogger`, as it captures all motor signals automatically.
+- **Data Capture**: Use `lambda log: None` for the `SysIdRoutineLog` parameter in the `Mechanism` constructor when using `SignalLogger`, as it captures all motor signals automatically.
 
 ### 7. Testing
 - Tests use `pytest` with WPILib HAL simulation.
@@ -61,6 +61,12 @@ When implementing SysId characterization for subsystems (especially those using 
     - Use `.wpilog` for high-level robot logic and vision fusion analysis.
 - **3D Visualization**: Publish `Pose3d` or `Transform3d` for the robot and its mechanisms to visualize movement and interactions in 3D.
 - **Swerve Visualizer**: Log individual module states (angle and velocity) as an array of doubles or specialized struct to use the Swerve visualizer component.
+
+## Development Workflow
+- **Issue Tracking**: All work must be performed on an existing GitHub issue.
+- **Branching**: For every task, create a new branch from `main`.
+- **User Review & Commit**: Provide file changes for the user to review. The user will handle staging, committing, and creating pull requests manually.
+- **Documentation**: After pull requests are merged, update `GEMINI.md` with relevant technical details, patterns, and standards identified during the task.
 
 ## Latest Session Insights (Feb 2026)
 - Successfully implemented Shooter SysId characterization.
