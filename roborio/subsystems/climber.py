@@ -82,7 +82,7 @@ class Climber(Subsystem):
                 lambda voltage: self.deploy_motor.set_control(
                     controls.VoltageOut(voltage, enable_foc=False)
                 ),
-                None,
+                lambda log: None,
                 self,
             ),
         )
@@ -98,7 +98,7 @@ class Climber(Subsystem):
                 lambda voltage: self.left_lift_motor.set_control(
                     controls.VoltageOut(voltage, enable_foc=False)
                 ),
-                None,
+                lambda log: None,
                 self,
             ),
         )

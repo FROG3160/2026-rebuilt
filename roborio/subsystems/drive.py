@@ -255,7 +255,7 @@ class Drive(SwerveChassis, Subsystem):
                     "state-drive", SysIdRoutineLog.stateEnumToString(state)
                 )
             ),
-            SysIdRoutine.Mechanism(self.sysid_drive, None, self),
+            SysIdRoutine.Mechanism(self._sysid_drive, lambda log: None, self),
         )
 
         self.sys_id_routine_steer = SysIdRoutine(
@@ -264,7 +264,7 @@ class Drive(SwerveChassis, Subsystem):
                     "state-steer", SysIdRoutineLog.stateEnumToString(state)
                 )
             ),
-            SysIdRoutine.Mechanism(self.sysid_steer, None, self),
+            SysIdRoutine.Mechanism(self._sysid_steer, lambda log: None, self),
         )
         self.vision_tunables = VisionTunables()
         SmartDashboard.putData("Vision Tunables", self.vision_tunables)
@@ -273,7 +273,7 @@ class Drive(SwerveChassis, Subsystem):
         self._distance_to_target = None
 
     # Tell SysId how to plumb the driving voltage to the motors.
-    def sysid_drive(self, voltage: volts) -> None:
+    def _sysid_drive(self, voltage: volts) -> None:
         for module in self.modules:
             module.steer_motor.set_control(
                 PositionVoltage(
@@ -283,7 +283,7 @@ class Drive(SwerveChassis, Subsystem):
             )
             module.drive_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
 
-    def sysid_steer(self, voltage: volts) -> None:
+    def _sysid_steer(self, voltage: volts) -> None:
         for module in self.modules:
             module.steer_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
             module.drive_motor.stopMotor()
@@ -491,7 +491,7 @@ class Drive(SwerveChassis, Subsystem):
                     .translation()
                     .distance(self.swerve_estimator_pose.translation())
                 )
-              
+
                 # only add vision measurement if within 1 meter of current estimate
                 # put camera pose on the dashboard field
                 cameraPoseObject = self.estimator_field.getObject(
