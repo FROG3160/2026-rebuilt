@@ -6,11 +6,14 @@ from FROGlib.ctre import (
     FROGFeedbackConfig,
 )
 import constants
-from phoenix6 import controls
+from phoenix6 import controls, SignalLogger
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
-from commands2 import Subsystem
-
+from commands2 import Subsystem, Command
+from commands2.sysid import SysIdRoutine
+from wpilib.sysid import SysIdRoutineLog
 import wpilib
+from wpiutil import SendableBuilder
+from wpimath.units import volts
 
 
 hopper_slot0 = FROGSlotConfig(
@@ -33,6 +36,23 @@ class Hopper(Subsystem):
         super().__init__()
         self.motor = FROGTalonFX(motor_config=hopper_motor_config)
         self._default_voltage = 4
+
+        # Set up SysID routine for the hopper
+        self.sys_id_routine = SysIdRoutine(
+            SysIdRoutine.Config(
+                recordState=lambda state: SignalLogger.write_string(
+                    "state-hopper", SysIdRoutineLog.stateEnumToString(state)
+                )
+            ),
+            SysIdRoutine.Mechanism(
+                lambda voltage: self.motor.set_control(
+                    controls.VoltageOut(voltage, enable_foc=False)
+                ),
+                None,
+                self,
+            ),
+        )
+
         if wpilib.RobotBase.isSimulation():
             self._sim_velocity = 0.0
             inverted = bool(self.motor.config.motor_output.inverted.value)
@@ -58,6 +78,12 @@ class Hopper(Subsystem):
     # ────────────────────────────────────────────────
     #          Command Factory Methods
     # ────────────────────────────────────────────────
+
+    def sysIdQuasistatic(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine.quasistatic(direction)
+
+    def sysIdDynamic(self, direction: SysIdRoutine.Direction) -> Command:
+        return self.sys_id_routine.dynamic(direction)
 
     def runForward(self):
         """Runs the hopper forward at default voltage until interrupted."""
@@ -98,4 +124,19 @@ class Hopper(Subsystem):
             battery_v,
             max_velocity_rps=83.33,
             velocity_sign_multiplier=self._velocity_sign_multiplier,
+        )
+
+    def initSendable(self, builder: SendableBuilder) -> None:
+        super().initSendable(builder)
+        builder.setSmartDashboardType("Hopper")
+        builder.addDoubleProperty(
+            "Voltage", lambda: self.motor.get_motor_voltage().value, lambda _: None
+        )
+        builder.addDoubleProperty(
+            "Velocity", lambda: self.motor.get_velocity().value, lambda _: None
+        )
+        builder.addDoubleProperty(
+            "tunables/Default Voltage",
+            lambda: self._default_voltage,
+            lambda value: setattr(self, "_default_voltage", value),
         )

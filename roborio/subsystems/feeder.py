@@ -5,6 +5,7 @@ from wpimath.units import volts
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpilib import SmartDashboard
 from phoenix6.controls import VoltageOut
+from phoenix6 import controls, SignalLogger
 from FROGlib.ctre import (
     FROGSlotConfig,
     FROGTalonFX,
@@ -61,8 +62,18 @@ class Feeder(Subsystem):
 
         # Set up SysID routine for the feeder
         self.sys_id_routine = SysIdRoutine(
-            SysIdRoutine.Config(),
-            SysIdRoutine.Mechanism(self._sysid_drive, self._sysid_log, self),
+            SysIdRoutine.Config(
+                recordState=lambda state: SignalLogger.write_string(
+                    "state-feeder", SysIdRoutineLog.stateEnumToString(state)
+                )
+            ),
+            SysIdRoutine.Mechanism(
+                lambda voltage: self.motor.set_control(
+                    controls.VoltageOut(voltage, enable_foc=False)
+                ),
+                None,
+                self,
+            ),
         )
 
         if wpilib.RobotBase.isSimulation():
@@ -79,18 +90,6 @@ class Feeder(Subsystem):
             self.motor.simulation_init(feed_plant, feed_gearbox)
 
         SmartDashboard.putData("Feeder", self)
-
-    # tells SysID how to control the feed motor during SysID routines
-    def _sysid_drive(self, voltage: volts) -> None:
-        self.motor.set_control(VoltageOut(output=voltage, enable_foc=False))
-
-    # tells SysID how to log data during SysID routines
-    def _sysid_log(self, sys_id_routine: SysIdRoutineLog) -> None:
-        sys_id_routine.motor("Feed Motor").voltage(
-            self.motor.get_motor_voltage().value
-        ).position(self.motor.get_position().value).velocity(
-            self.motor.get_velocity().value
-        )
 
     def sysIdQuasistatic(self, direction: SysIdRoutine.Direction) -> Command:
         return self.sys_id_routine.quasistatic(direction)

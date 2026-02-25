@@ -54,6 +54,14 @@ When implementing SysId characterization for subsystems (especially those using 
 - Ensure test files reset `CommandScheduler` and enable the simulated DriverStation between tests.
 - Always run tests and `python -m py_compile` to verify changes before concluding a task.
 
+### 8. AdvantageScope Best Practices
+- **Telemetry Naming**: Use standard names for pose and swerve data (e.g., "Odometry/RobotPose", "SwerveStates/Actual") to enable automatic 3D/Swerve visualization in AdvantageScope.
+- **Log Types**: 
+    - Use `.hoot` files for deep CAN bus/motor performance analysis.
+    - Use `.wpilog` for high-level robot logic and vision fusion analysis.
+- **3D Visualization**: Publish `Pose3d` or `Transform3d` for the robot and its mechanisms to visualize movement and interactions in 3D.
+- **Swerve Visualizer**: Log individual module states (angle and velocity) as an array of doubles or specialized struct to use the Swerve visualizer component.
+
 ## Latest Session Insights (Feb 2026)
 - Successfully implemented Shooter SysId characterization.
 - Verified that `SignalLogger.set_approaching_id` is not available in the current Python API; use direct `start()`/`stop()` instead.

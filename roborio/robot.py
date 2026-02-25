@@ -6,6 +6,7 @@
 #
 
 import commands2
+import wpilib
 from wpilib import DriverStation, SendableChooser, SmartDashboard
 from robotcontainer import RobotContainer
 
@@ -15,6 +16,7 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def robotInit(self) -> None:
         """Initialize all wpilib motors & sensors"""
+        wpilib.DataLogManager.start()
         self.alliance = None
 
         self.container = RobotContainer()
@@ -26,6 +28,9 @@ class FROGBot(commands2.TimedCommandRobot):
         )
         self.test_chooser.addOption("SysId Feeder Characterization", "sysid_feeder")
         self.test_chooser.addOption("SysId Shooter Characterization", "sysid_shooter")
+        self.test_chooser.addOption("SysId Intake Characterization", "sysid_intake")
+        self.test_chooser.addOption("SysId Hopper Characterization", "sysid_hopper")
+        self.test_chooser.addOption("SysId Climber Characterization", "sysid_climber")
         self.test_chooser.addOption("Component Tests", "components")
         SmartDashboard.putData("Test Mode Chooser", self.test_chooser)
 
@@ -58,6 +63,12 @@ class FROGBot(commands2.TimedCommandRobot):
             self.container.configureSysIDFeederButtonBindings()
         elif selected == "sysid_shooter":
             self.container.configureSysIDShooterButtonBindings()
+        elif selected == "sysid_intake":
+            self.container.configureSysIDIntakeButtonBindings()
+        elif selected == "sysid_hopper":
+            self.container.configureSysIDHopperButtonBindings()
+        elif selected == "sysid_climber":
+            self.container.configureSysIDClimberButtonBindings()
         elif selected == "components":
             self.container.configureComponentTestBindings()
 

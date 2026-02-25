@@ -8,55 +8,35 @@ from FROGlib.ctre import (
     FROGPigeonGyro,
     FROGTalonFX,
 )
-
-# from configs import ctre
 from wpilib import DriverStation, Field2d, RobotBase
 from wpimath.geometry import (
     Pose2d,
     Rotation2d,
     Translation2d,
     Translation3d,
-    Transform2d,
     Transform3d,
     Rotation3d,
     Pose3d,
 )
 from wpimath.units import volts
 from wpilib.sysid import SysIdRoutineLog
-
-# from subsystems.vision import PositioningSubsystem
-# from subsystems.elevation import ElevationSubsystem
 from wpilib import SmartDashboard
 from wpiutil import Sendable, SendableBuilder
-
 from commands2 import Subsystem, Command
 from commands2.sysid import SysIdRoutine
-from FROGlib.utils import DriveTrain, RobotRelativeTarget, remap
+from FROGlib.utils import DriveTrain, remap
 import constants
-
-# from subsystems.positioning import Position
-from wpimath.units import degreesToRadians, lbsToKilograms, inchesToMeters
-
-
 from phoenix6.controls import (
-    PositionDutyCycle,
-    VelocityVoltage,
     PositionVoltage,
     VoltageOut,
 )
+from phoenix6 import SignalLogger
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.controller import PPHolonomicDriveController
-from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig, DCMotor
-from pathplannerlib.path import PathPlannerPath, PathConstraints
-
-from photonlibpy import (
-    PhotonPoseEstimator,
-    PhotonCamera,
-    EstimatedRobotPose,
-)
+from pathplannerlib.config import RobotConfig, PIDConstants
+from pathplannerlib.path import PathPlannerPath
+from photonlibpy.estimatedRobotPose import EstimatedRobotPose
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
-from wpimath.geometry import Pose2d, Rotation2d
-
 from FROGlib.swerve import SwerveModuleConfig
 from FROGlib.ctre import (
     FROGTalonFXConfig,
@@ -64,19 +44,13 @@ from FROGlib.ctre import (
     MOTOR_OUTPUT_CCWP_BRAKE,
     MOTOR_OUTPUT_CWP_BRAKE,
 )
-from FROGlib.sds import MK4C_L3_GEARING, MK5I_R3_GEARING, WHEEL_DIAMETER
+from FROGlib.sds import MK5I_R3_GEARING, WHEEL_DIAMETER
 from FROGlib.vision import (
-    DetectorTunables,
-    FROGCameraConfig,
-    FROGDetector,
     FROGPoseEstimator,
 )
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from copy import deepcopy
-
-# from subsystems.leds import LEDSubsystem
-# from subsystems.vision import VisionPose
 
 # TODO: #3 Switch gear_stages to correct swerve module gearing when available
 drivetrain = DriveTrain(gear_stages=MK5I_R3_GEARING, wheel_diameter=WHEEL_DIAMETER)
@@ -220,6 +194,7 @@ class Drive(SwerveChassis, Subsystem):
             parent_nt=constants.kComponentSubtableName,
         )
         self.resetController = True
+        self._distance_to_target = None
 
         self.photon_estimators: list[FROGPoseEstimator] = []
 
@@ -275,13 +250,21 @@ class Drive(SwerveChassis, Subsystem):
         # Tell SysId to make generated commands require this subsystem, suffix test state in
         # WPILog with this subsystem's name ("drive")
         self.sys_id_routine_drive = SysIdRoutine(
-            SysIdRoutine.Config(),
-            SysIdRoutine.Mechanism(self.sysid_drive, self.sysid_log_drive, self),
+            SysIdRoutine.Config(
+                recordState=lambda state: SignalLogger.write_string(
+                    "state-drive", SysIdRoutineLog.stateEnumToString(state)
+                )
+            ),
+            SysIdRoutine.Mechanism(self.sysid_drive, None, self),
         )
 
         self.sys_id_routine_steer = SysIdRoutine(
-            SysIdRoutine.Config(),
-            SysIdRoutine.Mechanism(self.sysid_steer, self.sysid_log_steer, self),
+            SysIdRoutine.Config(
+                recordState=lambda state: SignalLogger.write_string(
+                    "state-steer", SysIdRoutineLog.stateEnumToString(state)
+                )
+            ),
+            SysIdRoutine.Mechanism(self.sysid_steer, None, self),
         )
         self.vision_tunables = VisionTunables()
         SmartDashboard.putData("Vision Tunables", self.vision_tunables)
@@ -304,26 +287,6 @@ class Drive(SwerveChassis, Subsystem):
         for module in self.modules:
             module.steer_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
             module.drive_motor.stopMotor()
-
-    def sysid_log_drive(self, sys_id_routine: SysIdRoutineLog) -> None:
-        # Record a frame for each module.  Since these share an encoder, we consider
-        # the entire group to be one motor.
-        for module in self.modules:
-            with module.drive_motor as m:
-                sys_id_routine.motor(module.name).voltage(
-                    m.get_motor_voltage().value
-                ).position(m.get_position().value).velocity(m.get_velocity().value)
-
-    def sysid_log_steer(self, sys_id_routine: SysIdRoutineLog) -> None:
-        # Record a frame for each module.  Since these share an encoder, we consider
-        # the entire group to be one motor.
-        for module in self.modules:
-            with module.steer_motor as m:
-                sys_id_routine.motor(module.name).voltage(
-                    m.get_motor_voltage().value
-                ).angularPosition(m.get_position().value).angularVelocity(
-                    m.get_velocity().value
-                )
 
     def shouldFlipPath(self):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
@@ -570,3 +533,23 @@ class Drive(SwerveChassis, Subsystem):
 
         # run periodic method of the superclass, in this case SwerveChassis.periodic()
         super().periodic()
+
+    def initSendable(self, builder: SendableBuilder) -> None:
+        super().initSendable(builder)
+        builder.setSmartDashboardType("Drive")
+        builder.addDoubleProperty(
+            "Pose X", lambda: self.swerve_estimator_pose.x, lambda _: None
+        )
+        builder.addDoubleProperty(
+            "Pose Y", lambda: self.swerve_estimator_pose.y, lambda _: None
+        )
+        builder.addDoubleProperty(
+            "Pose Degrees",
+            lambda: self.swerve_estimator_pose.rotation().degrees(),
+            lambda _: None,
+        )
+        builder.addDoubleProperty(
+            "Distance to Target",
+            lambda: self._distance_to_target if self._distance_to_target else 0.0,
+            lambda _: None,
+        )
