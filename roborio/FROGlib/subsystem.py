@@ -102,7 +102,7 @@ class Telemetry:
             pub = topic.publish()
             log_entry = None
             if self.log:
-                path = f"subsystems/{obj.getName()}/telemetry/{self.topic_name}"
+                path = f"FROGSubsystems/{obj.getName()}/telemetry/{self.topic_name}"
                 if isinstance(value, (int, float)):
                     log_entry = DoubleLogEntry(DataLogManager.getLog(), path)
                 elif isinstance(value, bool):
@@ -179,7 +179,7 @@ class FROGSubsystem(Subsystem):
             self.setName(self.__class__.__name__)
 
         nt = ntcore.NetworkTableInstance.getDefault()
-        self.nt_root = nt.getTable("subsystems")
+        self.nt_root = nt.getTable("FROGSubsystems")
         self.nt_table = self.nt_root.getSubTable(self.getName())
         self.nt_tunables = self.nt_table.getSubTable("tunables")
         self.nt_telemetry = self.nt_table.getSubTable("telemetry")
@@ -187,12 +187,35 @@ class FROGSubsystem(Subsystem):
         # Discover all Telemetry and Tunable attributes once
         self._telemetry_attrs = []
         self._tunable_attrs = []
+        discovered_motors = []
+        from FROGlib.ctre import FROGTalonFX
+
         for name in dir(self.__class__):
             attr = getattr(self.__class__, name)
             if isinstance(attr, Telemetry):
                 self._telemetry_attrs.append(name)
             elif isinstance(attr, Tunable):
                 self._tunable_attrs.append(name)
+
+        # Also discover motors on the instance
+        for attr_name, attr_value in self.__dict__.items():
+            if isinstance(attr_value, FROGTalonFX):
+                discovered_motors.append(attr_value)
+            elif isinstance(attr_value, (list, tuple)):
+                for item in attr_value:
+                    if isinstance(item, FROGTalonFX):
+                        discovered_motors.append(item)
+                    # Support list of SwerveModules
+                    elif hasattr(item, "drive_motor") and isinstance(
+                        item.drive_motor, FROGTalonFX
+                    ):
+                        discovered_motors.append(item.drive_motor)
+                    if hasattr(item, "steer_motor") and isinstance(
+                        item.steer_motor, FROGTalonFX  # type: ignore
+                    ):
+                        discovered_motors.append(item.steer_motor)  # type: ignore
+
+        self._motors = discovered_motors
 
     @telemetry("Current Command", log=True)
     def current_command_telem(self) -> str:

@@ -8,6 +8,7 @@
 import commands2
 import wpilib
 from wpilib import DriverStation, SendableChooser, SmartDashboard
+from phoenix6 import SignalLogger
 from robotcontainer import RobotContainer
 
 
@@ -18,6 +19,10 @@ class FROGBot(commands2.TimedCommandRobot):
         """Initialize all wpilib motors & sensors"""
         wpilib.DataLogManager.start()
         DriverStation.startDataLog(wpilib.DataLogManager.getLog(), True)
+
+        SignalLogger.enable_auto_logging(True)
+        SignalLogger.start()
+
         self.alliance = None
 
         self.container = RobotContainer()
