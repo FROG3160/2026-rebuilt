@@ -136,46 +136,45 @@ back_right_module_config = {
 }
 
 
-class VisionTunables(Sendable):
-    def __init__(self):
-        super().__init__()
-        self.max_translationDistance = 6.0  # meters
-        self.min_translationStdDev = 0.2  # meters
-        self.max_translationStdDev = 0.8  # meters
-        self.max_delta = 1.0  # meters
+class VisionTunables:
+    max_translationDistance = 6.0  # meters
+    min_translationStdDev = 0.2  # meters
+    max_translationStdDev = 0.8  # meters
+    max_delta = 1.0  # meters
 
-    def initSendable(self, builder: SendableBuilder) -> None:
-        builder.setSmartDashboardType("Vision Tunables")
-        builder.addDoubleProperty(
-            "Minimum Translation Std Dev",
-            lambda: self.min_translationStdDev,
-            lambda value: setattr(self, "min_translationStdDev", value),
-        )
-        builder.addDoubleProperty(
-            "Maximum Translation Std Dev",
-            lambda: self.max_translationStdDev,
-            lambda value: setattr(self, "max_translationStdDev", value),
-        )
-        builder.addDoubleProperty(
-            "Max Translation Distance",
-            lambda: self.max_translationDistance,
-            lambda value: setattr(self, "max_translationDistance", value),
-        )
-        builder.addDoubleProperty(
-            "Max Delta",
-            lambda: self.max_delta,
-            lambda value: setattr(self, "max_delta", value),
-        )
+    # def initSendable(self, builder: SendableBuilder) -> None:
+    #     builder.setSmartDashboardType("Vision Tunables")
+    #     builder.addDoubleProperty(
+    #         "Minimum Translation Std Dev",
+    #         lambda: self.min_translationStdDev,
+    #         lambda value: setattr(self, "min_translationStdDev", value),
+    #     )
+    #     builder.addDoubleProperty(
+    #         "Maximum Translation Std Dev",
+    #         lambda: self.max_translationStdDev,
+    #         lambda value: setattr(self, "max_translationStdDev", value),
+    #     )
+    #     builder.addDoubleProperty(
+    #         "Max Translation Distance",
+    #         lambda: self.max_translationDistance,
+    #         lambda value: setattr(self, "max_translationDistance", value),
+    #     )
+    #     builder.addDoubleProperty(
+    #         "Max Delta",
+    #         lambda: self.max_delta,
+    #         lambda value: setattr(self, "max_delta", value),
+    #     )
 
 
-class Drive(SwerveChassis, FROGSubsystem):
+class Drive(FROGSubsystem, SwerveChassis):
     """The drive subsystem that subclasses FROGlib.SwerveChassis and adds
     additional components, attributes and methods for autonomous driving, etc.
 
     """
 
     def __init__(self):
-        super().__init__(
+        SwerveChassis.__init__(
+            self,
             swerve_module_configs=(
                 SwerveModuleConfig(**front_left_module_config),
                 SwerveModuleConfig(**front_right_module_config),
@@ -194,6 +193,7 @@ class Drive(SwerveChassis, FROGSubsystem):
             max_rotation_speed=constants.kMaxChassisRadiansPerSec,
             parent_nt=constants.kComponentSubtableName,
         )
+        FROGSubsystem.__init__(self)
         self.resetController = True
         self._distance_to_target = None
 
@@ -268,7 +268,7 @@ class Drive(SwerveChassis, FROGSubsystem):
             SysIdRoutine.Mechanism(self._sysid_steer, lambda log: None, self),
         )
         self.vision_tunables = VisionTunables()
-        SmartDashboard.putData("Vision Tunables", self.vision_tunables)
+        # SmartDashboard.putData("Vision Tunables", self.vision_tunables)
         self.firing_target = None
         self._distance_to_target = None
 
@@ -453,8 +453,8 @@ class Drive(SwerveChassis, FROGSubsystem):
         self.initial_pose_set = False
 
     def periodic(self):
-        super().periodic()  # FROGSubsystem updates telemetry
-
+        SwerveChassis.periodic(self)
+        FROGSubsystem.periodic(self)
         # update estimator with chassis data
         self.swerve_estimator_pose = self.swerve_estimator.update(
             self.gyro.getRotation2d(), tuple(self.getModulePositions())
@@ -521,6 +521,22 @@ class Drive(SwerveChassis, FROGSubsystem):
 
                     # put camera pose on the estimator field2d
 
+    @FROGSubsystem.tunable("vision/max_translation_distance")
+    def max_translation_distance(self, value: float):
+        self.vision_tunables.max_translationDistance = value
+
+    @FROGSubsystem.tunable("vision/min_translation_stddev")
+    def min_translation_stddev(self, value: float):
+        self.vision_tunables.min_translationStdDev = value
+
+    @FROGSubsystem.tunable("vision/max_translation_stddev")
+    def max_translation_stddev(self, value: float):
+        self.vision_tunables.max_translationStdDev = value
+
+    @FROGSubsystem.tunable("vision/max_delta")
+    def max_delta(self, value: float):
+        self.vision_tunables.max_delta = value
+
     @FROGSubsystem.telemetry("Pose X")
     def pose_x_telem(self) -> float:
         return self.swerve_estimator_pose.x
@@ -536,4 +552,3 @@ class Drive(SwerveChassis, FROGSubsystem):
     @FROGSubsystem.telemetry("Distance to Target")
     def distance_to_target_telem(self) -> float:
         return self._distance_to_target if self._distance_to_target else 0.0
-
