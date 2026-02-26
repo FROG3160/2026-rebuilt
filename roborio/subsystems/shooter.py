@@ -28,6 +28,7 @@ from commands2 import cmd
 from phoenix6.signals import MotorAlignmentValue
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
+from FROGlib.subsystem import FROGSubsystem
 
 flywheel_gearing = DriveTrain(
     gear_stages=[], wheel_diameter=inchesToMeters(4.0)
@@ -70,8 +71,9 @@ hood_software_limits = (
 )
 
 
-class Shooter(Subsystem):
+class Shooter(FROGSubsystem):
     def __init__(self, drive: Drive):
+        super().__init__()
         self.motor = FROGTalonFX(
             motor_config=deepcopy(flywheel_motor_config)
             .with_id(constants.kShooterLeftFlywheelID)
@@ -174,7 +176,7 @@ class Shooter(Subsystem):
     # boolean to indicate if flywheel is at target speed
     def is_at_speed(self) -> bool:
         error = self.motor.get_closed_loop_error().value
-        speed = self._get_flywheel_velocity()
+        speed = self.motor.get_velocity().value
         return abs(error) <= self._flywheel_tolerance and speed > 0
 
     def _stop_flywheel(self):
@@ -209,56 +211,56 @@ class Shooter(Subsystem):
         battery_v = wpilib.RobotController.getBatteryVoltage()
         self.motor.simulation_update(dt, battery_v, [self._follower])
 
-    def _updateFlywheelSlot0(self, **kwargs):
+    def _updateFlywheelSlot(self, **kwargs):
         for k, v in kwargs.items():
             if hasattr(self._slot0, k):
                 setattr(self._slot0, k, v)
         self.motor.configurator.apply(self._slot0)
 
-    def _get_slot0_param(self, param: str) -> float:
-        return getattr(self._slot0, param)
+    @FROGSubsystem.telemetry("Flywheel Rotor Velocity")
+    def flywheel_rotor_velocity_telem(self) -> float:
+        return self.motor.get_rotor_velocity().value
 
-    def _get_flywheel_velocity(self) -> float:
+    @FROGSubsystem.telemetry("Flywheel Mech Velocity")
+    def flywheel_mech_velocity_telem(self) -> float:
         return self.motor.get_velocity().value
 
-    def initSendable(self, builder: SendableBuilder) -> None:
-        super().initSendable(builder)
-        builder.setSmartDashboardType("Shooter")  # or "Flywheel Tunables" etc.
+    @FROGSubsystem.telemetry("Flywheel Closed Loop Ref.")
+    def flywheel_closed_loop_ref_telem(self) -> float:
+        return self.motor.get_closed_loop_reference().value
 
-        # Read-only telemetry (shown in main widget)
-        builder.addDoubleProperty(
-            "Flywheel Rotor Velocity",
-            lambda: self.motor.get_rotor_velocity().value,
-            lambda: None,
-        )
-        builder.addDoubleProperty(
-            "Flywheel Mech Velocity",
-            lambda: self.motor.get_velocity().value,
-            lambda: None,
-        )
-        builder.addDoubleProperty(
-            "Flywheel Closed Loop Ref.",
-            lambda: self.motor.get_closed_loop_reference().value,
-            lambda: None,
-        )
-        builder.addDoubleProperty(
-            "Flywheel Closed Loop Error",
-            lambda: self.motor.get_closed_loop_error().value,
-            lambda: None,
-        )
-        builder.addDoubleProperty(
-            "Flywheel Commanded Speed",
-            lambda: self._commanded_flywheel_speed,
-            lambda value: setattr(self, "_commanded_flywheel_speed", value),
-        )
-        builder.addBooleanProperty(
-            "At Speed", lambda: self.is_at_speed(), lambda: None
-        )  # if you track target
+    @FROGSubsystem.telemetry("Flywheel Closed Loop Error")
+    def flywheel_closed_loop_error_telem(self) -> float:
+        return self.motor.get_closed_loop_error().value
 
-        # Tunable gains – these are editable
-        for param in ["k_s", "k_v", "k_a", "k_p", "k_i", "k_d"]:
-            builder.addDoubleProperty(
-                f"tunables/Flywheel {param.upper()}",
-                lambda p=param: self._get_slot0_param(p),
-                lambda v, p=param: self._updateFlywheelSlot0(**{p: v}),
-            )
+    @FROGSubsystem.telemetry("At Speed")
+    def at_speed_telem(self) -> bool:
+        return self.is_at_speed()
+
+    @FROGSubsystem.tunable(constants.kFlywheelS, "Flywheel K_S")
+    def flywheel_ks(self, val):
+        self._updateFlywheelSlot(k_s=val)
+
+    @FROGSubsystem.tunable(constants.kFlywheelV, "Flywheel K_V")
+    def flywheel_kv(self, val):
+        self._updateFlywheelSlot(k_v=val)
+
+    @FROGSubsystem.tunable(constants.kFlywheelA, "Flywheel K_A")
+    def flywheel_ka(self, val):
+        self._updateFlywheelSlot(k_a=val)
+
+    @FROGSubsystem.tunable(constants.kFlywheelP, "Flywheel K_P")
+    def flywheel_kp(self, val):
+        self._updateFlywheelSlot(k_p=val)
+
+    @FROGSubsystem.tunable(constants.kFlywheelI, "Flywheel K_I")
+    def flywheel_ki(self, val):
+        self._updateFlywheelSlot(k_i=val)
+
+    @FROGSubsystem.tunable(constants.kFlywheelD, "Flywheel K_D")
+    def flywheel_kd(self, val):
+        self._updateFlywheelSlot(k_d=val)
+
+    @FROGSubsystem.tunable(0.0, "Flywheel Commanded Speed")
+    def commanded_speed(self, val):
+        self._commanded_flywheel_speed = val

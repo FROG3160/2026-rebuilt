@@ -15,7 +15,6 @@ from FROGlib.xbox import FROGXboxDriver
 from FROGlib.xbox import FROGXboxTactical
 from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger
-from wpilib.shuffleboard import Shuffleboard
 from commands2.button import Trigger
 from commands2 import StartEndCommand, cmd
 import constants
@@ -31,6 +30,7 @@ class RobotContainer:
 
     def __init__(self):
         self.alliance = None
+
         self.climber = Climber()
         self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
         self.drive = Drive()
@@ -38,6 +38,7 @@ class RobotContainer:
         self.hopper = Hopper()
         self.shooter = Shooter(self.drive)
         self.feeder = Feeder()
+
         self.driver_xbox = FROGXboxDriver(
             constants.kDriverControllerPort,
             constants.kDeadband,
@@ -51,14 +52,10 @@ class RobotContainer:
         self.configure_automation_bindings()
 
         self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
-        Shuffleboard.getTab("Subsystems").add("Shooter", self.shooter)
-        Shuffleboard.getTab("Subsystems").add("Feeder", self.feeder)
-        #   → /Subsystems/Shooter : shows subsystem status/command
 
-        Shuffleboard.getTab("Tuning").add("Flywheel Gains", self.shooter)
         # Set up PathPlanner autos and publish to dashboard
         # self.autochooser = AutoBuilder.buildAutoChooser()
-        # SmartDashboard.putData("PathPlanner Autos", self.autochooser)
+        # SmartDashboard.putData("Auto Chooser", self.autochooser)
 
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""

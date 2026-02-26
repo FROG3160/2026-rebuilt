@@ -51,6 +51,7 @@ from FROGlib.vision import (
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from copy import deepcopy
+from FROGlib.subsystem import FROGSubsystem
 
 # TODO: #3 Switch gear_stages to correct swerve module gearing when available
 drivetrain = DriveTrain(gear_stages=MK5I_R3_GEARING, wheel_diameter=WHEEL_DIAMETER)
@@ -167,7 +168,7 @@ class VisionTunables(Sendable):
         )
 
 
-class Drive(SwerveChassis, Subsystem):
+class Drive(SwerveChassis, FROGSubsystem):
     """The drive subsystem that subclasses FROGlib.SwerveChassis and adds
     additional components, attributes and methods for autonomous driving, etc.
 
@@ -268,7 +269,6 @@ class Drive(SwerveChassis, Subsystem):
         )
         self.vision_tunables = VisionTunables()
         SmartDashboard.putData("Vision Tunables", self.vision_tunables)
-        SmartDashboard.putData("Drive Subsystem", self)
         self.firing_target = None
         self._distance_to_target = None
 
@@ -453,6 +453,8 @@ class Drive(SwerveChassis, Subsystem):
         self.initial_pose_set = False
 
     def periodic(self):
+        super().periodic()  # FROGSubsystem updates telemetry
+
         # update estimator with chassis data
         self.swerve_estimator_pose = self.swerve_estimator.update(
             self.gyro.getRotation2d(), tuple(self.getModulePositions())
@@ -519,37 +521,19 @@ class Drive(SwerveChassis, Subsystem):
 
                     # put camera pose on the estimator field2d
 
-        SmartDashboard.putNumberArray(
-            "Drive Pose",
-            [
-                self.swerve_estimator_pose.x,
-                self.swerve_estimator_pose.y,
-                self.swerve_estimator_pose.rotation().radians(),
-            ],
-        )
-        SmartDashboard.putNumber(
-            "Pose Rotation", self.swerve_estimator_pose.rotation().degrees()
-        )
+    @FROGSubsystem.telemetry("Pose X")
+    def pose_x_telem(self) -> float:
+        return self.swerve_estimator_pose.x
 
-        # run periodic method of the superclass, in this case SwerveChassis.periodic()
-        super().periodic()
+    @FROGSubsystem.telemetry("Pose Y")
+    def pose_y_telem(self) -> float:
+        return self.swerve_estimator_pose.y
 
-    def initSendable(self, builder: SendableBuilder) -> None:
-        super().initSendable(builder)
-        builder.setSmartDashboardType("Drive")
-        builder.addDoubleProperty(
-            "Pose X", lambda: self.swerve_estimator_pose.x, lambda _: None
-        )
-        builder.addDoubleProperty(
-            "Pose Y", lambda: self.swerve_estimator_pose.y, lambda _: None
-        )
-        builder.addDoubleProperty(
-            "Pose Degrees",
-            lambda: self.swerve_estimator_pose.rotation().degrees(),
-            lambda _: None,
-        )
-        builder.addDoubleProperty(
-            "Distance to Target",
-            lambda: self._distance_to_target if self._distance_to_target else 0.0,
-            lambda _: None,
-        )
+    @FROGSubsystem.telemetry("Pose Degrees")
+    def pose_degrees_telem(self) -> float:
+        return self.swerve_estimator_pose.rotation().degrees()
+
+    @FROGSubsystem.telemetry("Distance to Target")
+    def distance_to_target_telem(self) -> float:
+        return self._distance_to_target if self._distance_to_target else 0.0
+

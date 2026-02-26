@@ -15,7 +15,8 @@ from phoenix6.signals import MotorAlignmentValue
 import wpilib
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
-from wpiutil import SendableBuilder
+
+from FROGlib.subsystem import FROGSubsystem
 
 deploy_slot0 = FROGSlotConfig(
     k_s=constants.kDeployS,
@@ -50,7 +51,7 @@ lift_motor_config = FROGTalonFXConfig(
 )
 
 
-class Climber(Subsystem):
+class Climber(FROGSubsystem):
     def __init__(self):
         """Initialize the Climber subsystem."""
         super().__init__()
@@ -177,18 +178,18 @@ class Climber(Subsystem):
         self.deploy_motor.simulation_update(dt, battery_v)
         self.left_lift_motor.simulation_update(dt, battery_v, [self.right_lift_motor])
 
-    def initSendable(self, builder: SendableBuilder) -> None:
-        super().initSendable(builder)
-        builder.setSmartDashboardType("Climber")
-        builder.addDoubleProperty(
-            "Deploy Position", lambda: self.deploy_motor.get_position().value, lambda _: None
-        )
-        builder.addDoubleProperty(
-            "Lift Position", lambda: self.left_lift_motor.get_position().value, lambda _: None
-        )
-        builder.addDoubleProperty(
-            "Deploy Velocity", lambda: self.deploy_motor.get_velocity().value, lambda _: None
-        )
-        builder.addDoubleProperty(
-            "Lift Velocity", lambda: self.left_lift_motor.get_velocity().value, lambda _: None
-        )
+    @FROGSubsystem.telemetry("Deploy Position")
+    def deploy_position_telem(self) -> float:
+        return self.deploy_motor.get_position().value
+
+    @FROGSubsystem.telemetry("Lift Position")
+    def lift_position_telem(self) -> float:
+        return self.left_lift_motor.get_position().value
+
+    @FROGSubsystem.telemetry("Deploy Velocity")
+    def deploy_velocity_telem(self) -> float:
+        return self.deploy_motor.get_velocity().value
+
+    @FROGSubsystem.telemetry("Lift Velocity")
+    def lift_velocity_telem(self) -> float:
+        return self.left_lift_motor.get_velocity().value
