@@ -20,9 +20,8 @@ from wpimath.geometry import (
 )
 from wpimath.units import volts
 from wpilib.sysid import SysIdRoutineLog
-from wpilib import SmartDashboard
 from wpiutil import Sendable, SendableBuilder
-from commands2 import Subsystem, Command
+from commands2 import Command
 from commands2.sysid import SysIdRoutine
 from FROGlib.utils import DriveTrain, remap
 import constants
@@ -136,36 +135,6 @@ back_right_module_config = {
 }
 
 
-class VisionTunables:
-    max_translationDistance = 6.0  # meters
-    min_translationStdDev = 0.2  # meters
-    max_translationStdDev = 0.8  # meters
-    max_delta = 1.0  # meters
-
-    # def initSendable(self, builder: SendableBuilder) -> None:
-    #     builder.setSmartDashboardType("Vision Tunables")
-    #     builder.addDoubleProperty(
-    #         "Minimum Translation Std Dev",
-    #         lambda: self.min_translationStdDev,
-    #         lambda value: setattr(self, "min_translationStdDev", value),
-    #     )
-    #     builder.addDoubleProperty(
-    #         "Maximum Translation Std Dev",
-    #         lambda: self.max_translationStdDev,
-    #         lambda value: setattr(self, "max_translationStdDev", value),
-    #     )
-    #     builder.addDoubleProperty(
-    #         "Max Translation Distance",
-    #         lambda: self.max_translationDistance,
-    #         lambda value: setattr(self, "max_translationDistance", value),
-    #     )
-    #     builder.addDoubleProperty(
-    #         "Max Delta",
-    #         lambda: self.max_delta,
-    #         lambda value: setattr(self, "max_delta", value),
-    #     )
-
-
 class Drive(FROGSubsystem, SwerveChassis):
     """The drive subsystem that subclasses FROGlib.SwerveChassis and adds
     additional components, attributes and methods for autonomous driving, etc.
@@ -225,8 +194,6 @@ class Drive(FROGSubsystem, SwerveChassis):
 
         # create Field2d to display estimated swerve and camera poses
         self.estimator_field = Field2d()
-        # put Field2d on SmartDashboard/NetworkTables
-        SmartDashboard.putData("Estimator Poses", self.estimator_field)
 
         autobuilder_config = RobotConfig.fromGUISettings()
 
@@ -267,8 +234,11 @@ class Drive(FROGSubsystem, SwerveChassis):
             ),
             SysIdRoutine.Mechanism(self._sysid_steer, lambda log: None, self),
         )
-        self.vision_tunables = VisionTunables()
-        # SmartDashboard.putData("Vision Tunables", self.vision_tunables)
+        self._vt_max_delta = 1.0
+        self._vt_max_translationDistance = 6.0
+        self._vt_min_translationStdDev = 0.2
+        self._vt_max_translationStdDev = 0.8
+
         self.firing_target = None
         self._distance_to_target = None
 
@@ -480,9 +450,9 @@ class Drive(FROGSubsystem, SwerveChassis):
                 translation_stddev = remap(
                     tag_distance,
                     0,
-                    self.vision_tunables.max_translationDistance,
-                    self.vision_tunables.min_translationStdDev,
-                    self.vision_tunables.max_translationStdDev,
+                    self._vt_max_translationDistance,
+                    self._vt_min_translationStdDev,
+                    self._vt_max_translationStdDev,
                 )
                 rotational_stddev = math.pi  # Rely on gyro for rotation
                 # documentation for the swerve estimator recommends rejecting vision
@@ -507,8 +477,8 @@ class Drive(FROGSubsystem, SwerveChassis):
                         vision_estimated_pose.estimatedPose.toPose2d(),
                     )
                 elif (
-                    pose_delta < self.vision_tunables.max_delta
-                    and tag_distance < self.vision_tunables.max_translationDistance
+                    pose_delta < self._vt_max_delta
+                    and tag_distance < self._vt_max_translationDistance
                 ):
                     self.swerve_estimator.addVisionMeasurement(
                         vision_estimated_pose.estimatedPose.toPose2d(),
@@ -521,21 +491,21 @@ class Drive(FROGSubsystem, SwerveChassis):
 
                     # put camera pose on the estimator field2d
 
-    @FROGSubsystem.tunable("vision/max_translation_distance")
-    def max_translation_distance(self, value: float):
-        self.vision_tunables.max_translationDistance = value
+    @FROGSubsystem.tunable(1.0, "Vision/Max Delta")
+    def vt_max_delta_tunable(self, val):
+        self._vt_max_delta = val
 
-    @FROGSubsystem.tunable("vision/min_translation_stddev")
-    def min_translation_stddev(self, value: float):
-        self.vision_tunables.min_translationStdDev = value
+    @FROGSubsystem.tunable(6.0, "Vision/Max Translation Distance")
+    def vt_max_translationDistance_tunable(self, val):
+        self._vt_max_translationDistance = val
 
-    @FROGSubsystem.tunable("vision/max_translation_stddev")
-    def max_translation_stddev(self, value: float):
-        self.vision_tunables.max_translationStdDev = value
+    @FROGSubsystem.tunable(0.2, "Vision/Min Translation StdDev")
+    def vt_min_translationStdDev_tunable(self, val):
+        self._vt_min_translationStdDev = val
 
-    @FROGSubsystem.tunable("vision/max_delta")
-    def max_delta(self, value: float):
-        self.vision_tunables.max_delta = value
+    @FROGSubsystem.tunable(0.8, "Vision/Max Translation StdDev")
+    def vt_max_translationStdDev_tunable(self, val):
+        self._vt_max_translationStdDev = val
 
     @FROGSubsystem.telemetry("Pose X")
     def pose_x_telem(self) -> float:
@@ -552,3 +522,11 @@ class Drive(FROGSubsystem, SwerveChassis):
     @FROGSubsystem.telemetry("Distance to Target")
     def distance_to_target_telem(self) -> float:
         return self._distance_to_target if self._distance_to_target else 0.0
+
+    @FROGSubsystem.telemetry("Estimated Pose")
+    def estimated_pose_telem(self) -> Pose2d:
+        return self.swerve_estimator_pose
+
+    @FROGSubsystem.telemetry("Estimator Poses")
+    def estimator_field_telem(self) -> Field2d:
+        return self.estimator_field

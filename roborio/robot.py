@@ -77,4 +77,3 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def robotPeriodic(self):
         self.container.shift_tracker.update()
-        self.container.shift_tracker.put_to_dashboard()

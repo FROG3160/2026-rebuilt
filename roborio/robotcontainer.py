@@ -1,6 +1,4 @@
 from pathplannerlib.auto import NamedCommands, AutoBuilder
-from wpilib import SmartDashboard
-from wpimath.geometry import Pose2d
 
 from subsystems.climber import Climber
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
@@ -12,7 +10,6 @@ from subsystems.intake import Intake
 from subsystems.feeder import Feeder
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
-from FROGlib.xbox import FROGXboxTactical
 from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger
 from commands2.button import Trigger

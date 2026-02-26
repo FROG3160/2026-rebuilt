@@ -1,9 +1,7 @@
-from commands2 import Subsystem, Command
+from commands2 import Command
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
-from wpimath.units import volts
 from wpimath.system.plant import DCMotor, LinearSystemId
-from wpilib import SmartDashboard
 from FROGlib.subsystem import FROGSubsystem
 from phoenix6.controls import VoltageOut
 from phoenix6 import controls, SignalLogger
@@ -14,7 +12,6 @@ from FROGlib.ctre import (
     FROGFeedbackConfig,
     MOTOR_OUTPUT_CWP_COAST,
 )
-from phoenix6 import controls
 import constants
 import wpilib
 from wpiutil import SendableBuilder
@@ -145,4 +142,3 @@ class Feeder(FROGSubsystem):
     @FROGSubsystem.telemetry("Feed Velocity Telem")
     def feed_velocity_telem(self) -> float:
         return self.motor.get_velocity().value
-
