@@ -17,6 +17,7 @@ class FROGBot(commands2.TimedCommandRobot):
     def robotInit(self) -> None:
         """Initialize all wpilib motors & sensors"""
         wpilib.DataLogManager.start()
+        DriverStation.startDataLog(wpilib.DataLogManager.getLog(), True)
         self.alliance = None
 
         self.container = RobotContainer()

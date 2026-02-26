@@ -8,9 +8,8 @@ from FROGlib.ctre import (
 import constants
 from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
-from commands2 import Subsystem
+from FROGlib.subsystem import FROGSubsystem
 import wpilib
-from wpiutil import SendableBuilder
 
 
 hopper_slot0 = FROGSlotConfig(
@@ -28,7 +27,7 @@ hopper_motor_config = FROGTalonFXConfig(
 )
 
 
-class Hopper(Subsystem):
+class Hopper(FROGSubsystem):
     def __init__(self):
         super().__init__()
         self.motor = FROGTalonFX(motor_config=hopper_motor_config)
@@ -101,17 +100,15 @@ class Hopper(Subsystem):
             velocity_sign_multiplier=self._velocity_sign_multiplier,
         )
 
-    def initSendable(self, builder: SendableBuilder) -> None:
-        super().initSendable(builder)
-        builder.setSmartDashboardType("Hopper")
-        builder.addDoubleProperty(
-            "Voltage", lambda: self.motor.get_motor_voltage().value, lambda _: None
-        )
-        builder.addDoubleProperty(
-            "Velocity", lambda: self.motor.get_velocity().value, lambda _: None
-        )
-        builder.addDoubleProperty(
-            "tunables/Default Voltage",
-            lambda: self._default_voltage,
-            lambda value: setattr(self, "_default_voltage", value),
-        )
+    @FROGSubsystem.telemetry("Voltage")
+    def voltage_telem(self) -> float:
+        return self.motor.get_motor_voltage().value
+
+    @FROGSubsystem.telemetry("Velocity")
+    def velocity_telem(self) -> float:
+        return self.motor.get_velocity().value
+
+    @FROGSubsystem.tunable(4.0, "Default Voltage")
+    def default_voltage_tunable(self, val):
+        self._default_voltage = val
+

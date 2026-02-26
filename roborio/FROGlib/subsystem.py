@@ -25,20 +25,21 @@ class Tunable:
 
     def _get_storage(self, obj: "FROGSubsystem") -> Dict[str, Any]:
         if not hasattr(obj, "_tunable_data"):
-            obj._tunable_data = {}
-        if self._attr_name not in obj._tunable_data:
+            setattr(obj, "_tunable_data", {})
+        tunable_data = getattr(obj, "_tunable_data")
+        if self._attr_name not in tunable_data:
             topic = self._get_typed_topic(
                 obj.nt_tunables, self.topic_name, type(self.default)
             )
             pub = topic.publish()
             pub.set(self.default)
             sub = topic.subscribe(self.default)
-            obj._tunable_data[self._attr_name] = {
+            tunable_data[self._attr_name] = {
                 "value": self.default,
                 "pub": pub,
                 "sub": sub,
             }
-        return obj._tunable_data[self._attr_name]
+        return tunable_data[self._attr_name]
 
     def __get__(self, obj: "FROGSubsystem", objtype=None):
         if obj is None:
@@ -74,7 +75,12 @@ class Tunable:
 class Telemetry:
     """Descriptor for read-only telemetry (robot -> NT + optional logging)"""
 
-    def __init__(self, getter: Callable[[Any], Any], topic_name: Optional[str] = None, log: bool = True):
+    def __init__(
+        self,
+        getter: Callable[[Any], Any],
+        topic_name: Optional[str] = None,
+        log: bool = True,
+    ):
         self.getter = getter
         self.topic_name = topic_name
         self.log = log
@@ -87,11 +93,12 @@ class Telemetry:
 
     def _get_storage(self, obj: "FROGSubsystem") -> Dict[str, Any]:
         if not hasattr(obj, "_telemetry_data"):
-            obj._telemetry_data = {}
-        if self._attr_name not in obj._telemetry_data:
+            setattr(obj, "_telemetry_data", {})
+        telemetry_data = getattr(obj, "_telemetry_data")
+        if self._attr_name not in telemetry_data:
             # We need a sample value to determine type
             value = self.getter(obj)
-            topic = self._get_typed_topic(obj.nt_telemetry, self.topic_name, type(value))
+            topic = self._get_typed_topic(obj.nt_table, self.topic_name, type(value))
             pub = topic.publish()
             log_entry = None
             if self.log:
@@ -102,12 +109,9 @@ class Telemetry:
                     log_entry = BooleanLogEntry(DataLogManager.getLog(), path)
                 else:
                     log_entry = StringLogEntry(DataLogManager.getLog(), path)
-            
-            obj._telemetry_data[self._attr_name] = {
-                "pub": pub,
-                "log": log_entry
-            }
-        return obj._telemetry_data[self._attr_name]
+
+            telemetry_data[self._attr_name] = {"pub": pub, "log": log_entry}
+        return telemetry_data[self._attr_name]
 
     def __get__(self, obj: "FROGSubsystem", objtype=None):
         if obj is None:
@@ -136,8 +140,10 @@ def tunable(default: float | bool | str, topic_name: Optional[str] = None):
         def my_value(self, val):
             self.hardware.set(val)
     """
+
     def decorator(func: Callable[[Any, Any], None]):
         return Tunable(default, topic_name)
+
     return decorator
 
 
@@ -149,8 +155,10 @@ def telemetry(topic_name: Optional[str] = None, log: bool = True):
         def motor_velocity(self):
             return self.motor.get_velocity()
     """
+
     def decorator(func: Callable[[Any], Any]):
         return Telemetry(func, topic_name, log)
+
     return decorator
 
 
@@ -159,7 +167,7 @@ class FROGSubsystem(Subsystem):
     Base class for FROG Team subsystems with automatic NT tunables & telemetry.
     Inherit from this instead of plain Subsystem.
     """
-    
+
     # Expose as class attributes for decorator access
     tunable = tunable
     telemetry = telemetry
@@ -210,4 +218,6 @@ class FROGSubsystem(Subsystem):
             getattr(self, attr_name)  # Triggers Telemetry.__get__
 
         for attr_name in self._tunable_attrs:
-            getattr(self, attr_name)  # Triggers Tunable.__get__ (which checks for NT updates)
+            getattr(
+                self, attr_name
+            )  # Triggers Tunable.__get__ (which checks for NT updates)

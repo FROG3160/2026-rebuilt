@@ -4,6 +4,7 @@ from wpilib.sysid import SysIdRoutineLog
 from wpimath.units import volts
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpilib import SmartDashboard
+from FROGlib.subsystem import FROGSubsystem
 from phoenix6.controls import VoltageOut
 from phoenix6 import controls, SignalLogger
 from FROGlib.ctre import (
@@ -49,7 +50,7 @@ kBackOffRotations = 0.15  # rotations to retract from flywheel
 kBackOffTolerance = 0.02  # rotations
 
 
-class Feeder(Subsystem):
+class Feeder(FROGSubsystem):
     def __init__(self):
         super().__init__()
         self.motor = FROGTalonFX(
@@ -88,8 +89,6 @@ class Feeder(Subsystem):
                 gearing,
             )
             self.motor.simulation_init(feed_plant, feed_gearbox)
-
-        SmartDashboard.putData("Feeder", self)
 
     def sysIdQuasistatic(self, direction: SysIdRoutine.Direction) -> Command:
         return self.sys_id_routine.quasistatic(direction)
@@ -135,12 +134,15 @@ class Feeder(Subsystem):
         battery_v = wpilib.RobotController.getBatteryVoltage()
         self.motor.simulation_update(dt, battery_v)
 
-    def initSendable(self, builder: SendableBuilder) -> None:
-        super().initSendable(builder)
-        builder.setSmartDashboardType("Feeder")
+    @FROGSubsystem.tunable(20.0 / 3, "Feed Velocity")
+    def feed_velocity_tunable(self, val):
+        self._feed_velocity = val
 
-        builder.addDoubleProperty(
-            "tunable/Feed Velocity",
-            lambda: self._feed_velocity,
-            lambda value: setattr(self, "_feed_velocity", value),
-        )
+    @FROGSubsystem.telemetry("Feed Position")
+    def feed_position_telem(self) -> float:
+        return self.motor.get_position().value
+
+    @FROGSubsystem.telemetry("Feed Velocity Telem")
+    def feed_velocity_telem(self) -> float:
+        return self.motor.get_velocity().value
+
