@@ -63,6 +63,7 @@ class Climber(FROGSubsystem):
         )
         self.right_lift_motor = FROGTalonFX(
             motor_config=deepcopy(lift_motor_config)
+            .with_motor_name("RightLift")
             .with_id(constants.kClimberRightLiftMotorID)
             .with_motor_output(MOTOR_OUTPUT_CWP_BRAKE)
         )
