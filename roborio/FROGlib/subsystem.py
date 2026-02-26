@@ -169,8 +169,8 @@ class FROGSubsystem(Subsystem):
     """
 
     # Expose as class attributes for decorator access
-    tunable = tunable
-    telemetry = telemetry
+    tunable: Callable[..., Callable[..., Tunable]] = tunable
+    telemetry: Callable[..., Callable[..., Telemetry]] = telemetry
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
