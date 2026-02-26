@@ -269,6 +269,8 @@ class FROGTalonFX(TalonFX):
     def logData(self):
         """Logs data to network tables for this motor"""
         self._motorVelocityPub.set(self.get_velocity().value)
+        self._motorPositionPub.set(self.get_position().value)
+        self._motorVoltagePub.set(self.get_motor_voltage().value)
 
     def simulation_init(self, plant, gearbox, measurement_std_devs=None):
         """Initialize physics-based simulation for this motor.

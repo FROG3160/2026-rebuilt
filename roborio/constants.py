@@ -165,7 +165,7 @@ kProfiledRotationD = 0.0
 
 ## Network Tables names
 #########################################
-kComponentSubtableName = "Subsystems"
+kComponentSubtableName = "FROGSubsystems"
 
 ## Xbox Controller Constants
 #########################################

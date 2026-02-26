@@ -33,7 +33,7 @@ class FROGPoseEstimator:
             robotToCamera,
         )
 
-        nt_table = f"Subsystems/Vision/{camera_name}"
+        nt_table = f"FROGSubsystems/Vision/{camera_name}"
         self.pose_buffer = PoseBuffer(25)
         self._latest_pose_pub = (
             NetworkTableInstance.getDefault()
