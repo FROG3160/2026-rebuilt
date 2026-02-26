@@ -211,10 +211,10 @@ class FROGSubsystem(Subsystem):
                     ):
                         discovered_motors.append(item.drive_motor)
                     if hasattr(item, "steer_motor") and isinstance(
-                        item.steer_motor, FROGTalonFX
+                        item.steer_motor, FROGTalonFX  # type: ignore
                     ):
-                        discovered_motors.append(item.steer_motor)
-        
+                        discovered_motors.append(item.steer_motor)  # type: ignore
+
         self._motors = discovered_motors
 
     @telemetry("Current Command", log=True)
@@ -244,6 +244,3 @@ class FROGSubsystem(Subsystem):
             getattr(
                 self, attr_name
             )  # Triggers Tunable.__get__ (which checks for NT updates)
-
-        for motor in self._motors:
-            motor.logData()

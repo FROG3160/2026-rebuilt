@@ -240,37 +240,37 @@ class FROGTalonFX(TalonFX):
             motor_config (FROGTalonFXConfig): The configuration to apply to the motor. Defaults to a default FROGTalonFXConfig.
         """
         super().__init__(device_id=motor_config.id, canbus=CANBus(motor_config.can_bus))
+        if motor_config.motor_name == "":
+            motor_config.motor_name = f"TalonFX({motor_config.id})"
         self.config = motor_config
         self.configurator.apply(self.config)
 
-        if motor_config.motor_name == "":
-            motor_config.motor_name = f"TalonFX({motor_config.id})"
-        table = f"{motor_config.parent_nt}/{motor_config.motor_name}"
+        # table = f"{motor_config.parent_nt}/{motor_config.motor_name}"
 
-        self._motorVelocityPub = (
-            NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{table}/velocity")
-            .publish()
-        )
-        self._motorPositionPub = (
-            NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{table}/position")
-            .publish()
-        )
-        self._motorVoltagePub = (
-            NetworkTableInstance.getDefault()
-            .getFloatTopic(f"{table}/voltage")
-            .publish()
-        )
+        # self._motorVelocityPub = (
+        #     NetworkTableInstance.getDefault()
+        #     .getFloatTopic(f"{table}/velocity")
+        #     .publish()
+        # )
+        # self._motorPositionPub = (
+        #     NetworkTableInstance.getDefault()
+        #     .getFloatTopic(f"{table}/position")
+        #     .publish()
+        # )
+        # self._motorVoltagePub = (
+        #     NetworkTableInstance.getDefault()
+        #     .getFloatTopic(f"{table}/voltage")
+        #     .publish()
+        # )
 
     def getMotorVoltage(self):
         return self.get_motor_voltage().value
 
-    def logData(self):
-        """Logs data to network tables for this motor"""
-        self._motorVelocityPub.set(self.get_velocity().value)
-        self._motorPositionPub.set(self.get_position().value)
-        self._motorVoltagePub.set(self.get_motor_voltage().value)
+    # def logData(self):
+    #     """Logs data to network tables for this motor"""
+    #     self._motorVelocityPub.set(self.get_velocity().value)
+    #     self._motorPositionPub.set(self.get_position().value)
+    #     self._motorVoltagePub.set(self.get_motor_voltage().value)
 
     def simulation_init(self, plant, gearbox, measurement_std_devs=None):
         """Initialize physics-based simulation for this motor.
@@ -325,7 +325,7 @@ class FROGTalonFX(TalonFX):
             # Simple voltage-based simulation
             self.sim_state.set_supply_voltage(battery_v)
             applied_voltage = self.get_motor_voltage().value
-            target_velocity = (applied_voltage / 12.0) * max_velocity_rps
+            target_velocity = (applied_voltage / 12.0) * max_velocity_rps  # type: ignore
             if not hasattr(self, "_sim_velocity"):
                 self._sim_velocity = 0.0
             self._sim_velocity += 0.3 * (target_velocity - self._sim_velocity)
