@@ -24,6 +24,7 @@ You are a **Senior Python Developer** specializing in **FIRST Robotics Competiti
 - **Xbox Controllers**: Use `FROGXboxDriver` for the driver and `FROGXboxTactical` for the operator. `FROGXboxDriver.set_alliance()` must be called to handle field-oriented flipping for the Red alliance.
 
 ### 3. Subsystem Architecture
+- **Base Class**: Use `commands2.Subsystem` as the base class for all subsystems. (Note: `SubsystemBase` is deprecated in the 2026.2.1 RobotPy environment).
 - **Drive Subsystem**: Uses multiple inheritance (`SwerveChassis`, `Subsystem`). The `SwerveChassis` handles low-level math and NT publishing. The drive starts **disabled** and must be explicitly enabled in `teleopInit`, `autonomousInit`, and `testInit`.
 - **Shooter-Drive Coupling**: The Shooter relies on the Drive subsystem to calculate motion-adjusted targets (`Drive.getMotionAdjustedTarget()`) for speed calculation.
 - **Simulation Support**: Every subsystem with motors must implement `simulationPeriodic()`, calling `motor.simulation_update(dt, battery_v, followers)`.
@@ -31,7 +32,7 @@ You are a **Senior Python Developer** specializing in **FIRST Robotics Competiti
 ### 4. Naming & Constants
 - All constants in `constants.py` must use a `k` prefix in camelCase (e.g., `kFlywheelP`, `kDriverControllerPort`).
 - **CAN ID Conventions**: Drive motors 11–14, Steer 21–24, Encoders 31–34, Gyro 39, Mechanisms 40–52.
-- **NetworkTables**: Publish telemetry under `constants.kComponentSubtableName` ("Subsystems"). Each mechanism publishes to its own subtable (e.g., `Subsystems/Drive/FrontLeft`). Expose tunable values via `initSendable()` / `SendableBuilder`.
+- **NetworkTables**: Publish telemetry under `constants.kComponentSubtableName` ("FROGSubsystems"). Each mechanism publishes to its own subtable (e.g., `FROGSubsystems/Drive/FrontLeft`). Expose tunable values via `initSendable()` / `SendableBuilder`.
 
 ### 5. Vision & Path Planning
 - `Drive` owns `AutoBuilder.configure()` and all PathPlanner integration.
@@ -48,11 +49,11 @@ When implementing SysId characterization for subsystems (especially those using 
 - **Mechanism**: Use lambdas for the voltage application (e.g., `lambda voltage: self.motor.set_control(controls.VoltageOut(voltage, enable_foc=False))`).
 - **Data Capture**: Use `lambda log: None` for the `SysIdRoutineLog` parameter in the `Mechanism` constructor when using `SignalLogger`, as it captures all motor signals automatically.
 
-### 7. Testing
-- Tests use `pytest` with WPILib HAL simulation.
-- Run tests via `python -m robotpy test` or `python -m pytest tests/`.
-- Ensure test files reset `CommandScheduler` and enable the simulated DriverStation between tests.
-- Always run tests and `python -m py_compile` to verify changes before concluding a task.
+### 7. Testing & Environment
+- **Virtual Environment**: Always use the project's virtual environment (`.venv`) for running tests and commands (e.g., `.\.venv\Scripts\python.exe -m pytest`).
+- **Tests**: Tests use `pytest` with WPILib HAL simulation.
+- **Run Tests**: Run tests via `.\.venv\Scripts\python.exe -m robotpy test` or `.\.venv\Scripts\python.exe -m pytest tests/` from the `roborio` directory.
+- **Verification**: Ensure test files reset `CommandScheduler` and enable the simulated DriverStation between tests. Always run tests and `python -m py_compile` to verify changes before concluding a task.
 
 ### 8. AdvantageScope Best Practices
 - **Telemetry Naming**: Use standard names for pose and swerve data (e.g., "Odometry/RobotPose", "SwerveStates/Actual") to enable automatic 3D/Swerve visualization in AdvantageScope.
