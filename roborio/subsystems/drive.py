@@ -8,7 +8,7 @@ from FROGlib.ctre import (
     FROGPigeonGyro,
     FROGTalonFX,
 )
-from wpilib import DriverStation, Field2d, RobotBase
+from wpilib import DriverStation, Field2d, RobotBase, SmartDashboard
 from wpimath.geometry import (
     Pose2d,
     Rotation2d,
@@ -194,6 +194,7 @@ class Drive(FROGSubsystem, SwerveChassis):
 
         # create Field2d to display estimated swerve and camera poses
         self.estimator_field = Field2d()
+        SmartDashboard.putData("Drive/Estimator Field", self.estimator_field)
 
         autobuilder_config = RobotConfig.fromGUISettings()
 
@@ -526,7 +527,3 @@ class Drive(FROGSubsystem, SwerveChassis):
     @FROGSubsystem.telemetry("Estimated Pose")
     def estimated_pose_telem(self) -> Pose2d:
         return self.swerve_estimator_pose
-
-    @FROGSubsystem.telemetry("Estimator Poses")
-    def estimator_field_telem(self) -> Field2d:
-        return self.estimator_field
