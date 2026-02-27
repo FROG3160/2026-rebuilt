@@ -3,7 +3,7 @@ from pathplannerlib.auto import NamedCommands, AutoBuilder
 from subsystems.climber import Climber
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
 from FROGlib.vision import FROGDetector
-from subsystems.feedback import ShiftTracker
+from subsystems.feedback import ShiftTracker, FieldZones
 from subsystems.shooter import Shooter
 from subsystems.hopper import Hopper
 from subsystems.intake import Intake
@@ -44,11 +44,18 @@ class RobotContainer:
             constants.kRotSlew,
         )
         self.shift_tracker = ShiftTracker()
+        self.field_zones = FieldZones(self.drive.getPose)
 
         self.register_named_commands()
         self.configure_automation_bindings()
 
-        self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
+        self.drive.setDefaultCommand(
+            ManualDrive(
+                self.driver_xbox, 
+                self.drive, 
+                self.field_zones.get_max_speed_scalar
+            )
+        )
 
         # Set up PathPlanner autos and publish to dashboard
         # self.autochooser = AutoBuilder.buildAutoChooser()
@@ -69,7 +76,7 @@ class RobotContainer:
         """Configure button bindings for the driver controller."""
         self.driver_xbox.a().whileTrue(
             ManualDriveAndAim(
-                constants.kBlueHub, self.driver_xbox, self.drive, "DriveAndAim"
+                self.field_zones.get_aim_target, self.driver_xbox, self.drive, "DriveAndAim"
             )
         )
         self.driver_xbox.start().onTrue(
@@ -83,12 +90,10 @@ class RobotContainer:
         self.fuel_detector.get_trigger_targets_close().whileTrue(
             self.intake.runForward().alongWith(self.hopper.runForward())
         )
-        # self.driver_xbox.leftBumper().and_(
-        #     self.shooter.trigger_flywheel_at_speed()
-        # ).whileTrue(
-        #     self.shooter.run_feed_motor_forward().alongWith(self.hopper.runForward())
-        # )
-        self.driver_xbox.rightBumper().whileTrue(
+        
+        safe_to_shoot = self.field_zones.get_no_shoot_trigger().negate()
+
+        self.driver_xbox.rightBumper().and_(safe_to_shoot).whileTrue(
             self.shooter.cmd_fire_at_set_speed()
             .alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
