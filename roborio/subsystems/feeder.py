@@ -131,14 +131,14 @@ class Feeder(FROGSubsystem):
         battery_v = wpilib.RobotController.getBatteryVoltage()
         self.motor.simulation_update(dt, battery_v)
 
-    @FROGSubsystem.tunable(20.0 / 3, "Feed Velocity")
+    @FROGSubsystem.tunable(20.0 / 3, "Commanded Velocity")
     def feed_velocity_tunable(self, val):
         self._feed_velocity = val
 
-    @FROGSubsystem.telemetry("Feed Position")
-    def feed_position_telem(self) -> float:
+    @FROGSubsystem.telemetry("Actual Position")
+    def get_feed_position(self) -> float:
         return self.motor.get_position().value
 
-    @FROGSubsystem.telemetry("Feed Velocity Telem")
-    def feed_velocity_telem(self) -> float:
+    @FROGSubsystem.telemetry("Actual Velocity")
+    def get_feed_velocity(self) -> float:
         return self.motor.get_velocity().value
