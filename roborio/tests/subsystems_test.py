@@ -24,16 +24,10 @@ def scheduler():
 
 def test_shooter_fire_command_logic():
     """Test that fire_command calculates speed based on distance."""
-    # Mock the Drive subsystem to control the distance returned
-    mock_drive = MagicMock(spec=Drive)
-
-    # Set a specific distance: 4 meters
+    # Instantiate Shooter with a lambda returning a specific distance: 4 meters
     # Formula in Shooter: (23 * distance - 2) / 3
     # Calculation: (23 * 4 - 2) / 3 = 90 / 3 = 30.0
-    mock_drive.get_distance_to_target.return_value = 4.0
-
-    # Instantiate Shooter with the mock drive
-    shooter = Shooter(mock_drive)
+    shooter = Shooter(lambda: 4.0)
 
     # Get the command
     fire_cmd = shooter.cmd_fire_with_distance()
@@ -52,10 +46,7 @@ def test_shooter_fire_command_logic():
 
 def test_shooter_fire_command_no_target():
     """Test behavior when no target is found (None returned)."""
-    mock_drive = MagicMock(spec=Drive)
-    mock_drive.get_distance_to_target.return_value = None
-
-    shooter = Shooter(mock_drive)
+    shooter = Shooter(lambda: None)
     fire_cmd = shooter.cmd_fire_with_distance()
 
     fire_cmd.initialize()

@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from wpimath.geometry import Pose2d, Rotation2d
+from wpilib import Field2d
 from subsystems.feedback import FieldZones
 import constants
 
@@ -10,7 +11,7 @@ def test_field_zones_in_restricted_zone():
     def pose_supplier():
         return pose
         
-    zones = FieldZones(pose_supplier)
+    zones = FieldZones(pose_supplier, Field2d())
 
     # Inside zone 1: {"x_min": 0.0, "x_max": 3.5, "y_min": 0.0, "y_max": 1.8}
     pose_in_zone1 = Pose2d(2.0, 1.0, Rotation2d())
@@ -29,7 +30,7 @@ def test_field_zones_periodic_restricted():
         # Return a pose that is INSIDE a restricted zone
         return Pose2d(2.0, 1.0, Rotation2d())
     
-    zones = FieldZones(pose_supplier)
+    zones = FieldZones(pose_supplier, Field2d())
     zones.periodic()
     
     assert zones.status == "Restricted Zone!"
@@ -40,7 +41,7 @@ def test_field_zones_periodic_clear():
         # Return a pose that is OUTSIDE restricted zones
         return Pose2d(5.0, 5.0, Rotation2d())
     
-    zones = FieldZones(pose_supplier)
+    zones = FieldZones(pose_supplier, Field2d())
     zones.periodic()
     
     assert zones.status == "Clear"

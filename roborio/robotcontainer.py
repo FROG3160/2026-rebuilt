@@ -33,7 +33,7 @@ class RobotContainer:
         self.drive = Drive()
         self.intake = Intake()
         self.hopper = Hopper()
-        self.shooter = Shooter(self.drive)
+        self.shooter = Shooter(self.drive.get_distance_to_target)
         self.feeder = Feeder()
 
         self.driver_xbox = FROGXboxDriver(
@@ -44,7 +44,7 @@ class RobotContainer:
             constants.kRotSlew,
         )
         self.shift_tracker = ShiftTracker()
-        self.field_zones = FieldZones(self.drive.getPose)
+        self.field_zones = FieldZones(self.drive.getPose, self.drive.estimator_field)
 
         self.register_named_commands()
         self.configure_automation_bindings()

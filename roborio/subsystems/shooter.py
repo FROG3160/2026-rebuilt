@@ -18,7 +18,6 @@ from FROGlib.ctre import (
     MOTOR_OUTPUT_CCWP_BRAKE,
 )
 from FROGlib.utils import DriveTrain
-from subsystems.drive import Drive
 from phoenix6.configs import SlotConfigs
 from wpiutil import Sendable, SendableBuilder
 import wpilib
@@ -71,8 +70,10 @@ hood_software_limits = (
 )
 
 
+from typing import Callable, Optional
+
 class Shooter(FROGSubsystem):
-    def __init__(self, drive: Drive):
+    def __init__(self, distance_to_target_supplier: Callable[[], Optional[float]]):
         super().__init__()
         self.motor = FROGTalonFX(
             motor_config=deepcopy(flywheel_motor_config)
@@ -93,7 +94,7 @@ class Shooter(FROGSubsystem):
         self._slot0 = deepcopy(flywheel_slot0)
         self._hood_slot0 = deepcopy(hood_slot0)
 
-        self.drive = drive
+        self.distance_to_target_supplier = distance_to_target_supplier
 
         self.hood_motor = FROGTalonFX(
             motor_config=hood_motor_config.with_id(
@@ -166,7 +167,7 @@ class Shooter(FROGSubsystem):
         Returns speed as a float.
         Uses exact fraction: speed = (23 * distance - 2) / 3
         """
-        if distance := self.drive.get_distance_to_target():
+        if distance := self.distance_to_target_supplier():
             return (23 * distance - 2) / 3
         else:
             return None
