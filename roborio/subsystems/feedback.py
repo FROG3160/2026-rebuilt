@@ -184,13 +184,12 @@ class FieldZones(FROGSubsystem):
         {"x_min": 7.0, "x_max": 9.5, "y_min": 3.0, "y_max": 5.2}
     ]
 
-    def __init__(self, pose_supplier: Callable[[], Pose2d]):
+    def __init__(self, pose_supplier: Callable[[], Pose2d], field: Field2d):
         super().__init__()
         self.pose_supplier = pose_supplier
         self.status = "Clear"
         
-        # Correctly implement Rectangles for Field2d
-        self.field = Field2d()
+        self.field = field
         self._setup_field2d_zones()
 
     def _setup_field2d_zones(self):
@@ -249,8 +248,4 @@ class FieldZones(FROGSubsystem):
     @FROGSubsystem.telemetry("Status")
     def status_telem(self) -> str:
         return self.status
-
-    @FROGSubsystem.telemetry("Zones Field")
-    def zones_field_telem(self) -> Field2d:
-        return self.field
 
