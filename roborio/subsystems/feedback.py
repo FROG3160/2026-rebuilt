@@ -167,3 +167,90 @@ class ShiftTracker(FROGSubsystem):
     @FROGSubsystem.telemetry("Current Shift Number")
     def current_shift_number_telem(self) -> int:
         return self.current_shift_number
+
+
+from typing import Callable, Optional
+from wpimath.geometry import Pose2d, Rotation2d
+from wpilib import Field2d
+from commands2.button import Trigger
+import constants
+
+class FieldZones(FROGSubsystem):
+    # Field is ~16.5m x 8.2m, origin at blue alliance driver station
+    # All coords in meters, x forward, y right
+    NO_SHOOT_ZONES = [
+        {"x_min": 0.0, "x_max": 3.5, "y_min": 0.0, "y_max": 1.8},
+        {"x_min": 13.0, "x_max": 16.5, "y_min": 0.0, "y_max": 1.8},
+        {"x_min": 7.0, "x_max": 9.5, "y_min": 3.0, "y_max": 5.2}
+    ]
+
+    def __init__(self, pose_supplier: Callable[[], Pose2d]):
+        super().__init__()
+        self.pose_supplier = pose_supplier
+        self.status = "Clear"
+        
+        # Correctly implement Rectangles for Field2d
+        self.field = Field2d()
+        self._setup_field2d_zones()
+
+    def _setup_field2d_zones(self):
+        for i, zone in enumerate(self.NO_SHOOT_ZONES):
+            poses = [
+                Pose2d(zone["x_min"], zone["y_min"], Rotation2d()),
+                Pose2d(zone["x_min"], zone["y_max"], Rotation2d()),
+                Pose2d(zone["x_max"], zone["y_max"], Rotation2d()),
+                Pose2d(zone["x_max"], zone["y_min"], Rotation2d()),
+                Pose2d(zone["x_min"], zone["y_min"], Rotation2d()), # Close the loop
+            ]
+            self.field.getObject(f"NoShootZone_{i}").setPoses(poses)
+
+    def in_restricted_zone(self, pose: Optional[Pose2d] = None) -> bool:
+        pose_to_check = pose or self.pose_supplier()
+        x, y = pose_to_check.x, pose_to_check.y
+        
+        for zone in self.NO_SHOOT_ZONES:
+            if (zone["x_min"] <= x <= zone["x_max"] and
+                zone["y_min"] <= y <= zone["y_max"]):
+                return True
+        return False
+
+    def get_aim_target(self, pose: Optional[Pose2d] = None) -> Optional[Pose2d]:
+        """Dynamically return an aim target based on field position."""
+        # For now, as an example, if in the middle 3rd of the field, aim at a corner,
+        # otherwise aim at the Hub.
+        # Field length ~16.5m. Middle 3rd is roughly x between 5.5 and 11.0
+        pose_to_check = pose or self.pose_supplier()
+        x = pose_to_check.x
+        
+        if 5.5 < x < 11.0:
+            # Example corner target
+            return Pose2d(0, 0, Rotation2d()) 
+        else:
+            # Default hub target
+            return constants.kBlueHub
+
+    def get_no_shoot_trigger(self) -> Trigger:
+        return Trigger(lambda: self.in_restricted_zone())
+
+    def get_max_speed_scalar(self) -> float:
+        """Returns a scalar (0.0 to 1.0) to limit drive speed based on zone."""
+        if self.in_restricted_zone():
+            return 0.4 / constants.kMaxMetersPerSecond
+        return 1.0
+
+    def periodic(self):
+        if self.in_restricted_zone():
+            self.status = "Restricted Zone!"
+        else:
+            self.status = "Clear"
+            
+        super().periodic()
+
+    @FROGSubsystem.telemetry("Status")
+    def status_telem(self) -> str:
+        return self.status
+
+    @FROGSubsystem.telemetry("Zones Field")
+    def zones_field_telem(self) -> Field2d:
+        return self.field
+

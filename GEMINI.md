@@ -75,6 +75,7 @@ You are a **Senior Python Developer** specializing in **FIRST Robotics Competiti
 - **Documentation**: After pull requests are merged, update `GEMINI.md` with relevant technical details, patterns, and standards identified during the task.
 
 ## Latest Session Insights (Feb 2026)
+- Designed decoupled Field Location Tracking (`FieldZones`) using pure Suppliers and Triggers rather than direct subsystem mutation. Subsystems provide callbacks (`self.drive.getPose`) and receive targets via suppliers (`self.field_zones.get_aim_target`), minimizing circular dependencies and keeping logic declarative within `RobotContainer`.
 - Implemented `FROGSubsystem` base class with `@telemetry` and `@tunable` decorators for automated logging and dashboard publishing.
 - Centralized all logging (`DataLogManager`, `DriverStation`, `SignalLogger`) in `robot.py`.
 - Switched to global high-frequency motor logging via Phoenix 6 `.hoot` files, removing custom NetworkTable motor signal logging.
