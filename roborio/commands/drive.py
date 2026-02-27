@@ -10,7 +10,7 @@ import time
 
 class ManualDrive(Command):
     def __init__(
-        self, controller: FROGXboxDriver, drive: Drive, table: str = "Undefined"
+        self, controller: FROGXboxDriver, drive: Drive, table: str = "Commands"
     ) -> None:
         """Allows manual control of the drivetrain through use of the specified
         controller.
@@ -81,7 +81,7 @@ class ManualDriveAndAim(Command):
         aim_point: Pose2d,
         controller: FROGXboxDriver,
         drive: Drive,
-        table: str = "Undefined",
+        table: str = "Commands",
     ) -> None:
         """Allows manual control of the drivetrain through use of the specified
         controller, with automatic aiming.
@@ -135,7 +135,7 @@ class ManualDriveAndClusterAim(Command):
         controller: FROGXboxDriver,
         drive: Drive,
         fuel_detector: FROGDetector,
-        table: str = "Undefined",
+        table: str = "Commands",
     ) -> None:
         """Allows manual control of the drivetrain through use of the specified
         controller, with automatic aiming at detected fuel clusters.
@@ -171,15 +171,15 @@ class ManualDriveAndClusterAim(Command):
             self.fuel_detector.get_detection_results()
         )  # or get_alt_detection_results
         end_time = time.perf_counter()
-       
+
         # invert the yaw value of the detection target and convert to radians
         if detection:
             rotation_offset = degreesToRadians(
-                -self.fuel_detector.detection_target.target_yaw
+                -self.fuel_detector.detection_target.target_yaw  # type: ignore
             )
         else:
             rotation_offset = 0
-        
+
         current_rotation = self.drive.getRotation2d().radians()
 
         # calculate the required rotational velocity to face the new target
