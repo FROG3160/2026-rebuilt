@@ -186,3 +186,8 @@ kBlueRightTrench = Pose2d(4.692, 0.635, Rotation2d(0))
 kBlueLeftTrench = Pose2d(4.692, 7.489, Rotation2d(0))
 kRedRightTrench = Pose2d(11.849, 0.635, Rotation2d(math.pi))
 kRedLeftTrench = Pose2d(11.849, 7.489, Rotation2d(math.pi))
+
+kBlueRightCorner = Pose2d(1.0, 1.0, Rotation2d(0))
+kBlueLeftCorner = Pose2d(1.0, 7.2, Rotation2d(0))
+kRedRightCorner = Pose2d(15.5, 1.0, Rotation2d(math.pi))
+kRedLeftCorner = Pose2d(15.5, 7.2, Rotation2d(math.pi))
