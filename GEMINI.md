@@ -24,7 +24,8 @@ You are a **Senior Python Developer** specializing in **FIRST Robotics Competiti
 - **Xbox Controllers**: Use `FROGXboxDriver` for the driver and `FROGXboxTactical` for the operator. `FROGXboxDriver.set_alliance()` must be called to handle field-oriented flipping for the Red alliance.
 
 ### 3. Subsystem Architecture
-- **Base Class**: Inherit from `FROGlib.subsystem.FROGSubsystem` (which inherits from `commands2.Subsystem`). 
+- **Base Class**: Inherit from `FROGlib.subsystem.FROGSubsystem` (which inherits from `commands2.Subsystem`).
+- **Usage Policy**: Use `FROGSubsystem` only for objects that require command execution or are registered with the `CommandScheduler`. Non-command objects (like `RobotContainer`) should not inherit from `FROGSubsystem`.
 - **Telemetry & Tunables**: Use `@FROGSubsystem.telemetry()` and `@FROGSubsystem.tunable()` decorators for automated NetworkTables publishing and WPILogging.
 - **Command Telemetry**: `FROGSubsystem` automatically publishes "Current Command" and "Default Command" status.
 - **Drive Subsystem**: Uses multiple inheritance (`SwerveChassis`, `FROGSubsystem`). `SwerveChassis.periodic(self)` MUST be called before `FROGSubsystem.periodic(self)` in the `Drive.periodic` override.
