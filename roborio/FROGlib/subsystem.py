@@ -4,6 +4,7 @@ import ntcore
 from commands2 import Subsystem
 from wpilib import DataLogManager
 from wpiutil.log import DoubleLogEntry, BooleanLogEntry, StringLogEntry
+from wpimath.geometry import Pose2d
 
 
 class Tunable:
@@ -68,8 +69,12 @@ class Tunable:
             return table.getDoubleTopic(key)
         elif value_type is bool:
             return table.getBooleanTopic(key)
-        else:
+        elif value_type is str:
             return table.getStringTopic(key)
+        elif value_type is Pose2d:
+            return table.getStructTopic(key, Pose2d)
+        else:
+            return None
 
 
 class Telemetry:
@@ -99,7 +104,11 @@ class Telemetry:
             # We need a sample value to determine type
             value = self.getter(obj)
             topic = self._get_typed_topic(obj.nt_table, self.topic_name, type(value))
-            pub = topic.publish()
+            
+            pub = None
+            if topic:
+                pub = topic.publish()
+
             log_entry = None
             if self.log:
                 path = f"FROGSubsystems/{obj.getName()}/telemetry/{self.topic_name}"
@@ -107,7 +116,7 @@ class Telemetry:
                     log_entry = DoubleLogEntry(DataLogManager.getLog(), path)
                 elif isinstance(value, bool):
                     log_entry = BooleanLogEntry(DataLogManager.getLog(), path)
-                else:
+                elif isinstance(value, str):
                     log_entry = StringLogEntry(DataLogManager.getLog(), path)
 
             telemetry_data[self._attr_name] = {"pub": pub, "log": log_entry}
@@ -118,7 +127,8 @@ class Telemetry:
             return self
         value = self.getter(obj)
         storage = self._get_storage(obj)
-        storage["pub"].set(value)
+        if storage["pub"]:
+            storage["pub"].set(value)
         if storage["log"]:
             storage["log"].append(value)
         return value
@@ -128,8 +138,12 @@ class Telemetry:
             return table.getDoubleTopic(key)
         elif value_type is bool:
             return table.getBooleanTopic(key)
-        else:
+        elif value_type is str:
             return table.getStringTopic(key)
+        elif value_type is Pose2d:
+            return table.getStructTopic(key, Pose2d)
+        else:
+            return None
 
 
 def tunable(default: float | bool | str, topic_name: Optional[str] = None):

@@ -4,7 +4,6 @@ from typing import List, Tuple, Optional, Dict
 from photonlibpy import PhotonCamera, PhotonPoseEstimator, EstimatedRobotPose
 from photonlibpy.targeting import PhotonTrackedTarget
 from wpimath.geometry import Transform3d
-from wpilib import SmartDashboard
 from wpimath.geometry import Pose3d, Pose2d
 from wpiutil import Sendable, SendableBuilder
 from FROGlib.utils import PoseBuffer
@@ -145,44 +144,6 @@ class FROGPoseEstimator:
     #         return self.latestVisionPose
 
 
-class DetectorTunables(Sendable):
-    def __init__(self):
-        super().__init__()
-        self.min_confidence = 0.8
-        self.cluster_radius_deg = 12.0
-        self.use_weighted_centroid = True
-        self.min_neighbors = 2
-        self.use_area_weighting = True
-
-    def initSendable(self, builder: SendableBuilder) -> None:
-        builder.setSmartDashboardType("Detector Tunables")
-        builder.addDoubleProperty(
-            "Min Confidence",
-            lambda: self.min_confidence,
-            lambda value: setattr(self, "min_confidence", value),
-        )
-        builder.addDoubleProperty(
-            "Cluster Radius (deg)",
-            lambda: self.cluster_radius_deg,
-            lambda value: setattr(self, "cluster_radius_deg", value),
-        )
-        builder.addBooleanProperty(
-            "Use Weighted Centroid",
-            lambda: self.use_weighted_centroid,
-            lambda value: setattr(self, "use_weighted_centroid", value),
-        )
-        builder.addBooleanProperty(
-            "Use Area Weighting",
-            lambda: self.use_area_weighting,
-            lambda value: setattr(self, "use_area_weighting", value),
-        )
-        builder.addDoubleProperty(
-            "Min Neighbors",
-            lambda: self.min_neighbors,
-            lambda value: setattr(self, "min_neighbors", int(value)),
-        )
-
-
 @dataclass
 class DetectionResult:
     """Result of detection processing"""
@@ -214,8 +175,10 @@ class FROGDetector(PhotonCamera):
             cluster_radius: Maximum distance (degrees) for targets to be in same cluster
         """
         super().__init__(camera_config.name)
-        self.fuel_detector_tunables = DetectorTunables()
-        SmartDashboard.putData("Fuel Detector Tunables", self.fuel_detector_tunables)
+        self._min_confidence = 0.8
+        self._cluster_radius_deg = 12.0
+        self._min_neighbors = 2
+        self._use_area_weighting = True
         self.targets: List[PhotonTrackedTarget] = []
         self.detection_target: Optional[DetectionResult] = None
         # self.alt_detection_target: Optional[DetectionResult] = None
@@ -239,11 +202,7 @@ class FROGDetector(PhotonCamera):
         if self.targets is None:
             self._yaws = self._pitches = self._areas = np.array([])
             return
-        valid = [
-            t
-            for t in self.targets
-            if t.objDetectConf >= self.fuel_detector_tunables.min_confidence
-        ]
+        valid = [t for t in self.targets if t.objDetectConf >= self._min_confidence]
 
         # Extract to numpy for other clustering and other analysis methods
         if valid:
@@ -259,9 +218,9 @@ class FROGDetector(PhotonCamera):
 
         if self.targets:
             self.detection_target = self.get_best_cluster(
-                cluster_radius_deg=self.fuel_detector_tunables.cluster_radius_deg,
-                min_neighbors=self.fuel_detector_tunables.min_neighbors,
-                use_area_weighting=self.fuel_detector_tunables.use_area_weighting,
+                cluster_radius_deg=self._cluster_radius_deg,
+                min_neighbors=self._min_neighbors,
+                use_area_weighting=self._use_area_weighting,
             )
         else:
             return None

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from commands2 import Command, Subsystem
+from commands2 import Command
 from wpimath.units import inchesToMeters, volts
 from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6.hardware import TalonFX
@@ -91,6 +91,7 @@ class Shooter(FROGSubsystem):
         )
 
         self._slot0 = deepcopy(flywheel_slot0)
+        self._hood_slot0 = deepcopy(hood_slot0)
 
         self.drive = drive
 
@@ -217,6 +218,12 @@ class Shooter(FROGSubsystem):
                 setattr(self._slot0, k, v)
         self.motor.configurator.apply(self._slot0)
 
+    def _updateHoodSlot(self, **kwargs):
+        for k, v in kwargs.items():
+            if hasattr(self._hood_slot0, k):
+                setattr(self._hood_slot0, k, v)
+        self.hood_motor.configurator.apply(self._hood_slot0)
+
     @FROGSubsystem.telemetry("Flywheel Rotor Velocity")
     def flywheel_rotor_velocity_telem(self) -> float:
         return self.motor.get_rotor_velocity().value
@@ -264,3 +271,11 @@ class Shooter(FROGSubsystem):
     @FROGSubsystem.tunable(0.0, "Flywheel Commanded Speed")
     def commanded_speed(self, val):
         self._commanded_flywheel_speed = val
+
+    @FROGSubsystem.tunable(constants.kHoodS, "Hood K_S")
+    def hood_ks(self, val):
+        self._updateHoodSlot(k_s=val)
+
+    @FROGSubsystem.tunable(constants.kHoodP, "Hood K_P")
+    def hood_kp(self, val):
+        self._updateHoodSlot(k_p=val)

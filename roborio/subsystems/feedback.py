@@ -1,8 +1,9 @@
 import wpilib
-from wpilib import DriverStation, SmartDashboard, Timer
+from wpilib import DriverStation, Timer
+from FROGlib.subsystem import FROGSubsystem
 
 
-class ShiftTracker:
+class ShiftTracker(FROGSubsystem):
     """
     Helper class to easily answer:
       - Is our HUB currently active?
@@ -10,6 +11,7 @@ class ShiftTracker:
     """
 
     def __init__(self):
+        super().__init__()
         self.game_data = None  # 'R' or 'B'
         self.our_alliance = None  # Alliance.RED / BLUE / None
         self.first_inactive_alliance = None
@@ -38,8 +40,13 @@ class ShiftTracker:
         self.current_shift_duration = -1
         self.current_shift_number = 0  # 0: transition, 1-4: alliance shifts, 5: endgame
 
+    def periodic(self):
+        """Automatically called by CommandScheduler"""
+        self.update()
+        super().periodic()
+
     def update(self):
-        """Call this periodically (e.g. every loop in robotPeriodic / teleopPeriodic)"""
+        """Update internal state based on match time and game data"""
         # Get alliance once (shouldn't change during match)
         if self.our_alliance is None:
             self.our_alliance = DriverStation.getAlliance()
@@ -115,7 +122,7 @@ class ShiftTracker:
         else:
             new_shift_number = 5
             new_start_time = self.endgame_start
-            new_duration = float("inf")  # or self.endgame_duration if finite preferred
+            new_duration = 999.0
 
         if new_shift_number != self.current_shift_number:
             self.current_shift_number = new_shift_number
@@ -123,7 +130,7 @@ class ShiftTracker:
             self.current_shift_duration = new_duration
 
     def time_remaining_in_current_shift(self) -> float:
-        """Returns seconds remaining in current shift (or very large number on last shift)"""
+        """Returns seconds remaining in current shift"""
         if not self.has_good_data():
             return -1.0
 
@@ -131,7 +138,7 @@ class ShiftTracker:
         teleop_time_elapsed = self.teleop_duration - match_time_remaining
 
         if self.current_shift_number == 5:
-            return float("inf")
+            return 999.0
         else:
             return (
                 self.current_shift_start_time
@@ -139,15 +146,24 @@ class ShiftTracker:
                 - teleop_time_elapsed
             )
 
-    # ─────────────── Convenience / Dashboard methods ───────────────
-    def put_to_dashboard(self):
-        if self.has_good_data():
-            SmartDashboard.putString("Hub/Status", "Recived game data")
-            SmartDashboard.putBoolean("Hub/Our HUB Active", self.our_hub_is_active())
-            SmartDashboard.putString("Hub/First Inactive", self.first_inactive_alliance)
+    # ─────────────── Telemetry methods ───────────────
 
-            remaining = self.time_remaining_in_current_shift()
-            SmartDashboard.putNumber("Hub/Time Left in Shift", remaining)
-            SmartDashboard.putNumber("Hub/Current Shift", self.current_shift_number)
-        else:
-            SmartDashboard.putString("Hub/Status", "Waiting for game data...")
+    @FROGSubsystem.telemetry("Hub Status")
+    def status_telem(self) -> str:
+        return "Received game data" if self.has_good_data() else "Waiting for game data..."
+
+    @FROGSubsystem.telemetry("Our HUB Active")
+    def our_hub_active_telem(self) -> bool:
+        return self.our_hub_is_active()
+
+    @FROGSubsystem.telemetry("First Inactive Alliance")
+    def first_inactive_alliance_telem(self) -> str:
+        return str(self.first_inactive_alliance)
+
+    @FROGSubsystem.telemetry("Time Left in Shift")
+    def time_left_in_shift_telem(self) -> float:
+        return self.time_remaining_in_current_shift()
+
+    @FROGSubsystem.telemetry("Current Shift Number")
+    def current_shift_number_telem(self) -> int:
+        return self.current_shift_number
