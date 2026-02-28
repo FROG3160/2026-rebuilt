@@ -75,10 +75,20 @@ You are a **Senior Python Developer** specializing in **FIRST Robotics Competiti
 - **Documentation**: After pull requests are merged, update `GEMINI.md` with relevant technical details, patterns, and standards identified during the task.
 
 ## Latest Session Insights (Feb 2026)
+- Improved Trench Repulsion (Forcefield Logic): Upgraded `get_trench_velocity_limit` from a static vector addition to a proportional velocity-clamping forcefield. It measures the dot product of intended velocity against the vector pointing toward the tag. Drivers retain 100% control when moving parallel or away from the tags, but forward velocity is smoothly scaled down from 1.0 (at `1.5m` away) to 0.0 (at `0.75m` away) to prevent high-speed collisions without sudden jerks.
+- Integrated Hood Deployment Sequence: The driver's right bumper command in `RobotContainer` now utilizes `cmd.sequence()` to explicitly deploy the hood (`deploy_hood`), wait for `is_hood_deployed()` to become true, and only then fire the flywheel and feed mechanisms. The hood automatically retracts via `.finallyDo()` when the button is released.
+- Updated `ManualDriveAndAim` and `ManualDriveAndClusterAim` to accept the new proportional velocity limits and speed scalars just like the default `ManualDrive` command.
+- Established Alliance-Aware Aiming: Refactored aiming targets to be dynamically supplied (`get_aim_target`). Depending on the driver station's alliance and field X/Y coordinates, the robot automatically switches between aiming at the Hub or the closest protected field corner.
+- Refined No-Shoot Zones: Mapped out exact bounding boxes for the 4 trench zones, ensuring the center of the field remains a valid firing position while restricting shots taken directly under the trench overhangs.
 - Decoupled `Shooter` from `Drive` by injecting a `distance_to_target_supplier` into its constructor, eliminating the final instance of inter-subsystem tight coupling.
 - Designed decoupled Field Location Tracking (`FieldZones`) using pure Suppliers and Triggers rather than direct subsystem mutation. Subsystems provide callbacks (`self.drive.getPose`) and receive targets via suppliers (`self.field_zones.get_aim_target`), minimizing circular dependencies and keeping logic declarative within `RobotContainer`.
 - Implemented `FROGSubsystem` base class with `@telemetry` and `@tunable` decorators for automated logging and dashboard publishing.
 - Centralized all logging (`DataLogManager`, `DriverStation`, `SignalLogger`) in `robot.py`.
+
+## Tooling & Environment
+- **Shell:** Windows PowerShell (`powershell.exe -NoProfile -Command`) is the primary runtime for shell commands. Native bash tools (like `cat`, `grep`, `head`, `tail`) and bash operators (like `&&` and `<< EOF`) are not natively available in this PowerShell context.
+- **Git & GitHub:** The environment natively supports standard `git` commands and the GitHub CLI (`gh`). `gh issue create` and `git checkout -b` are the standard workflow for starting new tasks.
+- **Python Verification:** Always use the virtual environment (`.\.venv\Scripts\python.exe`) to execute `pytest` and `py_compile` to immediately verify structural and behavioral integrity.
 - Switched to global high-frequency motor logging via Phoenix 6 `.hoot` files, removing custom NetworkTable motor signal logging.
 - Confirmed that `SignalLogger` works in simulation; enabled it for both real and sim modes.
 - Refactored all subsystems to use the new `FROGSubsystem` pattern.
