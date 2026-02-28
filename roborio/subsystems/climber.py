@@ -128,6 +128,10 @@ class Climber(FROGSubsystem):
             controls.PositionVoltage(position, enable_foc=False)
         )
 
+    def _set_deploy_voltage(self, volts: float) -> None:
+        """Run the deploy motor at the specified voltage."""
+        self.deploy_motor.set_control(controls.VoltageOut(volts))
+
     def _stop_deploy(self) -> None:
         """Stop the deploy motor."""
         self.deploy_motor.stopMotor()
@@ -137,6 +141,10 @@ class Climber(FROGSubsystem):
         self.left_lift_motor.set_control(
             controls.PositionVoltage(position, enable_foc=False)
         )
+        
+    def _set_lift_voltage(self, volts: float) -> None:
+        """Run the lift motor at the specified voltage."""
+        self.left_lift_motor.set_control(controls.VoltageOut(volts))
 
     def _stop_lift(self) -> None:
         """Stop the lift motor."""
@@ -171,6 +179,20 @@ class Climber(FROGSubsystem):
         """Return a command to lift the climber to the specified position."""
         return self.runOnce(lambda: self._lift_position(position))
         # No need to wait for lift to reach position since it's follower
+
+    def manual_deploy_voltage_command(self, volts: float) -> Command:
+        """Runs the deploy motor at a constant voltage while the command is active."""
+        return self.runEnd(
+            lambda: self._set_deploy_voltage(volts),
+            self._stop_deploy
+        )
+
+    def manual_lift_voltage_command(self, voltage_supplier) -> Command:
+        """Runs the lift motor using a voltage supplier while the command is active."""
+        return self.runEnd(
+            lambda: self._set_lift_voltage(voltage_supplier()),
+            self._stop_lift
+        )
 
     def simulationPeriodic(self) -> None:
         """Update simulation state for the climber motors."""
