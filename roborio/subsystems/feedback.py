@@ -150,7 +150,9 @@ class ShiftTracker(FROGSubsystem):
 
     @FROGSubsystem.telemetry("Hub Status")
     def status_telem(self) -> str:
-        return "Received game data" if self.has_good_data() else "Waiting for game data..."
+        return (
+            "Received game data" if self.has_good_data() else "Waiting for game data..."
+        )
 
     @FROGSubsystem.telemetry("Our HUB Active")
     def our_hub_active_telem(self) -> bool:
@@ -175,24 +177,40 @@ from wpilib import Field2d
 from commands2.button import Trigger
 import constants
 
+
 class FieldZones(FROGSubsystem):
     # Covers the trench areas running along the sides of the field.
     # X bounds roughly align with the hubs (4.626 to 11.915).
     # We split this into 4 zones, leaving the very center of the field open.
     NO_SHOOT_ZONES = [
         # Blue side trenches (X from blue hub to midline ~8.25)
-        {"x_min": 4.62, "x_max": 8.25, "y_min": 0.0, "y_max": 1.8},  # Blue Right Trench
-        {"x_min": 4.62, "x_max": 8.25, "y_min": 6.4, "y_max": 8.2},  # Blue Left Trench
+        {
+            "x_min": 4.05,
+            "x_max": 5.23,
+            "y_min": 0.0,
+            "y_max": 1.265,
+        },  # Blue Right Trench
+        {"x_min": 4.05, "x_max": 5.24, "y_min": 6.75, "y_max": 8.0},  # Blue Left Trench
         # Red side trenches (X from midline ~8.25 to red hub)
-        {"x_min": 8.25, "x_max": 11.92, "y_min": 0.0, "y_max": 1.8}, # Red Right Trench
-        {"x_min": 8.25, "x_max": 11.92, "y_min": 6.4, "y_max": 8.2}, # Red Left Trench
+        {
+            "x_min": 11.33,
+            "x_max": 12.53,
+            "y_min": 0.0,
+            "y_max": 1.265,
+        },  # Red Left Trench
+        {
+            "x_min": 11.33,
+            "x_max": 12.53,
+            "y_min": 6.75,
+            "y_max": 8.0,
+        },  # Red Right Trench
     ]
 
     def __init__(self, pose_supplier: Callable[[], Pose2d], field: Field2d):
         super().__init__()
         self.pose_supplier = pose_supplier
         self.status = "Clear"
-        
+
         self.field = field
         self._setup_field2d_zones()
 
@@ -203,17 +221,19 @@ class FieldZones(FROGSubsystem):
                 Pose2d(zone["x_min"], zone["y_max"], Rotation2d()),
                 Pose2d(zone["x_max"], zone["y_max"], Rotation2d()),
                 Pose2d(zone["x_max"], zone["y_min"], Rotation2d()),
-                Pose2d(zone["x_min"], zone["y_min"], Rotation2d()), # Close the loop
+                Pose2d(zone["x_min"], zone["y_min"], Rotation2d()),  # Close the loop
             ]
             self.field.getObject(f"NoShootZone_{i}").setPoses(poses)
 
     def in_restricted_zone(self, pose: Optional[Pose2d] = None) -> bool:
         pose_to_check = pose or self.pose_supplier()
         x, y = pose_to_check.x, pose_to_check.y
-        
+
         for zone in self.NO_SHOOT_ZONES:
-            if (zone["x_min"] <= x <= zone["x_max"] and
-                zone["y_min"] <= y <= zone["y_max"]):
+            if (
+                zone["x_min"] <= x <= zone["x_max"]
+                and zone["y_min"] <= y <= zone["y_max"]
+            ):
                 return True
         return False
 
@@ -223,7 +243,7 @@ class FieldZones(FROGSubsystem):
         x = pose_to_check.x
         y = pose_to_check.y
         alliance = wpilib.DriverStation.getAlliance()
-        
+
         if alliance == wpilib.DriverStation.Alliance.kRed:
             # Red Alliance: Alliance zone is X > 11.0, opponent zone is X < 5.5
             if x > 11.0:
@@ -235,7 +255,7 @@ class FieldZones(FROGSubsystem):
                 else:
                     return constants.kRedLeftCorner
             else:
-                return constants.kRedHub # Default fallback
+                return constants.kRedHub  # Default fallback
         else:
             # Blue Alliance (or fallback): Alliance zone is X < 5.5, opponent zone is X > 11.0
             if x < 5.5:
@@ -247,7 +267,7 @@ class FieldZones(FROGSubsystem):
                 else:
                     return constants.kBlueLeftCorner
             else:
-                return constants.kBlueHub # Default fallback
+                return constants.kBlueHub  # Default fallback
 
     def get_no_shoot_trigger(self) -> Trigger:
         return Trigger(lambda: self.in_restricted_zone())
@@ -263,10 +283,9 @@ class FieldZones(FROGSubsystem):
             self.status = "Restricted Zone!"
         else:
             self.status = "Clear"
-            
+
         super().periodic()
 
     @FROGSubsystem.telemetry("Status")
     def status_telem(self) -> str:
         return self.status
-
