@@ -172,7 +172,7 @@ class ShiftTracker(FROGSubsystem):
 
 
 from typing import Callable, Optional
-from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpilib import Field2d
 from commands2.button import Trigger
 import constants
@@ -206,9 +206,30 @@ class FieldZones(FROGSubsystem):
         },  # Red Right Trench
     ]
 
-    def __init__(self, pose_supplier: Callable[[], Pose2d], field: Field2d):
+    # The locations of the AprilTags placed directly over the trenches
+    TRENCH_TAGS = [
+        Translation2d(11.8779798, 7.4247756),  # ID 1
+        Translation2d(11.8779798, 0.6444996),  # ID 6
+        Translation2d(11.9528844, 0.6444996),  # ID 7
+        Translation2d(11.9528844, 7.4247756),  # ID 12
+        Translation2d(4.6630844, 0.6444996),  # ID 17
+        Translation2d(4.6630844, 7.4247756),  # ID 22
+        Translation2d(4.5881798, 7.4247756),  # ID 23
+        Translation2d(4.5881798, 0.6444996),  # ID 28
+    ]
+    SPEED_SCALAR = 0.99
+    FORCEFIELD_OUTER_RADIUS = 1.5 # meters. Start slowing down here.
+    FORCEFIELD_INNER_RADIUS = 0.75 # meters. Complete stop here.
+
+    def __init__(
+        self,
+        pose_supplier: Callable[[], Pose2d],
+        hood_state_supplier: Callable[[], bool],
+        field: Field2d,
+    ):
         super().__init__()
         self.pose_supplier = pose_supplier
+        self.hood_state_supplier = hood_state_supplier
         self.status = "Clear"
 
         self.field = field
@@ -236,6 +257,63 @@ class FieldZones(FROGSubsystem):
             ):
                 return True
         return False
+
+    def get_trench_velocity_limit(self, intended_velocity: Translation2d) -> Translation2d:
+        """Applies a proportional forcefield if the hood is deployed.
+        Scales down the velocity vector component moving TOWARD the tags, leaving
+        motion away from tags unaffected.
+        """
+        if not self.hood_state_supplier() or intended_velocity.norm() == 0:
+            return intended_velocity
+
+        pose = self.pose_supplier()
+        robot_translation = pose.translation()
+
+        closest_tag = None
+        min_dist = float('inf')
+        
+        for tag in self.TRENCH_TAGS:
+            dist = robot_translation.distance(tag)
+            if dist < min_dist:
+                min_dist = dist
+                closest_tag = tag
+                
+        if closest_tag is None or min_dist >= self.FORCEFIELD_OUTER_RADIUS:
+            return intended_velocity
+            
+        # Calculate scalar between 0.0 (at inner radius) and 1.0 (at outer radius)
+        if min_dist <= self.FORCEFIELD_INNER_RADIUS:
+            allowed_forward_scalar = 0.0
+        else:
+            range_total = self.FORCEFIELD_OUTER_RADIUS - self.FORCEFIELD_INNER_RADIUS
+            allowed_forward_scalar = (min_dist - self.FORCEFIELD_INNER_RADIUS) / range_total
+
+        # Vector pointing from robot TO the tag
+        to_tag_vector = (closest_tag - robot_translation)
+        to_tag_norm = to_tag_vector.norm()
+        
+        if to_tag_norm == 0:
+             return intended_velocity * allowed_forward_scalar
+             
+        to_tag_unit = to_tag_vector / to_tag_norm
+        
+        # Calculate how much of our intended velocity is directly toward the tag
+        # Dot product: V_intended • Unit_To_Tag
+        forward_component = intended_velocity.x * to_tag_unit.x + intended_velocity.y * to_tag_unit.y
+        
+        if forward_component <= 0:
+            # We are driving parallel to or away from the tag. Don't restrict.
+            return intended_velocity
+            
+        # We are driving TOWARD the tag. Scale down only that forward component.
+        restricted_forward_component = forward_component * allowed_forward_scalar
+        
+        # Reconstruct the final velocity:
+        # Intended - original forward component + restricted forward component
+        velocity_reduction = to_tag_unit * (forward_component - restricted_forward_component)
+        final_velocity = intended_velocity - velocity_reduction
+        
+        return final_velocity
 
     def get_aim_target(self, pose: Optional[Pose2d] = None) -> Optional[Pose2d]:
         """Dynamically return an aim target based on field position and alliance."""
@@ -275,7 +353,7 @@ class FieldZones(FROGSubsystem):
     def get_max_speed_scalar(self) -> float:
         """Returns a scalar (0.0 to 1.0) to limit drive speed based on zone."""
         if self.in_restricted_zone():
-            return 0.4 / constants.kMaxMetersPerSecond
+            return self.SPEED_SCALAR / constants.kMaxMetersPerSecond
         return 1.0
 
     def periodic(self):

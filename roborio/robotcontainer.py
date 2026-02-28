@@ -44,16 +44,21 @@ class RobotContainer:
             constants.kRotSlew,
         )
         self.shift_tracker = ShiftTracker()
-        self.field_zones = FieldZones(self.drive.getPose, self.drive.estimator_field)
+        self.field_zones = FieldZones(
+            self.drive.getPose,
+            self.shooter.is_hood_deployed,
+            self.drive.estimator_field,
+        )
 
         self.register_named_commands()
         self.configure_automation_bindings()
 
         self.drive.setDefaultCommand(
             ManualDrive(
-                self.driver_xbox, 
-                self.drive, 
-                self.field_zones.get_max_speed_scalar
+                self.driver_xbox,
+                self.drive,
+                None,  # self.field_zones.get_max_speed_scalar,
+                self.field_zones.get_trench_velocity_limit,
             )
         )
 
@@ -76,7 +81,12 @@ class RobotContainer:
         """Configure button bindings for the driver controller."""
         self.driver_xbox.a().whileTrue(
             ManualDriveAndAim(
-                self.field_zones.get_aim_target, self.driver_xbox, self.drive, "DriveAndAim"
+                self.field_zones.get_aim_target,
+                self.driver_xbox,
+                self.drive,
+                None,  # self.field_zones.get_max_speed_scalar,
+                self.field_zones.get_trench_velocity_limit,
+                "DriveAndAim",
             )
         )
         self.driver_xbox.start().onTrue(
@@ -90,16 +100,20 @@ class RobotContainer:
         self.fuel_detector.get_trigger_targets_close().whileTrue(
             self.intake.runForward().alongWith(self.hopper.runForward())
         )
-        
+
         safe_to_shoot = self.field_zones.get_no_shoot_trigger().negate()
 
         self.driver_xbox.rightBumper().and_(safe_to_shoot).whileTrue(
-            self.shooter.cmd_fire_at_set_speed()
-            .alongWith(
-                cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                    self.hopper.runForward().alongWith(self.feeder.runForward())
-                )
+            cmd.sequence(
+                cmd.runOnce(self.shooter.deploy_hood),
+                cmd.waitUntil(self.shooter.is_hood_deployed),
+                self.shooter.cmd_fire_at_set_speed().alongWith(
+                    cmd.waitUntil(self.shooter.is_at_speed).andThen(
+                        self.hopper.runForward().alongWith(self.feeder.runForward())
+                    )
+                ),
             )
+            .finallyDo(lambda interrupted: self.shooter.retract_hood())
             .withName("Fire Command")
         )  # max speed with 4" wheel is 33.8 m/s
 
