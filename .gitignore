@@ -218,3 +218,4 @@ start_agent.bat
 .github/
 background_agent.py
 roborio/logs/
+GEMINI.md
