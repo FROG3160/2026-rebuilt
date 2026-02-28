@@ -16,6 +16,7 @@ class ManualDrive(Command):
         controller: FROGXboxDriver, 
         drive: Drive, 
         speed_scalar_supplier: Optional[Callable[[], float]] = None,
+        velocity_limit_modifier: Optional[Callable[[Translation2d], Translation2d]] = None,
         table: str = "Commands"
     ) -> None:
         """Allows manual control of the drivetrain through use of the specified
@@ -25,11 +26,13 @@ class ManualDrive(Command):
             controller (FROGXboxDriver): The controller used to control the drive.
             drive (DriveTrain): The drive to be controlled.
             speed_scalar_supplier (Callable[[], float], optional): A supplier for a speed modifier scalar. Defaults to returning 1.0.
+            velocity_limit_modifier (Callable[[Translation2d], Translation2d], optional): Modifies intended velocity for forcefields.
             table (str): The name of the network table telemetry data will go into
         """
         self.controller = controller
         self.drive = drive
         self.speed_scalar_supplier = speed_scalar_supplier if speed_scalar_supplier else lambda: 1.0
+        self.velocity_limit_modifier = velocity_limit_modifier if velocity_limit_modifier else lambda v: v
         self.addRequirements(self.drive)
         self.resetController = True
         # profiledRotationConstraints = TrapezoidProfileRadians.Constraints(
@@ -76,6 +79,13 @@ class ManualDrive(Command):
 
         vX = self.controller.getSlewLimitedFieldForward() * scalar
         vY = self.controller.getSlewLimitedFieldLeft() * scalar
+        
+        # Apply forcefield velocity modifier
+        intended_velocity = Translation2d(vX, vY)
+        limited_velocity = self.velocity_limit_modifier(intended_velocity)
+        
+        vX = limited_velocity.x
+        vY = limited_velocity.y
 
         self.drive.fieldOrientedDrive(
             # self._vX, self._vY, self._vT, self._throttle
@@ -92,6 +102,8 @@ class ManualDriveAndAim(Command):
         target_supplier: Callable[[], Optional[Pose2d]],
         controller: FROGXboxDriver,
         drive: Drive,
+        speed_scalar_supplier: Optional[Callable[[], float]] = None,
+        velocity_limit_modifier: Optional[Callable[[Translation2d], Translation2d]] = None,
         table: str = "Commands",
     ) -> None:
         """Allows manual control of the drivetrain through use of the specified
@@ -101,11 +113,15 @@ class ManualDriveAndAim(Command):
             target_supplier (Callable[[], Optional[Pose2d]]): Function that returns the target the robot should aim at, or None for manual aiming.
             controller (FROGXboxDriver): The controller used to control the drive.
             drive (DriveTrain): The drive to be controlled.
+            speed_scalar_supplier (Callable[[], float], optional): A supplier for a speed modifier scalar. Defaults to returning 1.0.
+            velocity_limit_modifier (Callable[[Translation2d], Translation2d], optional): Modifies intended velocity for forcefields.
             table (str): The name of the network table telemetry data will go into
         """
         self.controller = controller
         self.drive = drive
         self.target_supplier = target_supplier
+        self.speed_scalar_supplier = speed_scalar_supplier if speed_scalar_supplier else lambda: 1.0
+        self.velocity_limit_modifier = velocity_limit_modifier if velocity_limit_modifier else lambda v: v
         self.addRequirements(self.drive)
         self.nt_table = f"{table}/{type(self).__name__}"
         self._calculated_vTPub = (
@@ -118,9 +134,18 @@ class ManualDriveAndAim(Command):
         self.drive.resetRotationController()
 
     def execute(self) -> None:
+        
+        scalar = self.speed_scalar_supplier()
 
-        vX = self.controller.getSlewLimitedFieldForward()
-        vY = self.controller.getSlewLimitedFieldLeft()
+        vX = self.controller.getSlewLimitedFieldForward() * scalar
+        vY = self.controller.getSlewLimitedFieldLeft() * scalar
+        
+        # Apply forcefield velocity modifier
+        intended_velocity = Translation2d(vX, vY)
+        limited_velocity = self.velocity_limit_modifier(intended_velocity)
+        
+        vX = limited_velocity.x
+        vY = limited_velocity.y
 
         target = self.target_supplier()
 
@@ -136,7 +161,7 @@ class ManualDriveAndAim(Command):
             self._calculated_vTPub.set(vT)
         else:
             # Fallback to manual control if no target is provided
-            vT = self.controller.getSlewLimitedFieldRotation()
+            vT = self.controller.getSlewLimitedFieldRotation() * scalar
             self._calculated_vTPub.set(0.0)
 
         self.drive.fieldOrientedAutoRotateDrive(
@@ -153,6 +178,8 @@ class ManualDriveAndClusterAim(Command):
         controller: FROGXboxDriver,
         drive: Drive,
         fuel_detector: FROGDetector,
+        speed_scalar_supplier: Optional[Callable[[], float]] = None,
+        velocity_limit_modifier: Optional[Callable[[Translation2d], Translation2d]] = None,
         table: str = "Commands",
     ) -> None:
         """Allows manual control of the drivetrain through use of the specified
@@ -162,11 +189,15 @@ class ManualDriveAndClusterAim(Command):
             aim_point (Pose2d): The target the robot should aim at.
             controller (FROGXboxDriver): The controller used to control the drive.
             drive (DriveTrain): The drive to be controlled.
+            speed_scalar_supplier (Callable[[], float], optional): A supplier for a speed modifier scalar. Defaults to returning 1.0.
+            velocity_limit_modifier (Callable[[Translation2d], Translation2d], optional): Modifies intended velocity for forcefields.
             table (str): The name of the network table telemetry data will go into
         """
         self.controller = controller
         self.drive = drive
         self.fuel_detector = fuel_detector
+        self.speed_scalar_supplier = speed_scalar_supplier if speed_scalar_supplier else lambda: 1.0
+        self.velocity_limit_modifier = velocity_limit_modifier if velocity_limit_modifier else lambda v: v
         self.addRequirements(self.drive)
         self.nt_table = f"{table}/{type(self).__name__}"
         self._calculated_vTPub = (
@@ -179,9 +210,18 @@ class ManualDriveAndClusterAim(Command):
         self.drive.resetRotationController()
 
     def execute(self) -> None:
+        
+        scalar = self.speed_scalar_supplier()
 
-        vX = self.controller.getSlewLimitedFieldForward()
-        vY = self.controller.getSlewLimitedFieldLeft()
+        vX = self.controller.getSlewLimitedFieldForward() * scalar
+        vY = self.controller.getSlewLimitedFieldLeft() * scalar
+        
+        # Apply forcefield velocity modifier
+        intended_velocity = Translation2d(vX, vY)
+        limited_velocity = self.velocity_limit_modifier(intended_velocity)
+        
+        vX = limited_velocity.x
+        vY = limited_velocity.y
 
         # calculate the cluster center
         start_time = time.perf_counter()

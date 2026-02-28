@@ -118,6 +118,14 @@ class Shooter(FROGSubsystem):
                 flywheel_gearbox, J_flywheel, gearing
             )
             self.motor.simulation_init(flywheel_plant, flywheel_gearbox)
+            
+            hood_gearbox = DCMotor.falcon500(1)
+            J_hood = 0.001
+            hood_gearing = 60.0
+            hood_plant = LinearSystemId.DCMotorSystem(
+                hood_gearbox, J_hood, hood_gearing
+            )
+            self.hood_motor.simulation_init(hood_plant, hood_gearbox)
 
         # Set up SysID routine for the shooter
         self.sys_id_routine = SysIdRoutine(
@@ -191,6 +199,12 @@ class Shooter(FROGSubsystem):
     def cmd_fire_at_set_speed(self) -> Command:
         return self.runEnd(self._apply_commanded_speed, self._stop_flywheel)
 
+    def deploy_hood(self):
+        self.hood_motor.set_control(controls.PositionVoltage(constants.kHoodForwardLimit))
+
+    def retract_hood(self):
+        self.hood_motor.set_control(controls.PositionVoltage(0.0))
+
     def _set_hood_position(self):
         self.hood_motor.set_position(0)
         self.hood_motor.config.software_limit_switch = hood_software_limits
@@ -208,10 +222,15 @@ class Shooter(FROGSubsystem):
             .andThen(self.runOnce(self._set_hood_position))
         )
 
+    def is_hood_deployed(self) -> bool:
+        """Returns True if the hood is currently deployed (position > 0.01)"""
+        return self.hood_motor.get_position().value > 0.01
+
     def simulationPeriodic(self):
         dt = 0.020
         battery_v = wpilib.RobotController.getBatteryVoltage()
         self.motor.simulation_update(dt, battery_v, [self._follower])
+        self.hood_motor.simulation_update(dt, battery_v)
 
     def _updateFlywheelSlot(self, **kwargs):
         for k, v in kwargs.items():
