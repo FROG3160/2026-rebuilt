@@ -221,8 +221,8 @@ class Shooter(FROGSubsystem):
 
     def _set_hood_position(self):
         self.hood_motor.set_position(0)
-        self.hood_motor.config.software_limit_switch = hood_software_limits
-        self.hood_motor.configurator.apply(self.hood_motor.config)
+        # self.hood_motor.config.software_limit_switch = hood_software_limits
+        # self.hood_motor.configurator.apply(self.hood_motor.config)
 
     def zero_hood_command(self):
         return (
