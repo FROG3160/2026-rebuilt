@@ -45,7 +45,7 @@ lift_motor_config = FROGTalonFXConfig(
     can_bus="rio",
     motor_name="LeftLift",
     parent_nt="Climber",
-    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
+    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
     feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=constants.kLiftRatio),
     slot0=lift_slot0,
 )
@@ -65,7 +65,7 @@ class Climber(FROGSubsystem):
             motor_config=deepcopy(lift_motor_config)
             .with_motor_name("RightLift")
             .with_id(constants.kClimberRightLiftMotorID)
-            .with_motor_output(MOTOR_OUTPUT_CWP_BRAKE)
+            .with_motor_output(MOTOR_OUTPUT_CCWP_BRAKE)
         )
         self.right_lift_motor.set_control(
             controls.Follower(
@@ -141,7 +141,7 @@ class Climber(FROGSubsystem):
         self.left_lift_motor.set_control(
             controls.PositionVoltage(position, enable_foc=False)
         )
-        
+
     def _set_lift_voltage(self, volts: float) -> None:
         """Run the lift motor at the specified voltage."""
         self.left_lift_motor.set_control(controls.VoltageOut(volts))
@@ -182,16 +182,12 @@ class Climber(FROGSubsystem):
 
     def manual_deploy_voltage_command(self, volts: float) -> Command:
         """Runs the deploy motor at a constant voltage while the command is active."""
-        return self.runEnd(
-            lambda: self._set_deploy_voltage(volts),
-            self._stop_deploy
-        )
+        return self.runEnd(lambda: self._set_deploy_voltage(volts), self._stop_deploy)
 
     def manual_lift_voltage_command(self, voltage_supplier) -> Command:
         """Runs the lift motor using a voltage supplier while the command is active."""
         return self.runEnd(
-            lambda: self._set_lift_voltage(voltage_supplier()),
-            self._stop_lift
+            lambda: self._set_lift_voltage(voltage_supplier()), self._stop_lift
         )
 
     def simulationPeriodic(self) -> None:

@@ -105,8 +105,8 @@ class RobotContainer:
 
         self.driver_xbox.rightBumper().and_(safe_to_shoot).whileTrue(
             cmd.sequence(
-                cmd.runOnce(self.shooter.deploy_hood),
-                cmd.waitUntil(self.shooter.is_hood_deployed),
+                # cmd.runOnce(self.shooter.deploy_hood),
+                # cmd.waitUntil(self.shooter.is_hood_deployed),
                 self.shooter.cmd_fire_at_set_speed().alongWith(
                     cmd.waitUntil(self.shooter.is_at_speed).andThen(
                         self.hopper.runForward().alongWith(self.feeder.runForward())
@@ -241,30 +241,38 @@ class RobotContainer:
                 self.shooter._stop_flywheel,
             ).withName("Run Flywheel")
         )
-        
+
         # Climber Manual Controls (Test Mode)
         # Deploy on D-Pad (POV)
         self.driver_xbox.povUp().whileTrue(
-            self.climber.manual_deploy_voltage_command(4.0).withName("Manual Deploy Forward")
+            self.climber.manual_deploy_voltage_command(4.0).withName(
+                "Manual Deploy Forward"
+            )
         )
         self.driver_xbox.povDown().whileTrue(
-            self.climber.manual_deploy_voltage_command(-4.0).withName("Manual Deploy Reverse")
+            self.climber.manual_deploy_voltage_command(-4.0).withName(
+                "Manual Deploy Reverse"
+            )
         )
-        
+
         # Lift on Right Stick Y axis
-        # Assuming the right stick Y value is positive when pushed down, 
+        # Assuming the right stick Y value is positive when pushed down,
         # we negate it and multiply by max voltage (e.g. 12.0)
         def get_lift_voltage():
             # Apply deadband manually if FROGXboxDriver doesn't have a direct helper for right stick Y with deadband
             # Get raw right Y. WPILib XboxController returns negative for up, positive for down.
             # We want UP to lift (positive voltage), DOWN to lower (negative voltage).
-            raw_y = self.driver_xbox.getRightY() 
+            raw_y = self.driver_xbox.getRightY()
             if abs(raw_y) < constants.kDeadband:
                 return 0.0
-            return raw_y * -12.0 
-            
+            return raw_y * -12.0
+
         # We need a trigger that evaluates to True when the stick is outside deadband
-        right_stick_active = Trigger(lambda: abs(self.driver_xbox.getRightY()) > constants.kDeadband)
+        right_stick_active = Trigger(
+            lambda: abs(self.driver_xbox.getRightY()) > constants.kDeadband
+        )
         right_stick_active.whileTrue(
-            self.climber.manual_lift_voltage_command(get_lift_voltage).withName("Manual Lift")
+            self.climber.manual_lift_voltage_command(get_lift_voltage).withName(
+                "Manual Lift"
+            )
         )
