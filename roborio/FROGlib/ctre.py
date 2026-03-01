@@ -244,6 +244,7 @@ class FROGTalonFX(TalonFX):
             motor_config.motor_name = f"TalonFX({motor_config.id})"
         self.config = motor_config
         self.configurator.apply(self.config)
+        self.optimize_bus_utilization()
 
     def getMotorVoltage(self):
         return self.get_motor_voltage().value
@@ -318,6 +319,8 @@ class FROGPigeonGyro:
     def __init__(self, can_id: int):
         self.gyro = Pigeon2(can_id)
         self.gyro.reset()
+        self.gyro.optimize_bus_utilization()
+        self.gyro.get_yaw().set_update_frequency(100)
 
     def getAngleCCW(self) -> float:
         # returns gyro heading
@@ -387,5 +390,6 @@ class FROGCanCoder(CANcoder):
     def __init__(self, config: FROGCANCoderConfig):
         super().__init__(config.id)
         self.configurator.apply(config)
+        self.optimize_bus_utilization()
         # self._motorPositionPub.set(self.get_position().value)
         # self._motorVoltagePub.set(self.get_motor_voltage().value)
