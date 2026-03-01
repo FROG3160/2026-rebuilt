@@ -87,9 +87,10 @@ kLiftRatio = 45 / (
 kFeedS = 0.24257
 kFeedV = 0.55678
 kFeedA = 0.034161
-kFeedVelocityP = 0.8629  # velocity PID
+kFeedVelocityP = 0.0  # velocity PID
 kFeedVelocityI = 0.0
 kFeedVelocityD = 0.0
+# TODO: #66 Test Position PID for feeder if we want to use it for backoff command
 kFeedPositionP = 9.9692
 kFeedPositionI = 0.0
 kFeedPositionD = 0.62293
@@ -103,9 +104,15 @@ kFlywheelV = 0.34733  # 0.342  # 0.351
 kFlywheelA = 0.018088
 
 # Hood motor gains
-kHoodS = 0.155
-kHoodP = 24.0
-kHoodForwardLimit = 0.07646483
+# It takes about 0.45 volts to move the lead screw to push the hood up,
+# and about -0.4 volts to move it down, so we can calculate kS and kG from those values
+kHoodS = 0.425  # (|Upward V| + |Downward V|) / 2
+kHoodP = 3.0
+kHoodV = 0.12
+kHoodG = 0.025
+kHoodMMV = 8.0
+kHoodMMA = 16.0  # (Upward V - Downward V) / 2
+kHoodForwardLimit = 1.15  # rotations
 kHoodReverseLimit = 0.0
 
 # tolerances
