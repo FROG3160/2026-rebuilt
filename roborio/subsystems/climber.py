@@ -37,7 +37,7 @@ deploy_motor_config = FROGTalonFXConfig(
     can_bus="rio",
     motor_name="Deploy",
     parent_nt="Climber",
-    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
+    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
     feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=constants.kDeployRatio),
     slot0=deploy_slot0,
 )
