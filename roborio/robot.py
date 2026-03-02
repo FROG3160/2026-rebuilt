@@ -10,6 +10,7 @@ import wpilib
 from wpilib import DriverStation, SendableChooser, SmartDashboard
 from phoenix6 import SignalLogger
 from robotcontainer import RobotContainer
+import constants
 
 
 class FROGBot(commands2.TimedCommandRobot):
@@ -22,6 +23,9 @@ class FROGBot(commands2.TimedCommandRobot):
 
         SignalLogger.enable_auto_logging(True)
         SignalLogger.start()
+
+        # Initialize Power Distribution Hub (REV, CAN ID 1)
+        self.pdh = wpilib.PowerDistribution(1, wpilib.PowerDistribution.ModuleType.kRev)
 
         self.alliance = None
 
@@ -77,3 +81,8 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def robotPeriodic(self):
         self.container.shift_tracker.update()
+
+        # Publish power and battery data
+        SmartDashboard.putNumber("Power/TotalCurrent", self.pdh.getTotalCurrent())
+        SmartDashboard.putNumber("Power/BatteryVoltage", self.pdh.getVoltage())
+        SmartDashboard.putNumber("Power/ShooterCurrent", self.pdh.getCurrent(constants.kShooterPDHChannel))
