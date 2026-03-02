@@ -1,6 +1,5 @@
 from enum import Enum
 import math
-from turtle import mode
 from ntcore import NetworkTableInstance
 from phoenix6 import StatusSignal
 from phoenix6.configs.cancoder_configs import (
@@ -239,15 +238,15 @@ class FROGTalonFX(TalonFX):
          - Primary Frame: Position, Velocity, Acceleration (used for closed-loop control)
          - Secondary Frame: Motor Voltage, Stator Current, Supply Voltage (crucial for current-limit tuning)
          - Health Frame: Device Temperature, Faults (important for monitoring and diagnostics)
-         - Tuning profilemaxes out all frames for high-fidelity logging during PID tuning and
+        Tuning profile maxes out all frames for high-fidelity logging during PID tuning and
               System Identification (SysId).
-        Production modes use more conservative frequencies to optimize bus utilization.
+        Production profiles use more conservative frequencies to optimize bus utilization.
         """
 
         # (Pos/Vel/Accel), (Volt/Curr), (Temp/Fault)
-        SWERVE_DRIVE = (100, 50, 4)
-        SWERVE_AZIMUTH = (100, 20, 4)
-        FLYWHEEL = (100, 20, 4)  # 50Hz is fine for 'production'
+        SWERVE_DRIVE = (50, 50, 4)
+        SWERVE_AZIMUTH = (50, 20, 4)
+        FLYWHEEL = (50, 20, 4)  # 50Hz is fine for 'production'
         POSITION_MM = (50, 20, 4)
         FOLLOWER = (20, 20, 4)
         BASIC = (20, 20, 4)

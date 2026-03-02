@@ -53,7 +53,8 @@ class Feeder(FROGSubsystem):
         self.motor = FROGTalonFX(
             motor_config=feed_motor_config.with_id(
                 constants.kFeedMotorID
-            ).with_motor_name("Feed Motor")
+            ).with_motor_name("Feed Motor"),
+            signal_profile=FROGTalonFX.SignalProfile.BASIC,
         )
         self._feed_velocity = 20.0 / 3  # rotations per second
         self._back_off_target = 0.0

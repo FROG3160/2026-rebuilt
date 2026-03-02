@@ -72,6 +72,7 @@ hood_software_limits = (
 
 from typing import Callable, Optional
 
+
 class Shooter(FROGSubsystem):
     def __init__(self, distance_to_target_supplier: Callable[[], Optional[float]]):
         super().__init__()
@@ -79,13 +80,15 @@ class Shooter(FROGSubsystem):
             motor_config=deepcopy(flywheel_motor_config)
             .with_id(constants.kShooterLeftFlywheelID)
             .with_motor_name("LeftFlywheel")
-            .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
+            .with_motor_output(MOTOR_OUTPUT_CCWP_COAST),
+            signal_profile=FROGTalonFX.SignalProfile.FLYWHEEL,
         )
         self._follower = FROGTalonFX(
             motor_config=deepcopy(flywheel_motor_config)
             .with_id(constants.kShooterRightFlywheelID)
             .with_motor_name("RightFlywheel")
-            .with_slot0(FROGSlotConfig())
+            .with_slot0(FROGSlotConfig()),
+            signal_profile=FROGTalonFX.SignalProfile.FOLLOWER,
         )
         self._follower.set_control(
             controls.Follower(self.motor.device_id, MotorAlignmentValue.OPPOSED)
@@ -99,7 +102,8 @@ class Shooter(FROGSubsystem):
         self.hood_motor = FROGTalonFX(
             motor_config=hood_motor_config.with_id(
                 constants.kHoodMotorID
-            ).with_motor_name("Hood Motor")
+            ).with_motor_name("Hood Motor"),
+            signal_profile=FROGTalonFX.SignalProfile.POSITION_MM,
         )
 
         self._flywheel_tolerance = (
@@ -118,7 +122,7 @@ class Shooter(FROGSubsystem):
                 flywheel_gearbox, J_flywheel, gearing
             )
             self.motor.simulation_init(flywheel_plant, flywheel_gearbox)
-            
+
             hood_gearbox = DCMotor.falcon500(1)
             J_hood = 0.001
             hood_gearing = 60.0
@@ -200,7 +204,9 @@ class Shooter(FROGSubsystem):
         return self.runEnd(self._apply_commanded_speed, self._stop_flywheel)
 
     def deploy_hood(self):
-        self.hood_motor.set_control(controls.PositionVoltage(constants.kHoodForwardLimit))
+        self.hood_motor.set_control(
+            controls.PositionVoltage(constants.kHoodForwardLimit)
+        )
 
     def retract_hood(self):
         self.hood_motor.set_control(controls.PositionVoltage(0.0))

@@ -55,17 +55,21 @@ class Climber(FROGSubsystem):
     def __init__(self):
         """Initialize the Climber subsystem."""
         super().__init__()
-        self.deploy_motor = FROGTalonFX(motor_config=deploy_motor_config)
+        self.deploy_motor = FROGTalonFX(
+            motor_config=deploy_motor_config,
+            signal_profile=FROGTalonFX.SignalProfile.POSITION_MM,
+        )
         self.left_lift_motor = FROGTalonFX(
             motor_config=deepcopy(lift_motor_config).with_id(
                 constants.kClimberLeftLiftMotorID
-            )
+            ),
+            signal_profile=FROGTalonFX.SignalProfile.FLYWHEEL,
         )
         self.right_lift_motor = FROGTalonFX(
             motor_config=deepcopy(lift_motor_config)
             .with_motor_name("RightLift")
-            .with_id(constants.kClimberRightLiftMotorID)
-            .with_motor_output(MOTOR_OUTPUT_CCWP_BRAKE)
+            .with_id(constants.kClimberRightLiftMotorID),
+            signal_profile=FROGTalonFX.SignalProfile.FOLLOWER,
         )
         self.right_lift_motor.set_control(
             controls.Follower(

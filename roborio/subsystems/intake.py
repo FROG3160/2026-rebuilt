@@ -30,7 +30,9 @@ intake_motor_config = FROGTalonFXConfig(
 class Intake(FROGSubsystem):
     def __init__(self):
         super().__init__()
-        self.motor = FROGTalonFX(motor_config=intake_motor_config)
+        self.motor = FROGTalonFX(
+            motor_config=intake_motor_config,
+        )
         self._default_voltage = 4
 
         if wpilib.RobotBase.isSimulation():
@@ -112,4 +114,3 @@ class Intake(FROGSubsystem):
     @FROGSubsystem.tunable(4.0, "Default Voltage")
     def default_voltage_tunable(self, val):
         self._default_voltage = val
-
