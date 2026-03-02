@@ -150,6 +150,9 @@ kClimberDeployMotorID = 50
 kClimberLeftLiftMotorID = 51
 kClimberRightLiftMotorID = 52
 
+# PDH Channels
+kShooterPDHChannel = 5  # an example.
+
 
 # ROGOT CHARACTERISTICS
 #########################################
