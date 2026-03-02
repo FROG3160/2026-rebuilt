@@ -1,4 +1,6 @@
+from enum import Enum
 import math
+from turtle import mode
 from ntcore import NetworkTableInstance
 from phoenix6 import StatusSignal
 from phoenix6.configs.cancoder_configs import (
@@ -230,9 +232,36 @@ class FROGTalonFXConfig(TalonFXConfiguration):
 class FROGTalonFX(TalonFX):
     """FROG custom TalonFX that takes parameters during instantiation."""
 
+    class SignalProfile(Enum):
+        """
+        Frame-aligned frequency profiles for Phoenix 6.
+        Tuple: (Primary, Secondary, Health) frame frequencies in Hz.
+         - Primary Frame: Position, Velocity, Acceleration (used for closed-loop control)
+         - Secondary Frame: Motor Voltage, Stator Current, Supply Voltage (crucial for current-limit tuning)
+         - Health Frame: Device Temperature, Faults (important for monitoring and diagnostics)
+         - Tuning profilemaxes out all frames for high-fidelity logging during PID tuning and
+              System Identification (SysId).
+        Production modes use more conservative frequencies to optimize bus utilization.
+        """
+
+        # (Pos/Vel/Accel), (Volt/Curr), (Temp/Fault)
+        SWERVE_DRIVE = (100, 50, 4)
+        SWERVE_AZIMUTH = (100, 20, 4)
+        FLYWHEEL = (100, 20, 4)  # 50Hz is fine for 'production'
+        POSITION_MM = (50, 20, 4)
+        FOLLOWER = (20, 20, 4)
+        BASIC = (20, 20, 4)
+
+        # --- TUNING MODE ---
+        # Used for PID tuning and System Identification (SysId)
+        # Maxes out the relevant frames for high-fidelity logging
+        TUNING = (250, 100, 4)
+        DISABLED = (4, 4, 4)
+
     def __init__(
         self,
         motor_config: FROGTalonFXConfig = FROGTalonFXConfig(),
+        signal_profile: SignalProfile = SignalProfile.BASIC,
     ):
         """Creates a TalonFX motor object with applied configuration
 
@@ -244,6 +273,26 @@ class FROGTalonFX(TalonFX):
             motor_config.motor_name = f"TalonFX({motor_config.id})"
         self.config = motor_config
         self.configurator.apply(self.config)
+        self.apply_usage_mode(signal_profile)
+
+    def apply_usage_mode(self, signal_profile: SignalProfile):
+        primary, secondary, health = signal_profile.value
+
+        # Primary Frame: Motion data
+        self.get_position().set_update_frequency(primary)
+        self.get_velocity().set_update_frequency(primary)
+        self.get_acceleration().set_update_frequency(primary)
+
+        # Secondary Frame: Power data (Crucial for current-limit tuning)
+        self.get_motor_voltage().set_update_frequency(secondary)
+        self.get_stator_current().set_update_frequency(secondary)
+        self.get_supply_voltage().set_update_frequency(secondary)
+
+        # Health Frame: Thermal/Fault data
+        self.get_device_temp().set_update_frequency(health)
+        self.get_fault_field().set_update_frequency(health)
+
+        # Disable/Slow everything else
         self.optimize_bus_utilization()
 
     def getMotorVoltage(self):
