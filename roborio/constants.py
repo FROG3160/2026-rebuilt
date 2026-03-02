@@ -116,7 +116,7 @@ kHoodForwardLimit = 1.15  # rotations
 kHoodReverseLimit = 0.0
 
 # tolerances
-kFlywheelTolerance = 1.0  # tolerance in m/s
+kFlywheelTolerance = 0.2  # tolerance in m/s
 
 ## CAN ID assignments
 ########################################

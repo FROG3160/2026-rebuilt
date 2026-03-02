@@ -306,6 +306,10 @@ class Shooter(FROGSubsystem):
     def commanded_speed(self, val):
         self._commanded_flywheel_speed = val
 
+    @FROGSubsystem.tunable(constants.kFlywheelTolerance, "Flywheel Tolerance")
+    def flywheel_tolerance(self, val):
+        self._flywheel_tolerance = val
+
     @FROGSubsystem.tunable(constants.kHoodS, "Hood K_S")
     def hood_ks(self, val):
         self._updateHoodSlot(k_s=val)
