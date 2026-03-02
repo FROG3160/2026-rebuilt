@@ -111,4 +111,3 @@ class Hopper(FROGSubsystem):
     @FROGSubsystem.tunable(4.0, "Default Voltage")
     def default_voltage_tunable(self, val):
         self._default_voltage = val
-

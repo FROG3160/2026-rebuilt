@@ -91,13 +91,15 @@ class Shooter(FROGSubsystem):
             motor_config=deepcopy(flywheel_motor_config)
             .with_id(constants.kShooterLeftFlywheelID)
             .with_motor_name("LeftFlywheel")
-            .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
+            .with_motor_output(MOTOR_OUTPUT_CCWP_COAST),
+            signal_profile=FROGTalonFX.SignalProfile.FLYWHEEL,
         )
         self._follower = FROGTalonFX(
             motor_config=deepcopy(flywheel_motor_config)
             .with_id(constants.kShooterRightFlywheelID)
             .with_motor_name("RightFlywheel")
-            .with_slot0(FROGSlotConfig())
+            .with_slot0(FROGSlotConfig()),
+            signal_profile=FROGTalonFX.SignalProfile.FOLLOWER,
         )
         self._follower.set_control(
             controls.Follower(self.motor.device_id, MotorAlignmentValue.OPPOSED)
@@ -111,7 +113,8 @@ class Shooter(FROGSubsystem):
         self.hood_motor = FROGTalonFX(
             motor_config=hood_motor_config.with_id(
                 constants.kHoodMotorID
-            ).with_motor_name("Hood Motor")
+            ).with_motor_name("Hood Motor"),
+            signal_profile=FROGTalonFX.SignalProfile.POSITION_MM,
         )
 
         self._flywheel_tolerance = (
