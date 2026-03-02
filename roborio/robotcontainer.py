@@ -92,12 +92,15 @@ class RobotContainer:
         self.driver_xbox.start().onTrue(
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
-        self.driver_xbox.y().whileTrue(self.climber.lift_to_position(7.3))
-        self.driver_xbox.x().whileTrue(self.climber.deploy_to_position(1.5))
+        # self.driver_xbox.y().whileTrue(self.climber.lift_to_position(7.3))
+        # self.driver_xbox.x().whileTrue(self.climber.deploy_to_position(1.5))
         self.driver_xbox.b().whileTrue(
             self.intake.runForward().alongWith(self.hopper.runForward())
         )
         self.fuel_detector.get_trigger_targets_close().whileTrue(
+            self.intake.runForward().alongWith(self.hopper.runForward())
+        )
+        self.driver_xbox.y().toggleOnTrue(
             self.intake.runForward().alongWith(self.hopper.runForward())
         )
 
@@ -105,8 +108,8 @@ class RobotContainer:
 
         self.driver_xbox.rightBumper().and_(safe_to_shoot).whileTrue(
             cmd.sequence(
-                # cmd.runOnce(self.shooter.deploy_hood),
-                # cmd.waitUntil(self.shooter.is_hood_deployed),
+                cmd.runOnce(self.shooter.deploy_hood),
+                cmd.waitUntil(self.shooter.is_hood_deployed),
                 self.shooter.cmd_fire_at_set_speed().alongWith(
                     cmd.waitUntil(self.shooter.is_at_speed).andThen(
                         self.hopper.runForward().alongWith(self.feeder.runForward())

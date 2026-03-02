@@ -3,8 +3,9 @@ from commands2 import Command
 from wpimath.units import inchesToMeters, volts
 from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6.hardware import TalonFX
-from phoenix6.configs import SoftwareLimitSwitchConfigs
+from phoenix6.configs import MotionMagicConfigs, SoftwareLimitSwitchConfigs
 from FROGlib.ctre import (
+    MOTOR_OUTPUT_CWP_BRAKE,
     FROGSlotConfig,
     FROGTalonFX,
     FROGTalonFXConfig,
@@ -41,7 +42,12 @@ flywheel_slot0 = FROGSlotConfig(
     k_i=constants.kFlywheelI,
     k_d=constants.kFlywheelD,
 )
-hood_slot0 = FROGSlotConfig(k_s=constants.kHoodS, k_p=constants.kHoodP)
+hood_slot0 = FROGSlotConfig(
+    k_s=constants.kHoodS,
+    k_p=constants.kHoodP,
+    k_g=constants.kHoodG,
+    k_v=constants.kHoodV,
+)
 
 flywheel_motor_config = FROGTalonFXConfig(
     can_bus="rio",
@@ -53,21 +59,26 @@ flywheel_motor_config = FROGTalonFXConfig(
     slot0=flywheel_slot0,
 )
 
+hood_motion_magic_config = (
+    MotionMagicConfigs()
+    .with_motion_magic_cruise_velocity(constants.kHoodMMV)
+    .with_motion_magic_acceleration(constants.kHoodMMA)
+)
 hood_motor_config = FROGTalonFXConfig(
     can_bus="rio",
     parent_nt="Shooter",
-    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=60.0),
+    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
+    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=1.0),
+    motion_magic=hood_motion_magic_config,
     slot0=hood_slot0,
 )
-
-hood_software_limits = (
-    SoftwareLimitSwitchConfigs()
-    .with_forward_soft_limit_threshold(constants.kHoodForwardLimit)
-    .with_reverse_soft_limit_threshold(constants.kHoodReverseLimit)
-    .with_forward_soft_limit_enable(True)
-    .with_forward_soft_limit_enable(True)
-)
+# hood_software_limits = (
+#     SoftwareLimitSwitchConfigs()
+#     .with_forward_soft_limit_threshold(constants.kHoodForwardLimit)
+#     .with_reverse_soft_limit_threshold(constants.kHoodReverseLimit)
+#     .with_forward_soft_limit_enable(True)
+#     .with_forward_soft_limit_enable(True)
+# )
 
 
 from typing import Callable, Optional
@@ -205,7 +216,7 @@ class Shooter(FROGSubsystem):
 
     def deploy_hood(self):
         self.hood_motor.set_control(
-            controls.PositionVoltage(constants.kHoodForwardLimit)
+            controls.MotionMagicVoltage(constants.kHoodForwardLimit)
         )
 
     def retract_hood(self):
@@ -213,8 +224,8 @@ class Shooter(FROGSubsystem):
 
     def _set_hood_position(self):
         self.hood_motor.set_position(0)
-        self.hood_motor.config.software_limit_switch = hood_software_limits
-        self.hood_motor.configurator.apply(self.hood_motor.config)
+        # self.hood_motor.config.software_limit_switch = hood_software_limits
+        # self.hood_motor.configurator.apply(self.hood_motor.config)
 
     def zero_hood_command(self):
         return (
@@ -297,6 +308,10 @@ class Shooter(FROGSubsystem):
     @FROGSubsystem.tunable(0.0, "Flywheel Commanded Speed")
     def commanded_speed(self, val):
         self._commanded_flywheel_speed = val
+
+    @FROGSubsystem.tunable(constants.kFlywheelTolerance, "Flywheel Tolerance")
+    def flywheel_tolerance(self, val):
+        self._flywheel_tolerance = val
 
     @FROGSubsystem.tunable(constants.kHoodS, "Hood K_S")
     def hood_ks(self, val):
