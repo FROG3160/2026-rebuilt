@@ -220,7 +220,9 @@ class Shooter(FROGSubsystem):
         )
 
     def retract_hood(self):
-        self.hood_motor.set_control(controls.PositionVoltage(0.0))
+        self.hood_motor.set_control(
+            controls.MotionMagicVoltage(constants.kHoodReverseLimit)
+        )
 
     def _set_hood_position(self):
         self.hood_motor.set_position(0)
