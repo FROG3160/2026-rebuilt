@@ -294,9 +294,6 @@ class FROGPigeonGyro(Pigeon2):
     def getRadiansPerSecCCW(self) -> float:
         return math.radians(self.getDegreesPerSecCCW())
 
-    def getRotation2d(self) -> Rotation2d:
-        return self.getRotation2d()
-
     def setAngleAdjustment(self, angle):
         self.set_yaw(angle)
 
