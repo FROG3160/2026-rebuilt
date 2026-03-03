@@ -8,7 +8,7 @@ from FROGlib.ctre import (
 import constants
 from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
-from FROGlib.subsystem import FROGSubsystem
+from FROGlib.subsystem import FROGSubsystem, Direction
 import wpilib
 
 
@@ -55,8 +55,14 @@ class Intake(FROGSubsystem):
         self.motor.stopMotor()
 
     # Optional: helper to check if motor is actively driven
-    def _is_running(self) -> bool:
-        return abs(self.motor.get_motor_voltage().value) > 0
+    def get_direction(self) -> Direction:
+        voltage = self.motor.get_motor_voltage().value
+        if voltage > 0.1:
+            return Direction.FORWARD
+        elif voltage < -0.1:
+            return Direction.REVERSE
+        else:
+            return Direction.IDLE
 
     # ────────────────────────────────────────────────
     #          Command Factory Methods

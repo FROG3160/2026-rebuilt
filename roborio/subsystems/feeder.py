@@ -2,7 +2,7 @@ from commands2 import Command
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.system.plant import DCMotor, LinearSystemId
-from FROGlib.subsystem import FROGSubsystem
+from FROGlib.subsystem import FROGSubsystem, Direction
 from phoenix6.controls import VoltageOut
 from phoenix6 import controls, SignalLogger
 from FROGlib.ctre import (
@@ -127,6 +127,15 @@ class Feeder(FROGSubsystem):
 
     def stop(self):
         self.motor.stopMotor()
+
+    def get_direction(self) -> Direction:
+        voltage = self.motor.get_motor_voltage().value
+        if voltage > 0.1:
+            return Direction.FORWARD
+        elif voltage < -0.1:
+            return Direction.REVERSE
+        else:
+            return Direction.IDLE
 
     def simulationPeriodic(self):
         dt = 0.020
