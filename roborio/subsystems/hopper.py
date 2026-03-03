@@ -8,8 +8,7 @@ from FROGlib.ctre import (
 import constants
 from phoenix6 import controls
 from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
-from commands2 import Subsystem
-
+from FROGlib.subsystem import FROGSubsystem
 import wpilib
 
 
@@ -28,13 +27,16 @@ hopper_motor_config = FROGTalonFXConfig(
 )
 
 
-class Hopper(Subsystem):
+class Hopper(FROGSubsystem):
     def __init__(self):
         super().__init__()
         self.motor = FROGTalonFX(motor_config=hopper_motor_config)
         self._default_voltage = 4
+
         if wpilib.RobotBase.isSimulation():
             self._sim_velocity = 0.0
+            inverted = bool(self.motor.config.motor_output.inverted.value)
+            self._velocity_sign_multiplier = -1 if inverted else 1
 
     def _run_hopper_motor_forward(self):
         self.motor.set_control(
@@ -89,27 +91,23 @@ class Hopper(Subsystem):
         )
 
     def simulationPeriodic(self):
-        # if self._is_sim:
-        self.motor.sim_state.set_supply_voltage(
-            wpilib.RobotController.getBatteryVoltage()
-        )
-        # Simple simulation of motor velocity based on applied voltage
-        applied_voltage = self.motor.get_motor_voltage().value
-        # Assume a simple linear model: velocity proportional to voltage
-        max_velocity_rot_per_sec = 83.33  # ← CHANGE THIS TO MATCH YOUR MECHANISM
-        target_velocity = (
-            applied_voltage / 12.0
-        ) * max_velocity_rot_per_sec  # Assuming 12V full speed
-
-        # Apply smoothing (simulates inertia/friction ramp)
-        self._sim_velocity += 0.3 * (target_velocity - self._sim_velocity)
-
-        # IMPORTANT: Apply direction sign from motor config
-        directed_velocity = 1 * self._sim_velocity
-
-        self.motor.sim_state.set_rotor_velocity(directed_velocity)
-
-        # Integrate to update position (dt ≈ 0.020 s in TimedRobot)
         dt = 0.020
-        position_change = directed_velocity * dt
-        self.motor.sim_state.add_rotor_position(position_change)
+        battery_v = wpilib.RobotController.getBatteryVoltage()
+        self.motor.simulation_update(
+            dt,
+            battery_v,
+            max_velocity_rps=83.33,
+            velocity_sign_multiplier=self._velocity_sign_multiplier,
+        )
+
+    @FROGSubsystem.telemetry("Voltage")
+    def voltage_telem(self) -> float:
+        return self.motor.get_motor_voltage().value
+
+    @FROGSubsystem.telemetry("Velocity")
+    def velocity_telem(self) -> float:
+        return self.motor.get_velocity().value
+
+    @FROGSubsystem.tunable(4.0, "Default Voltage")
+    def default_voltage_tunable(self, val):
+        self._default_voltage = val

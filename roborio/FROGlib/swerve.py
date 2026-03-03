@@ -119,7 +119,10 @@ class SwerveModule:
         module_config.steer_motor_config.parent_nt = nt_table
 
         # create/configure drive motor
-        self.drive_motor = FROGTalonFX(module_config.drive_motor_config)
+        self.drive_motor = FROGTalonFX(
+            module_config.drive_motor_config,
+            signal_profile=FROGTalonFX.SignalProfile.SWERVE_DRIVE,
+        )
 
         # create/configure cancoder
         self.steer_encoder = FROGCanCoder(module_config.cancoder_config)
@@ -132,20 +135,11 @@ class SwerveModule:
                     feedback_sensor_source=FeedbackSensorSourceValue.REMOTE_CANCODER,
                 )
             ),
+            signal_profile=FROGTalonFX.SignalProfile.SWERVE_AZIMUTH,
         )
-        # configure signal frequencies
-        #   drive motor, need velocity and possibly voltage
-        self.drive_motor.get_velocity().set_update_frequency(50)
-        self.drive_motor.get_motor_voltage().set_update_frequency(50)
-        self.drive_motor.get_closed_loop_error().set_update_frequency(50)
-        self.drive_motor.optimize_bus_utilization()
-        #   steer motor, need position and maybe closed loop error
-        self.steer_motor.get_position().set_update_frequency(50)
-        # TODO: #2 is closed loop error needed for steer?
-        self.steer_motor.get_closed_loop_error().set_update_frequency(50)
-        self.steer_motor.optimize_bus_utilization()
-        #  cancoder, need absolute position
-        self.steer_encoder.get_absolute_position().set_update_frequency(50)
+
+        #  cancoder, update status signal frequency - need absolute position
+        self.steer_encoder.get_absolute_position().set_update_frequency(100)
         self.steer_encoder.optimize_bus_utilization()
 
         # set module location
@@ -282,7 +276,6 @@ class SwerveModule:
         else:
             # stop the drive motor, steer motor can stay where it is
             self.drive_motor.set_control(VelocityVoltage(velocity=0, slot=1))
-        self.drive_motor.logData()
         # self.steer.logData()
 
 

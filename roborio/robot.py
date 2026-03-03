@@ -6,8 +6,11 @@
 #
 
 import commands2
+import wpilib
 from wpilib import DriverStation, SendableChooser, SmartDashboard
+from phoenix6 import SignalLogger
 from robotcontainer import RobotContainer
+import constants
 
 
 class FROGBot(commands2.TimedCommandRobot):
@@ -15,13 +18,27 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def robotInit(self) -> None:
         """Initialize all wpilib motors & sensors"""
+        wpilib.DataLogManager.start()
+        DriverStation.startDataLog(wpilib.DataLogManager.getLog(), True)
+
+        SignalLogger.enable_auto_logging(True)
+        SignalLogger.start()
+
+        # Initialize Power Distribution Hub (REV, CAN ID 1)
+        self.pdh = wpilib.PowerDistribution(1, wpilib.PowerDistribution.ModuleType.kRev)
+
         self.alliance = None
 
         self.container = RobotContainer()
 
         # Add SendableChooser for test modes
         self.test_chooser = SendableChooser()
-        self.test_chooser.setDefaultOption("SysId Characterization", "sysid")
+        self.test_chooser.setDefaultOption(
+            "SysId Drive Characterization", "sysid_drive"
+        )
+        self.test_chooser.addOption("SysId Feeder Characterization", "sysid_feeder")
+        self.test_chooser.addOption("SysId Shooter Characterization", "sysid_shooter")
+        self.test_chooser.addOption("SysId Climber Characterization", "sysid_climber")
         self.test_chooser.addOption("Component Tests", "components")
         SmartDashboard.putData("Test Mode Chooser", self.test_chooser)
 
@@ -36,6 +53,7 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def teleopInit(self) -> None:
         self.setAlliance()
+        self.container.configure_xbox_bindings()
         self.container.drive.enable()
 
     def teleopPeriodic(self):
@@ -47,8 +65,14 @@ class FROGBot(commands2.TimedCommandRobot):
 
         # Configure bindings based on chosen test mode
         selected = self.test_chooser.getSelected()
-        if selected == "sysid":
+        if selected == "sysid_drive":
             self.container.configureSysIDButtonBindings()
+        elif selected == "sysid_feeder":
+            self.container.configureSysIDFeederButtonBindings()
+        elif selected == "sysid_shooter":
+            self.container.configureSysIDShooterButtonBindings()
+        elif selected == "sysid_climber":
+            self.container.configureSysIDClimberButtonBindings()
         elif selected == "components":
             self.container.configureComponentTestBindings()
 
@@ -57,4 +81,8 @@ class FROGBot(commands2.TimedCommandRobot):
 
     def robotPeriodic(self):
         self.container.shift_tracker.update()
-        self.container.shift_tracker.put_to_dashboard()
+
+        # Publish power and battery data
+        SmartDashboard.putNumber("Power/TotalCurrent", self.pdh.getTotalCurrent())
+        SmartDashboard.putNumber("Power/BatteryVoltage", self.pdh.getVoltage())
+        SmartDashboard.putNumber("Power/ShooterCurrent", self.pdh.getCurrent(constants.kShooterPDHChannel))

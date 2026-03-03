@@ -51,10 +51,10 @@ kDriveFeedForward = 0.53
 kDutyCycleDriveV = 0.00916
 kDutyCycleDriveS = 0.01125
 
-kVoltageDriveV = 1.795
-kVoltageDriveS = 0.211
-kVoltageDriveP = 0.5
-kVoltageDriveA = 0.027631
+kVoltageDriveV = 2.0164  # 1.795
+kVoltageDriveS = 0.060831  # 0.211
+kVoltageDriveP = 2.9646  # 0.5
+kVoltageDriveA = 0.14705  # 0.027631
 
 # intake gains
 kVoltageIntakeS = 0.12
@@ -69,6 +69,8 @@ kDeployD = 0.0
 kDeployS = 0.0
 kDeployV = 0.0
 
+kDeployRatio = 45.0  # gear reduction for climber deploy motor (45:1)
+
 # climber lift gains
 kLiftP = 1.0
 kLiftI = 0.0
@@ -77,24 +79,44 @@ kLiftS = 0.0
 kLiftV = 0.0
 kLiftG = 0.0
 
+kLiftRatio = 45 / (
+    14 * 0.25
+)  # (gear reduction (45) / (sprocket teeth (14) * pitch (0.25 inches per tooth)))
+
 # Feed/transfer motor gains
-kFeedS = 0.2
+kFeedS = 0.24257
+kFeedV = 0.55678
+kFeedA = 0.034161
+kFeedVelocityP = 0.0  # velocity PID
+kFeedVelocityI = 0.0
+kFeedVelocityD = 0.0
+# TODO: #66 Test Position PID for feeder if we want to use it for backoff command
+kFeedPositionP = 9.9692
+kFeedPositionI = 0.0
+kFeedPositionD = 0.62293
 
 # flywheel gains
-kFlywheelP = 0.1
+kFlywheelP = 0.50197
 kFlywheelI = 0.0
 kFlywheelD = 0.0
-kFlywheelS = 0.19  # determined with follower helping
-kFlywheelV = 0.0002
-kFlywheelA = 0.00002
+kFlywheelS = 0.095535  # determined with follower helping
+kFlywheelV = 0.34733  # 0.342  # 0.351
+kFlywheelA = 0.018088
 
 # Hood motor gains
-kHoodS = 0.15
-kHoodForwardLimit = 0.07646483
+# It takes about 0.45 volts to move the lead screw to push the hood up,
+# and about -0.4 volts to move it down, so we can calculate kS and kG from those values
+kHoodS = 0.425  # (|Upward V| + |Downward V|) / 2
+kHoodP = 3.0
+kHoodV = 0.12
+kHoodG = 0.025
+kHoodMMV = 8.0
+kHoodMMA = 16.0  # (Upward V - Downward V) / 2
+kHoodForwardLimit = 1.15  # rotations
 kHoodReverseLimit = 0.0
 
 # tolerances
-kFlywheelTolerance = 1.0  # tolerance in m/s
+kFlywheelTolerance = 0.2  # tolerance in m/s
 
 ## CAN ID assignments
 ########################################
@@ -128,6 +150,9 @@ kClimberDeployMotorID = 50
 kClimberLeftLiftMotorID = 51
 kClimberRightLiftMotorID = 52
 
+# PDH Channels
+kShooterPDHChannel = 5  # an example.
+
 
 # ROGOT CHARACTERISTICS
 #########################################
@@ -150,7 +175,7 @@ kProfiledRotationD = 0.0
 
 ## Network Tables names
 #########################################
-kComponentSubtableName = "Subsystems"
+kComponentSubtableName = "FROGSubsystems"
 
 ## Xbox Controller Constants
 #########################################
@@ -171,3 +196,8 @@ kBlueRightTrench = Pose2d(4.692, 0.635, Rotation2d(0))
 kBlueLeftTrench = Pose2d(4.692, 7.489, Rotation2d(0))
 kRedRightTrench = Pose2d(11.849, 0.635, Rotation2d(math.pi))
 kRedLeftTrench = Pose2d(11.849, 7.489, Rotation2d(math.pi))
+
+kBlueRightCorner = Pose2d(1.0, 1.0, Rotation2d(0))
+kBlueLeftCorner = Pose2d(1.0, 7.2, Rotation2d(0))
+kRedRightCorner = Pose2d(15.5, 1.0, Rotation2d(math.pi))
+kRedLeftCorner = Pose2d(15.5, 7.2, Rotation2d(math.pi))

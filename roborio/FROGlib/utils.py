@@ -241,27 +241,9 @@ class DriveTrain:
 # field = loadAprilTagLayoutField(AprilTagField.k2024Crescendo)
 # field.setOrigin(field.OriginPosition.kBlueAllianceWallRightSide)
 # robotPose = Pose3d(14, 5, 0.04, Rotation3d(0, 0, 0))
-# print(f"robot pose: {robotPose}")
 # tagPose = field.getTagPose(5)
-# print(f"tag pose: {tagPose}")
-# test = robotPose - tagPose
-# print(f"transform: {test}")
+# test = robotPose - tagPose 
 # isBlueAlliance = True
 # rrt = RobotRelativeTarget(robotPose, tagPose, isBlueAlliance)
-
-# print()
-# print(f"Is Blue Aliance: {isBlueAlliance}")
-# print(
-#     f"Distance Forward: {rrt.fieldX}, Distance Left: {rrt.fieldY}, Distance Up: {rrt.fieldZ}"
-# )
-# print(
-#     f"Distance:, {rrt.distance}, Heading: {rrt.driveHeading.degrees()}, Firing Heading: {rrt.firingHeading.degrees()}, Elevation: {rrt.elevation.degrees()}"
-# )
-# # print(f"RedReversed: {degrees(constrain_radians(ss.azimuth - math.pi))}")
-# # print(f"{Rotation2d(ss.x, ss.y).degrees()}")
-# print()
-# print()
-# for tag in field.getTags():
-#     print(f"Tag: {tag.ID}, {tag.pose}")
 
 pass

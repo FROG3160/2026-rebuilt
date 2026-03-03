@@ -8,55 +8,34 @@ from FROGlib.ctre import (
     FROGPigeonGyro,
     FROGTalonFX,
 )
-
-# from configs import ctre
-from wpilib import DriverStation, Field2d, RobotBase
+from wpilib import DriverStation, Field2d, RobotBase, SmartDashboard
 from wpimath.geometry import (
     Pose2d,
     Rotation2d,
     Translation2d,
     Translation3d,
-    Transform2d,
     Transform3d,
     Rotation3d,
     Pose3d,
 )
 from wpimath.units import volts
 from wpilib.sysid import SysIdRoutineLog
-
-# from subsystems.vision import PositioningSubsystem
-# from subsystems.elevation import ElevationSubsystem
-from wpilib import SmartDashboard
 from wpiutil import Sendable, SendableBuilder
-
-from commands2 import Subsystem, Command
+from commands2 import Command
 from commands2.sysid import SysIdRoutine
-from FROGlib.utils import DriveTrain, RobotRelativeTarget, remap
+from FROGlib.utils import DriveTrain, remap
 import constants
-
-# from subsystems.positioning import Position
-from wpimath.units import degreesToRadians, lbsToKilograms, inchesToMeters
-
-
 from phoenix6.controls import (
-    PositionDutyCycle,
-    VelocityVoltage,
     PositionVoltage,
     VoltageOut,
 )
+from phoenix6 import SignalLogger
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.controller import PPHolonomicDriveController
-from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig, DCMotor
-from pathplannerlib.path import PathPlannerPath, PathConstraints
-
-from photonlibpy import (
-    PhotonPoseEstimator,
-    PhotonCamera,
-    EstimatedRobotPose,
-)
+from pathplannerlib.config import RobotConfig, PIDConstants
+from pathplannerlib.path import PathPlannerPath
+from photonlibpy.estimatedRobotPose import EstimatedRobotPose
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
-from wpimath.geometry import Pose2d, Rotation2d
-
 from FROGlib.swerve import SwerveModuleConfig
 from FROGlib.ctre import (
     FROGTalonFXConfig,
@@ -64,19 +43,14 @@ from FROGlib.ctre import (
     MOTOR_OUTPUT_CCWP_BRAKE,
     MOTOR_OUTPUT_CWP_BRAKE,
 )
-from FROGlib.sds import MK4C_L3_GEARING, MK5I_R3_GEARING, WHEEL_DIAMETER
+from FROGlib.sds import MK5I_R3_GEARING, WHEEL_DIAMETER
 from FROGlib.vision import (
-    DetectorTunables,
-    FROGCameraConfig,
-    FROGDetector,
     FROGPoseEstimator,
 )
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from copy import deepcopy
-
-# from subsystems.leds import LEDSubsystem
-# from subsystems.vision import VisionPose
+from FROGlib.subsystem import FROGSubsystem
 
 # TODO: #3 Switch gear_stages to correct swerve module gearing when available
 drivetrain = DriveTrain(gear_stages=MK5I_R3_GEARING, wheel_diameter=WHEEL_DIAMETER)
@@ -161,46 +135,15 @@ back_right_module_config = {
 }
 
 
-class VisionTunables(Sendable):
-    def __init__(self):
-        super().__init__()
-        self.max_translationDistance = 6.0  # meters
-        self.min_translationStdDev = 0.2  # meters
-        self.max_translationStdDev = 0.8  # meters
-        self.max_delta = 1.0  # meters
-
-    def initSendable(self, builder: SendableBuilder) -> None:
-        builder.setSmartDashboardType("Vision Tunables")
-        builder.addDoubleProperty(
-            "Minimum Translation Std Dev",
-            lambda: self.min_translationStdDev,
-            lambda value: setattr(self, "min_translationStdDev", value),
-        )
-        builder.addDoubleProperty(
-            "Maximum Translation Std Dev",
-            lambda: self.max_translationStdDev,
-            lambda value: setattr(self, "max_translationStdDev", value),
-        )
-        builder.addDoubleProperty(
-            "Max Translation Distance",
-            lambda: self.max_translationDistance,
-            lambda value: setattr(self, "max_translationDistance", value),
-        )
-        builder.addDoubleProperty(
-            "Max Delta",
-            lambda: self.max_delta,
-            lambda value: setattr(self, "max_delta", value),
-        )
-
-
-class Drive(SwerveChassis, Subsystem):
+class Drive(FROGSubsystem, SwerveChassis):
     """The drive subsystem that subclasses FROGlib.SwerveChassis and adds
     additional components, attributes and methods for autonomous driving, etc.
 
     """
 
     def __init__(self):
-        super().__init__(
+        SwerveChassis.__init__(
+            self,
             swerve_module_configs=(
                 SwerveModuleConfig(**front_left_module_config),
                 SwerveModuleConfig(**front_right_module_config),
@@ -219,7 +162,9 @@ class Drive(SwerveChassis, Subsystem):
             max_rotation_speed=constants.kMaxChassisRadiansPerSec,
             parent_nt=constants.kComponentSubtableName,
         )
+        FROGSubsystem.__init__(self)
         self.resetController = True
+        self._distance_to_target = None
 
         self.photon_estimators: list[FROGPoseEstimator] = []
 
@@ -249,8 +194,7 @@ class Drive(SwerveChassis, Subsystem):
 
         # create Field2d to display estimated swerve and camera poses
         self.estimator_field = Field2d()
-        # put Field2d on SmartDashboard/NetworkTables
-        SmartDashboard.putData("Estimator Poses", self.estimator_field)
+        SmartDashboard.putData("Drive/Estimator Field", self.estimator_field)
 
         autobuilder_config = RobotConfig.fromGUISettings()
 
@@ -275,22 +219,32 @@ class Drive(SwerveChassis, Subsystem):
         # Tell SysId to make generated commands require this subsystem, suffix test state in
         # WPILog with this subsystem's name ("drive")
         self.sys_id_routine_drive = SysIdRoutine(
-            SysIdRoutine.Config(),
-            SysIdRoutine.Mechanism(self.sysid_drive, self.sysid_log_drive, self),
+            SysIdRoutine.Config(
+                recordState=lambda state: SignalLogger.write_string(
+                    "state-drive", SysIdRoutineLog.stateEnumToString(state)
+                )
+            ),
+            SysIdRoutine.Mechanism(self._sysid_drive, lambda log: None, self),
         )
 
         self.sys_id_routine_steer = SysIdRoutine(
-            SysIdRoutine.Config(),
-            SysIdRoutine.Mechanism(self.sysid_steer, self.sysid_log_steer, self),
+            SysIdRoutine.Config(
+                recordState=lambda state: SignalLogger.write_string(
+                    "state-steer", SysIdRoutineLog.stateEnumToString(state)
+                )
+            ),
+            SysIdRoutine.Mechanism(self._sysid_steer, lambda log: None, self),
         )
-        self.vision_tunables = VisionTunables()
-        SmartDashboard.putData("Vision Tunables", self.vision_tunables)
-        SmartDashboard.putData("Drive Subsystem", self)
+        self._vt_max_delta = 1.0
+        self._vt_max_translationDistance = 6.0
+        self._vt_min_translationStdDev = 0.2
+        self._vt_max_translationStdDev = 0.8
+
         self.firing_target = None
         self._distance_to_target = None
 
     # Tell SysId how to plumb the driving voltage to the motors.
-    def sysid_drive(self, voltage: volts) -> None:
+    def _sysid_drive(self, voltage: volts) -> None:
         for module in self.modules:
             module.steer_motor.set_control(
                 PositionVoltage(
@@ -300,30 +254,10 @@ class Drive(SwerveChassis, Subsystem):
             )
             module.drive_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
 
-    def sysid_steer(self, voltage: volts) -> None:
+    def _sysid_steer(self, voltage: volts) -> None:
         for module in self.modules:
             module.steer_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
             module.drive_motor.stopMotor()
-
-    def sysid_log_drive(self, sys_id_routine: SysIdRoutineLog) -> None:
-        # Record a frame for each module.  Since these share an encoder, we consider
-        # the entire group to be one motor.
-        for module in self.modules:
-            with module.drive_motor as m:
-                sys_id_routine.motor(module.name).voltage(
-                    m.get_motor_voltage().value
-                ).position(m.get_position().value).velocity(m.get_velocity().value)
-
-    def sysid_log_steer(self, sys_id_routine: SysIdRoutineLog) -> None:
-        # Record a frame for each module.  Since these share an encoder, we consider
-        # the entire group to be one motor.
-        for module in self.modules:
-            with module.steer_motor as m:
-                sys_id_routine.motor(module.name).voltage(
-                    m.get_motor_voltage().value
-                ).angularPosition(m.get_position().value).angularVelocity(
-                    m.get_velocity().value
-                )
 
     def shouldFlipPath(self):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
@@ -490,6 +424,8 @@ class Drive(SwerveChassis, Subsystem):
         self.initial_pose_set = False
 
     def periodic(self):
+        SwerveChassis.periodic(self)
+        FROGSubsystem.periodic(self)
         # update estimator with chassis data
         self.swerve_estimator_pose = self.swerve_estimator.update(
             self.gyro.getRotation2d(), tuple(self.getModulePositions())
@@ -515,9 +451,9 @@ class Drive(SwerveChassis, Subsystem):
                 translation_stddev = remap(
                     tag_distance,
                     0,
-                    self.vision_tunables.max_translationDistance,
-                    self.vision_tunables.min_translationStdDev,
-                    self.vision_tunables.max_translationStdDev,
+                    self._vt_max_translationDistance,
+                    self._vt_min_translationStdDev,
+                    self._vt_max_translationStdDev,
                 )
                 rotational_stddev = math.pi  # Rely on gyro for rotation
                 # documentation for the swerve estimator recommends rejecting vision
@@ -528,10 +464,6 @@ class Drive(SwerveChassis, Subsystem):
                     .translation()
                     .distance(self.swerve_estimator_pose.translation())
                 )
-                # print(
-                #     f"Pose delta for {estimator.camera.getName()}: {pose_delta:.2f} m"
-                # )
-                # print(f"Tunable Max Delta: {self.vision_tunables.max_delta:.2f} m")
 
                 # only add vision measurement if within 1 meter of current estimate
                 # put camera pose on the dashboard field
@@ -546,8 +478,8 @@ class Drive(SwerveChassis, Subsystem):
                         vision_estimated_pose.estimatedPose.toPose2d(),
                     )
                 elif (
-                    pose_delta < self.vision_tunables.max_delta
-                    and tag_distance < self.vision_tunables.max_translationDistance
+                    pose_delta < self._vt_max_delta
+                    and tag_distance < self._vt_max_translationDistance
                 ):
                     self.swerve_estimator.addVisionMeasurement(
                         vision_estimated_pose.estimatedPose.toPose2d(),
@@ -560,17 +492,38 @@ class Drive(SwerveChassis, Subsystem):
 
                     # put camera pose on the estimator field2d
 
-        SmartDashboard.putNumberArray(
-            "Drive Pose",
-            [
-                self.swerve_estimator_pose.x,
-                self.swerve_estimator_pose.y,
-                self.swerve_estimator_pose.rotation().radians(),
-            ],
-        )
-        SmartDashboard.putNumber(
-            "Pose Rotation", self.swerve_estimator_pose.rotation().degrees()
-        )
+    @FROGSubsystem.tunable(1.0, "Vision/Max Delta")
+    def vt_max_delta_tunable(self, val):
+        self._vt_max_delta = val
 
-        # run periodic method of the superclass, in this case SwerveChassis.periodic()
-        super().periodic()
+    @FROGSubsystem.tunable(6.0, "Vision/Max Translation Distance")
+    def vt_max_translationDistance_tunable(self, val):
+        self._vt_max_translationDistance = val
+
+    @FROGSubsystem.tunable(0.2, "Vision/Min Translation StdDev")
+    def vt_min_translationStdDev_tunable(self, val):
+        self._vt_min_translationStdDev = val
+
+    @FROGSubsystem.tunable(0.8, "Vision/Max Translation StdDev")
+    def vt_max_translationStdDev_tunable(self, val):
+        self._vt_max_translationStdDev = val
+
+    @FROGSubsystem.telemetry("Pose X")
+    def pose_x_telem(self) -> float:
+        return self.swerve_estimator_pose.x
+
+    @FROGSubsystem.telemetry("Pose Y")
+    def pose_y_telem(self) -> float:
+        return self.swerve_estimator_pose.y
+
+    @FROGSubsystem.telemetry("Pose Degrees")
+    def pose_degrees_telem(self) -> float:
+        return self.swerve_estimator_pose.rotation().degrees()
+
+    @FROGSubsystem.telemetry("Distance to Target")
+    def distance_to_target_telem(self) -> float:
+        return self._distance_to_target if self._distance_to_target else 0.0
+
+    @FROGSubsystem.telemetry("Estimated Pose")
+    def estimated_pose_telem(self) -> Pose2d:
+        return self.swerve_estimator_pose

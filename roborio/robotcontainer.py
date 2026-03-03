@@ -1,20 +1,20 @@
 from pathplannerlib.auto import NamedCommands, AutoBuilder
-from wpilib import SmartDashboard
-from wpimath.geometry import Pose2d
 
+from subsystems.climber import Climber
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
 from FROGlib.vision import FROGDetector
-from subsystems.feedback import ShiftTracker
+from subsystems.feedback import ShiftTracker, FieldZones
 from subsystems.shooter import Shooter
 from subsystems.hopper import Hopper
 from subsystems.intake import Intake
+from subsystems.feeder import Feeder
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
-from FROGlib.xbox import FROGXboxTactical
+from FROGlib.subsystem import Direction
 from commands2.sysid import SysIdRoutine
-from wpilib.shuffleboard import Shuffleboard
+from phoenix6 import SignalLogger
 from commands2.button import Trigger
-from commands2 import StartEndCommand
+from commands2 import StartEndCommand, cmd
 import constants
 
 
@@ -28,11 +28,15 @@ class RobotContainer:
 
     def __init__(self):
         self.alliance = None
+
+        self.climber = Climber()
         self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
         self.drive = Drive()
         self.intake = Intake()
         self.hopper = Hopper()
-        self.shooter = Shooter(self.drive)
+        self.shooter = Shooter(self.drive.get_distance_to_target)
+        self.feeder = Feeder()
+
         self.driver_xbox = FROGXboxDriver(
             constants.kDriverControllerPort,
             constants.kDeadband,
@@ -41,75 +45,165 @@ class RobotContainer:
             constants.kRotSlew,
         )
         self.shift_tracker = ShiftTracker()
+        self.field_zones = FieldZones(
+            self.drive.getPose,
+            self.shooter.is_hood_deployed,
+            self.drive.estimator_field,
+        )
 
         self.register_named_commands()
-        self.configure_button_bindings()
         self.configure_automation_bindings()
 
-        self.drive.setDefaultCommand(ManualDrive(self.driver_xbox, self.drive))
-        Shuffleboard.getTab("Subsystems").add("Shooter", self.shooter)
-        #   → /Subsystems/Shooter : shows subsystem status/command
+        self.drive.setDefaultCommand(
+            ManualDrive(
+                self.driver_xbox,
+                self.drive,
+                None,  # self.field_zones.get_max_speed_scalar,
+                self.field_zones.get_trench_velocity_limit,
+            )
+        )
 
-        Shuffleboard.getTab("Tuning").add("Flywheel Gains", self.shooter)
         # Set up PathPlanner autos and publish to dashboard
         # self.autochooser = AutoBuilder.buildAutoChooser()
-        # SmartDashboard.putData("PathPlanner Autos", self.autochooser)
+        # SmartDashboard.putData("Auto Chooser", self.autochooser)
 
-    def configure_automation_bindings(self):
-        # Configure automation bindings
-        pass
+    def configure_automation_bindings(self) -> None:
+        """Configure automation bindings for the robot."""
+        # The hopper should run forward whenever either the intake OR the feed motors are running forward.
+        Trigger(
+            lambda: self.intake.get_direction() == Direction.FORWARD
+            or self.feeder.get_direction() == Direction.FORWARD
+        ).whileTrue(self.hopper.runForward())
+        # The hopper should run backward whenever either the intake OR the feed motors are running backward.
+        Trigger(
+            lambda: self.intake.get_direction() == Direction.REVERSE
+            or self.feeder.get_direction() == Direction.REVERSE
+        ).whileTrue(self.hopper.runBackward())
 
-    def configure_button_bindings(self):
+    def configure_xbox_bindings(self) -> None:
+        """Configure button bindings for the xboxcontrollers."""
         self.configure_driver_controls()
         self.configure_tactical_controls()
         # Bind buttons to commands
 
-    def configure_driver_controls(self):
-        # Configure driver controls
+    def configure_driver_controls(self) -> None:
+        """Configure button bindings for the driver controller."""
         self.driver_xbox.a().whileTrue(
             ManualDriveAndAim(
-                constants.kBlueHub, self.driver_xbox, self.drive, "DriveAndAim"
+                self.field_zones.get_aim_target,
+                self.driver_xbox,
+                self.drive,
+                None,  # self.field_zones.get_max_speed_scalar,
+                self.field_zones.get_trench_velocity_limit,
+                "DriveAndAim",
             )
         )
         self.driver_xbox.start().onTrue(
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
-        self.driver_xbox.y().whileTrue(
-            ManualDriveAndClusterAim(
-                self.driver_xbox,
-                self.drive,
-                self.fuel_detector,
-                "DriveAndClusterAim",
-            )
-        )
+        # self.driver_xbox.y().whileTrue(self.climber.lift_to_position(7.3))
+
+        # Reverse intake and feed motors to empty the hopper (hopper will follow automatically via triggers)
         self.driver_xbox.x().whileTrue(
-            self.intake.runBackward().alongWith(self.hopper.runBackward())
+            self.intake.runBackward()
+            .alongWith(self.feeder.runBackward())
+            .withName("Eject All")
         )
-        self.driver_xbox.b().whileTrue(
-            self.intake.runForward().alongWith(self.hopper.runForward())
-        )
+
+        self.driver_xbox.b().whileTrue(self.intake.runForward())
         self.fuel_detector.get_trigger_targets_close().whileTrue(
-            self.intake.runForward().alongWith(self.hopper.runForward())
+            self.intake.runForward()
         )
-        # self.driver_xbox.leftBumper().and_(
-        #     self.shooter.trigger_flywheel_at_speed()
-        # ).whileTrue(
-        #     self.shooter.run_feed_motor_forward().alongWith(self.hopper.runForward())
-        # )
-        self.driver_xbox.leftBumper().whileTrue(
-            self.shooter.fire_command().alongWith(self.hopper.runForward())
+        self.driver_xbox.y().toggleOnTrue(self.intake.runForward())
+
+        safe_to_shoot = self.field_zones.get_no_shoot_trigger().negate()
+
+        self.driver_xbox.rightBumper().and_(safe_to_shoot).whileTrue(
+            cmd.sequence(
+                cmd.runOnce(self.shooter.deploy_hood),
+                cmd.waitUntil(self.shooter.is_hood_deployed),
+                self.shooter.cmd_fire_at_set_speed().alongWith(
+                    cmd.waitUntil(self.shooter.is_at_speed).andThen(
+                        self.feeder.runForward()
+                    )
+                ),
+            )
+            .finallyDo(lambda interrupted: self.shooter.retract_hood())
+            .withName("Fire Command")
         )  # max speed with 4" wheel is 33.8 m/s
 
-    def configure_tactical_controls(self):
+        self.driver_xbox.leftBumper().whileTrue(self.climber.deploy_to_position(0.0))
+        self.driver_xbox.leftTrigger().whileTrue(
+            self.climber.lift_to_position(10.0)
+        )  # 10.0 inches is arbitrary for now, will need to be tuned based on actual robot
+
+    def configure_tactical_controls(self) -> None:
+        """Configure button bindings for the tactical controller."""
         # Configure operator controls
         pass
 
-    def register_named_commands(self):
+    def register_named_commands(self) -> None:
+        """Register named commands for use in autonomous routines."""
         # Register named commands
         # NamedCommands.registerCommand("shoot", ShootCommand(self.shooter))
         pass
 
-    def configureSysIDButtonBindings(self):
+    def configureSysIDFeederButtonBindings(self) -> None:
+        """Configure button bindings for Feeder SysId routine tests."""
+        self.driver_xbox.a().whileTrue(
+            self.feeder.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.b().whileTrue(
+            self.feeder.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.x().whileTrue(
+            self.feeder.sysIdDynamic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.y().whileTrue(
+            self.feeder.sysIdDynamic(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
+        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
+
+    def configureSysIDShooterButtonBindings(self) -> None:
+        """Configure button bindings for Shooter SysId routine tests."""
+        self.driver_xbox.a().whileTrue(
+            self.shooter.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.b().whileTrue(
+            self.shooter.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.x().whileTrue(
+            self.shooter.sysIdDynamic(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.y().whileTrue(
+            self.shooter.sysIdDynamic(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
+        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
+
+    def configureSysIDClimberButtonBindings(self) -> None:
+        """Configure button bindings for Climber SysId routine tests."""
+        # Deploy routines on A/B/X/Y
+        self.driver_xbox.a().whileTrue(
+            self.climber.sysIdQuasistaticDeploy(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.b().whileTrue(
+            self.climber.sysIdQuasistaticDeploy(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.x().whileTrue(
+            self.climber.sysIdDynamicDeploy(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.y().whileTrue(
+            self.climber.sysIdDynamicDeploy(SysIdRoutine.Direction.kReverse)
+        )
+        # Lift routines on triggers maybe? Or just keep it separate.
+        # Let's put lift on D-pad for now if needed, but usually we do one mechanism at a time.
+        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
+        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
+
+    def configureSysIDButtonBindings(self) -> None:
+        """Configure button bindings for SysId routine tests."""
         # Bind full set of SysId routine tests to buttons; a complete routine should run each of these
         # once.
         self.driver_xbox.a().whileTrue(
@@ -125,7 +219,7 @@ class RobotContainer:
             self.drive.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse)
         )
 
-    def configureComponentTestBindings(self):
+    def configureComponentTestBindings(self) -> None:
         """Button bindings for manual component testing in test mode.
         Each press toggles the motor on/off (runs until toggled off or interrupted).
         """
@@ -151,9 +245,7 @@ class RobotContainer:
 
         # Shooter feed toggle
         self.driver_xbox.leftBumper().toggleOnTrue(
-            StartEndCommand(
-                self.shooter._run_feed_motor, lambda: self.shooter._stop_feed_motor
-            ).withName("Run Shooter Feed")
+            self.feeder.runForward().withName("Run Feeder")
         )
 
         # Flywheel: Using triggers as hold-to-run (common for speed control).
@@ -163,4 +255,39 @@ class RobotContainer:
                 self.shooter._apply_commanded_speed,
                 self.shooter._stop_flywheel,
             ).withName("Run Flywheel")
+        )
+
+        # Climber Manual Controls (Test Mode)
+        # Deploy on D-Pad (POV)
+        self.driver_xbox.povUp().whileTrue(
+            self.climber.manual_deploy_voltage_command(4.0).withName(
+                "Manual Deploy Forward"
+            )
+        )
+        self.driver_xbox.povDown().whileTrue(
+            self.climber.manual_deploy_voltage_command(-4.0).withName(
+                "Manual Deploy Reverse"
+            )
+        )
+
+        # Lift on Right Stick Y axis
+        # Assuming the right stick Y value is positive when pushed down,
+        # we negate it and multiply by max voltage (e.g. 12.0)
+        def get_lift_voltage():
+            # Apply deadband manually if FROGXboxDriver doesn't have a direct helper for right stick Y with deadband
+            # Get raw right Y. WPILib XboxController returns negative for up, positive for down.
+            # We want UP to lift (positive voltage), DOWN to lower (negative voltage).
+            raw_y = self.driver_xbox.getRightY()
+            if abs(raw_y) < constants.kDeadband:
+                return 0.0
+            return raw_y * -12.0
+
+        # We need a trigger that evaluates to True when the stick is outside deadband
+        right_stick_active = Trigger(
+            lambda: abs(self.driver_xbox.getRightY()) > constants.kDeadband
+        )
+        right_stick_active.whileTrue(
+            self.climber.manual_lift_voltage_command(get_lift_voltage).withName(
+                "Manual Lift"
+            )
         )
