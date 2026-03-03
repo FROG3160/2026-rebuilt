@@ -5,6 +5,12 @@ from commands2 import Subsystem
 from wpilib import DataLogManager
 from wpiutil.log import DoubleLogEntry, BooleanLogEntry, StringLogEntry
 from wpimath.geometry import Pose2d
+from enum import Enum
+
+class Direction(Enum):
+    FORWARD = 1
+    REVERSE = -1
+    IDLE = 0
 
 
 class Tunable:

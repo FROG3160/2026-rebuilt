@@ -10,6 +10,7 @@ from subsystems.intake import Intake
 from subsystems.feeder import Feeder
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
+from FROGlib.subsystem import Direction
 from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger
 from commands2.button import Trigger
@@ -68,8 +69,16 @@ class RobotContainer:
 
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
-        # Configure automation bindings
-        pass
+        # The hopper should run forward whenever either the intake OR the feed motors are running forward.
+        Trigger(
+            lambda: self.intake.get_direction() == Direction.FORWARD
+            or self.feeder.get_direction() == Direction.FORWARD
+        ).whileTrue(self.hopper.runForward())
+        # The hopper should run backward whenever either the intake OR the feed motors are running backward.
+        Trigger(
+            lambda: self.intake.get_direction() == Direction.REVERSE
+            or self.feeder.get_direction() == Direction.REVERSE
+        ).whileTrue(self.hopper.runBackward())
 
     def configure_xbox_bindings(self) -> None:
         """Configure button bindings for the xboxcontrollers."""
@@ -93,16 +102,19 @@ class RobotContainer:
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
         # self.driver_xbox.y().whileTrue(self.climber.lift_to_position(7.3))
-        # self.driver_xbox.x().whileTrue(self.climber.deploy_to_position(1.5))
-        self.driver_xbox.b().whileTrue(
-            self.intake.runForward().alongWith(self.hopper.runForward())
+
+        # Reverse intake and feed motors to empty the hopper (hopper will follow automatically via triggers)
+        self.driver_xbox.x().whileTrue(
+            self.intake.runBackward()
+            .alongWith(self.feeder.runBackward())
+            .withName("Eject All")
         )
+
+        self.driver_xbox.b().whileTrue(self.intake.runForward())
         self.fuel_detector.get_trigger_targets_close().whileTrue(
-            self.intake.runForward().alongWith(self.hopper.runForward())
+            self.intake.runForward()
         )
-        self.driver_xbox.y().toggleOnTrue(
-            self.intake.runForward().alongWith(self.hopper.runForward())
-        )
+        self.driver_xbox.y().toggleOnTrue(self.intake.runForward())
 
         safe_to_shoot = self.field_zones.get_no_shoot_trigger().negate()
 
@@ -112,7 +124,7 @@ class RobotContainer:
                 cmd.waitUntil(self.shooter.is_hood_deployed),
                 self.shooter.cmd_fire_at_set_speed().alongWith(
                     cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                        self.hopper.runForward().alongWith(self.feeder.runForward())
+                        self.feeder.runForward()
                     )
                 ),
             )
