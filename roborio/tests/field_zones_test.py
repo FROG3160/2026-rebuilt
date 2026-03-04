@@ -175,22 +175,22 @@ def test_field_zones_get_path_for_middle_zone():
     wpilib.simulation.DriverStationSim.notifyNewData()
 
     # Out of bounds
-    current_pose[0] = Pose2d(2.0, 4.0, Rotation2d())
+    current_pose[0] = Pose2d(5.0, 4.0, Rotation2d())
     assert zones.get_path_for_middle_zone() is None
 
-    # Blue Close Left (X <= 8.25, Y > 4.1)
+    # Blue Close Left (X <= 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(6.0, 6.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "CloseLeftZonePath"
 
-    # Blue Close Right (X <= 8.25, Y <= 4.1)
+    # Blue Close Right (X <= 8.2705, Y <= 4.1)
     current_pose[0] = Pose2d(6.0, 2.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "CloseRightZonePath"
 
-    # Blue Far Left (X > 8.25, Y > 4.1)
+    # Blue Far Left (X > 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(10.0, 6.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "FarLeftZonePath"
 
-    # Blue Far Right (X > 8.25, Y <= 4.1)
+    # Blue Far Right (X > 8.2705, Y <= 4.1)
     current_pose[0] = Pose2d(10.0, 2.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "FarRightZonePath"
 
@@ -198,18 +198,18 @@ def test_field_zones_get_path_for_middle_zone():
     wpilib.simulation.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kRed1)
     wpilib.simulation.DriverStationSim.notifyNewData()
 
-    # Red Close Left (X > 8.25, Y <= 4.1)
+    # Red Close Left (X > 8.2705, Y <= 4.1)
     current_pose[0] = Pose2d(10.0, 2.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "CloseLeftZonePath"
 
-    # Red Close Right (X > 8.25, Y > 4.1)
+    # Red Close Right (X > 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(10.0, 6.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "CloseRightZonePath"
 
-    # Red Far Left (X <= 8.25, Y <= 4.1)
+    # Red Far Left (X <= 8.2705, Y <= 4.1)
     current_pose[0] = Pose2d(6.0, 2.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "FarLeftZonePath"
 
-    # Red Far Right (X <= 8.25, Y > 4.1)
+    # Red Far Right (X <= 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(6.0, 6.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "FarRightZonePath"

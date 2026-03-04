@@ -349,7 +349,8 @@ class FieldZones(FROGSubsystem):
 
     def get_path_for_middle_zone(self, pose: Optional[Pose2d] = None) -> Optional[str]:
         """
-        Splits the middle of the field (5.5 <= X <= 11.0) into a 2x2 grid.
+        Splits the middle of the field (5.229 <= X <= 11.312) into a 2x2 grid.
+        These X bounds correspond to the AprilTags on the Hubs that face the center of the field.
         Returns a different PathPlanner path name based on which zone the robot is in.
         This is alliance-aware, adjusting 'Close/Far' and 'Left/Right' based on driver station perspective.
         """
@@ -359,7 +360,7 @@ class FieldZones(FROGSubsystem):
         alliance = wpilib.DriverStation.getAlliance()
 
         # Check if we are in the middle field area
-        if not (5.5 <= x <= 11.0):
+        if not (5.229 <= x <= 11.312):
             return None
 
         is_red = (alliance == wpilib.DriverStation.Alliance.kRed)
@@ -367,13 +368,13 @@ class FieldZones(FROGSubsystem):
         # "Close" means closer to our alliance wall
         # "Left" means to the left when standing at our alliance wall looking across the field
         if is_red:
-            # Red wall is at X ~ 16.5, so X > 8.25 is "Close"
-            is_close = x > 8.25
+            # Red wall is at X ~ 16.5, so X > 8.2705 is "Close" (midpoint of 5.229 and 11.312 is 8.2705)
+            is_close = x > 8.2705
             # Red looks down -X. So +Y (Y > 4.1) is to their Right. Left is Y <= 4.1.
             is_left = y <= 4.1
         else:
-            # Blue wall is at X = 0, so X <= 8.25 is "Close"
-            is_close = x <= 8.25
+            # Blue wall is at X = 0, so X <= 8.2705 is "Close"
+            is_close = x <= 8.2705
             # Blue looks up +X. So +Y (Y > 4.1) is to their Left.
             is_left = y > 4.1
 
