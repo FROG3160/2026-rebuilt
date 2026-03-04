@@ -102,7 +102,7 @@ class RobotContainer:
                 cmd.sequence(
                     cmd.runOnce(self.shooter.deploy_hood),
                     cmd.waitUntil(self.shooter.is_hood_deployed),
-                    self.shooter.cmd_fire_at_set_speed().alongWith(
+                    self.shooter.cmd_fire_with_distance().alongWith(
                         cmd.waitUntil(self.shooter.is_at_speed).andThen(
                             self.feeder.runForward()
                         )

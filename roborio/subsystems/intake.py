@@ -33,7 +33,7 @@ class Intake(FROGSubsystem):
         self.motor = FROGTalonFX(
             motor_config=intake_motor_config,
         )
-        self._default_voltage = 4
+        self._default_voltage = 3.0
 
         if wpilib.RobotBase.isSimulation():
             self._sim_velocity = 0.0
