@@ -1,6 +1,6 @@
 {
-  "robotWidth": 0.848,
-  "robotLength": 0.734,
+  "robotWidth": 0.92,
+  "robotLength": 0.815,
   "holonomicMode": true,
   "pathFolders": [
     "TeleopPaths"
