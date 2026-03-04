@@ -213,3 +213,44 @@ def test_field_zones_get_path_for_middle_zone():
     # Red Far Right (X <= 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(6.0, 6.0, Rotation2d())
     assert zones.get_path_for_middle_zone() == "FarRightZonePath"
+
+
+def test_field_zones_get_selection_zone():
+    current_pose = [Pose2d(0.0, 0.0, Rotation2d())]
+
+    def pose_supplier():
+        return current_pose[0]
+
+    zones = FieldZones(pose_supplier, lambda: False, Field2d())
+
+    # Simulate Blue Alliance
+    wpilib.simulation.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue1)
+    wpilib.simulation.DriverStationSim.notifyNewData()
+
+    # Blue Outpost (X [0, 3], Y [0, 2])
+    current_pose[0] = Pose2d(1.5, 1.0, Rotation2d())
+    assert zones.get_selection_zone() == "Outpost"
+
+    # Blue Tower (X [0, 3], Y [2.962, 4.962])
+    current_pose[0] = Pose2d(1.5, 4.0, Rotation2d())
+    assert zones.get_selection_zone() == "Tower"
+
+    # Blue Middle Zone Fallback
+    current_pose[0] = Pose2d(6.0, 6.0, Rotation2d())
+    assert zones.get_selection_zone() == "CloseLeftZonePath"
+
+    # Simulate Red Alliance
+    wpilib.simulation.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kRed1)
+    wpilib.simulation.DriverStationSim.notifyNewData()
+
+    # Red Outpost (X [13.54, 16.54], Y [6.07, 8.07])
+    current_pose[0] = Pose2d(15.0, 7.0, Rotation2d())
+    assert zones.get_selection_zone() == "Outpost"
+
+    # Red Tower (X [13.54, 16.54], Y [3.108, 5.108])
+    current_pose[0] = Pose2d(15.0, 4.0, Rotation2d())
+    assert zones.get_selection_zone() == "Tower"
+
+    # Red Middle Zone Fallback
+    current_pose[0] = Pose2d(10.0, 2.0, Rotation2d())
+    assert zones.get_selection_zone() == "CloseLeftZonePath"

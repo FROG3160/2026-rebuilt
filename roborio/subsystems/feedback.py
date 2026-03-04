@@ -400,6 +400,39 @@ class FieldZones(FROGSubsystem):
         else:
             return "FarRightZonePath"
 
+    def get_selection_zone(self, pose: Optional[Pose2d] = None) -> Optional[str]:
+        """
+        Returns a string identifying the current zone for path selection.
+        - 'Outpost': 2m wide, 3m long, against the right wall in front of the outpost.
+        - 'Tower': 2m wide, 3m long, centered on the tower.
+        - Otherwise, returns the result from get_path_for_middle_zone.
+        """
+        pose_to_check = pose or self.pose_supplier()
+        x = pose_to_check.x
+        y = pose_to_check.y
+        alliance = wpilib.DriverStation.getAlliance()
+        is_red = alliance == wpilib.DriverStation.Alliance.kRed
+
+        # Outpost Zone (3m long, 2m wide, against right wall)
+        # Blue right wall: Y=0. Red right wall: Y=8.07.
+        if is_red:
+            if 13.54 <= x <= 16.54 and 6.07 <= y <= 8.07:
+                return "Outpost"
+        else:
+            if 0.0 <= x <= 3.0 and 0.0 <= y <= 2.0:
+                return "Outpost"
+
+        # Tower Zone (3m long, 2m wide, centered on tower)
+        # Blue tower center: Y=3.962. Red tower center: Y=4.108.
+        if is_red:
+            if 13.54 <= x <= 16.54 and 3.108 <= y <= 5.108:
+                return "Tower"
+        else:
+            if 0.0 <= x <= 3.0 and 2.962 <= y <= 4.962:
+                return "Tower"
+
+        return self.get_path_for_middle_zone(pose_to_check)
+
     def get_no_shoot_trigger(self) -> Trigger:
         return Trigger(lambda: self.in_restricted_zone())
 
