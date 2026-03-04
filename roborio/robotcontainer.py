@@ -253,11 +253,15 @@ class RobotContainer:
 
         # Climber Manual Controls (Test Mode)
         # Deploy on D-Pad (POV)
-        self.driver_xbox.povUp().onTrue(
-            self.climber.deploy_command().withName("Manual Deploy Forward")
+        self.driver_xbox.povUp().whileTrue(
+            self.climber.manual_deploy_voltage_command(1.5).withName(
+                "Manual Climber Deploy"
+            )
         )
-        self.driver_xbox.povDown().onTrue(
-            self.climber.stow_command().withName("Manual Deploy Reverse")
+        self.driver_xbox.povDown().whileTrue(
+            self.climber.manual_deploy_voltage_command(-1.5).withName(
+                "Manual ClimberRetract"
+            )
         )
 
         # Lift on Right Stick Y axis
