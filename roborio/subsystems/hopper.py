@@ -108,6 +108,11 @@ class Hopper(FROGSubsystem):
     def velocity_telem(self) -> float:
         return self.motor.get_velocity().value
 
+    @FROGSubsystem.telemetry("Not Stalled")
+    def not_stalled_telem(self) -> bool:
+        """Returns False if the motor is stalled."""
+        return not self.motor.is_stalled()
+
     @FROGSubsystem.tunable(4.0, "Default Voltage")
     def default_voltage_tunable(self, val):
         self._default_voltage = val

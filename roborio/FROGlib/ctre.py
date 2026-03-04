@@ -297,6 +297,12 @@ class FROGTalonFX(TalonFX):
     def getMotorVoltage(self):
         return self.get_motor_voltage().value
 
+    def is_stalled(self, current_threshold: float = 40.0, velocity_threshold: float = 0.1) -> bool:
+        """Returns True if the motor is likely stalled based on current and velocity."""
+        stator_current = self.get_stator_current().value
+        velocity = abs(self.get_velocity().value)
+        return stator_current > current_threshold and velocity < velocity_threshold
+
     def simulation_init(self, plant, gearbox, measurement_std_devs=None):
         """Initialize physics-based simulation for this motor.
 
