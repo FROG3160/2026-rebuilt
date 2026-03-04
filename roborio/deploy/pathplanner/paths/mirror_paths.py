@@ -3,17 +3,24 @@ import os
 
 FIELD_WIDTH = 8.07
 
+
 def normalize_angle(angle):
-    while angle > 180: angle -= 360
-    while angle <= -180: angle += 360
+    while angle > 180:
+        angle -= 360
+    while angle <= -180:
+        angle += 360
     return angle
 
+
 def mirror_y(pt):
-    if pt is None: return None
+    if pt is None:
+        return None
     return {"x": pt["x"], "y": FIELD_WIDTH - pt["y"]}
+
 
 def process_rotation(rot):
     return normalize_angle(-rot)
+
 
 def mirror_path(input_path, output_path):
     with open(input_path, "r") as f:
@@ -31,22 +38,27 @@ def mirror_path(input_path, output_path):
             rt["rotationDegrees"] = process_rotation(rt["rotationDegrees"])
 
     if "goalEndState" in data and "rotation" in data["goalEndState"]:
-        data["goalEndState"]["rotation"] = process_rotation(data["goalEndState"]["rotation"])
+        data["goalEndState"]["rotation"] = process_rotation(
+            data["goalEndState"]["rotation"]
+        )
 
     if "idealStartingState" in data and "rotation" in data["idealStartingState"]:
-        data["idealStartingState"]["rotation"] = process_rotation(data["idealStartingState"]["rotation"])
+        data["idealStartingState"]["rotation"] = process_rotation(
+            data["idealStartingState"]["rotation"]
+        )
 
     with open(output_path, "w") as f:
         json.dump(data, f, indent=2)
 
+
 if __name__ == "__main__":
     base_path = os.path.dirname(os.path.abspath(__file__))
-    
+
     # 1. Mirror CloseSweepLeft to CloseSweepRight
-    input_close = os.path.join(base_path, "CloseSweepLeft.path")
-    output_close = os.path.join(base_path, "CloseSweepRight.path")
+    input_close = os.path.join(base_path, "NearSweepLeft.path")
+    output_close = os.path.join(base_path, "NearSweepRight.path")
     mirror_path(input_close, output_close)
-    
+
     # 2. Mirror FarSweepLeft to FarSweepRight
     input_far = os.path.join(base_path, "FarSweepLeft.path")
     output_far = os.path.join(base_path, "FarSweepRight.path")
