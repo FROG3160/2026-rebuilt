@@ -3,7 +3,6 @@
   "robotLength": 0.734,
   "holonomicMode": true,
   "pathFolders": [
-    "Folder",
     "TeleopPaths"
   ],
   "autoFolders": [],
