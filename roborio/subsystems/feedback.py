@@ -180,32 +180,31 @@ import constants
 
 class FieldZones(FROGSubsystem):
     # Covers the trench areas running along the sides of the field.
-    # X bounds roughly align with the hubs (4.626 to 11.915).
-    # We split this into 4 zones, leaving the very center of the field open.
+    # X bounds align with the hubs.
     NO_SHOOT_ZONES = [
-        # Blue side trenches (X from blue hub back wall 4.022 to front wall 5.229)
+        # Blue side trenches
         {
-            "x_min": 4.022,
-            "x_max": 5.229,
+            "x_min": constants.kHubXBlueFacingAlliance,
+            "x_max": constants.kHubXBlueFacingCenter,
             "y_min": 0.0,
             "y_max": 1.265,
         },  # Blue Right Trench
         {
-            "x_min": 4.022,
-            "x_max": 5.229,
+            "x_min": constants.kHubXBlueFacingAlliance,
+            "x_max": constants.kHubXBlueFacingCenter,
             "y_min": 6.75,
             "y_max": 8.0,
         },  # Blue Left Trench
-        # Red side trenches (X from red hub front wall 11.312 to back wall 12.519)
+        # Red side trenches
         {
-            "x_min": 11.312,
-            "x_max": 12.519,
+            "x_min": constants.kHubXRedFacingCenter,
+            "x_max": constants.kHubXRedFacingAlliance,
             "y_min": 0.0,
             "y_max": 1.265,
         },  # Red Left Trench
         {
-            "x_min": 11.312,
-            "x_max": 12.519,
+            "x_min": constants.kHubXRedFacingCenter,
+            "x_max": constants.kHubXRedFacingAlliance,
             "y_min": 6.75,
             "y_max": 8.0,
         },  # Red Right Trench
@@ -238,7 +237,7 @@ class FieldZones(FROGSubsystem):
         self.status = "Clear"
 
         self.field = field
-        self._setup_field2d_zones()
+        # self._setup_field2d_zones()
 
     def _setup_field2d_zones(self):
         for i, zone in enumerate(self.NO_SHOOT_ZONES):
@@ -336,24 +335,24 @@ class FieldZones(FROGSubsystem):
         alliance = wpilib.DriverStation.getAlliance()
 
         if alliance == wpilib.DriverStation.Alliance.kRed:
-            # Red Alliance: Alliance zone is X > 11.0, opponent zone is X < 5.5
-            if x > 11.0:
+            # Red Alliance: Alliance zone is X > kHubXRedFacingCenter, opponent zone is X < kHubXBlueFacingCenter
+            if x > constants.kHubXRedFacingCenter:
                 return constants.kRedHub
-            elif 5.5 <= x <= 11.0:
-                # Middle of the field -> closest Red corner (x=16.5)
-                if y < 4.1:
+            elif constants.kHubXBlueFacingCenter <= x <= constants.kHubXRedFacingCenter:
+                # Middle of the field -> closest Red corner (x=constants.kFieldLength)
+                if y < constants.kFieldMidlineY:
                     return constants.kRedRightCorner
                 else:
                     return constants.kRedLeftCorner
             else:
                 return constants.kRedHub  # Default fallback
         else:
-            # Blue Alliance (or fallback): Alliance zone is X < 5.5, opponent zone is X > 11.0
-            if x < 5.5:
+            # Blue Alliance (or fallback): Alliance zone is X < kHubXBlueFacingCenter, opponent zone is X > kHubXRedFacingCenter
+            if x < constants.kHubXBlueFacingCenter:
                 return constants.kBlueHub
-            elif 5.5 <= x <= 11.0:
+            elif constants.kHubXBlueFacingCenter <= x <= constants.kHubXRedFacingCenter:
                 # Middle of the field -> closest Blue corner (x=0)
-                if y < 4.1:
+                if y < constants.kFieldMidlineY:
                     return constants.kBlueRightCorner
                 else:
                     return constants.kBlueLeftCorner
@@ -362,7 +361,7 @@ class FieldZones(FROGSubsystem):
 
     def get_path_for_middle_zone(self, pose: Optional[Pose2d] = None) -> Optional[str]:
         """
-        Splits the middle of the field (5.229 <= X <= 11.312) into a 2x2 grid.
+        Splits the middle of the field into a 2x2 grid.
         These X bounds correspond to the AprilTags on the Hubs that face the center of the field.
         Returns a different PathPlanner path name based on which zone the robot is in.
         This is alliance-aware, adjusting 'Close/Far' and 'Left/Right' based on driver station perspective.
@@ -373,7 +372,7 @@ class FieldZones(FROGSubsystem):
         alliance = wpilib.DriverStation.getAlliance()
 
         # Check if we are in the middle field area
-        if not (5.229 <= x <= 11.312):
+        if not (constants.kHubXBlueFacingCenter <= x <= constants.kHubXRedFacingCenter):
             return None
 
         is_red = alliance == wpilib.DriverStation.Alliance.kRed
@@ -381,15 +380,15 @@ class FieldZones(FROGSubsystem):
         # "Close" means closer to our alliance wall
         # "Left" means to the left when standing at our alliance wall looking across the field
         if is_red:
-            # Red wall is at X ~ 16.5, so X > 8.2705 is "Close" (midpoint of 5.229 and 11.312 is 8.2705)
-            is_close = x > 8.2705
-            # Red looks down -X. So +Y (Y > 4.1) is to their Right. Left is Y <= 4.1.
-            is_left = y <= 4.1
+            # Red wall is at X ~ kFieldLength, so X > kFieldMidlineX is "Close"
+            is_close = x > constants.kFieldMidlineX
+            # Red looks down -X. So +Y (Y > kFieldMidlineY) is to their Right. Left is Y <= kFieldMidlineY.
+            is_left = y <= constants.kFieldMidlineY
         else:
-            # Blue wall is at X = 0, so X <= 8.2705 is "Close"
-            is_close = x <= 8.2705
-            # Blue looks up +X. So +Y (Y > 4.1) is to their Left.
-            is_left = y > 4.1
+            # Blue wall is at X = 0, so X <= kFieldMidlineX is "Close"
+            is_close = x <= constants.kFieldMidlineX
+            # Blue looks up +X. So +Y (Y > kFieldMidlineY) is to their Left.
+            is_left = y > constants.kFieldMidlineY
 
         if is_close and is_left:
             return "CloseLeftZonePath"
@@ -399,6 +398,47 @@ class FieldZones(FROGSubsystem):
             return "FarLeftZonePath"
         else:
             return "FarRightZonePath"
+
+    def get_selection_zone(self, pose: Optional[Pose2d] = None) -> Optional[str]:
+        """
+        Returns a string identifying the current zone for path selection.
+        - 'Outpost': 2m wide, 3m long, against the right wall in front of the outpost.
+        - 'Tower': 2m wide, 3m long, centered on the tower.
+        - Otherwise, returns the result from get_path_for_middle_zone.
+        """
+        pose_to_check = pose or self.pose_supplier()
+        x = pose_to_check.x
+        y = pose_to_check.y
+        alliance = wpilib.DriverStation.getAlliance()
+        is_red = alliance == wpilib.DriverStation.Alliance.kRed
+
+        # Outpost Zone (3m long, 2m wide, against right wall)
+        # Blue right wall: Y=0. Red right wall: Y=kFieldWidth.
+        if is_red:
+            if (
+                constants.kFieldLength - 3.0 <= x <= constants.kFieldLength
+                and constants.kFieldWidth - 2.0 <= y <= constants.kFieldWidth
+            ):
+                return "Outpost"
+        else:
+            if 0.0 <= x <= 3.0 and 0.0 <= y <= 2.0:
+                return "Outpost"
+
+        # Tower Zone (3m long, 2m wide, centered on tower)
+        # Blue tower center: Y=3.962. Red tower center: Y=4.108.
+        if is_red:
+            if (
+                constants.kFieldLength - 3.0 <= x <= constants.kFieldLength
+                and 4.108 - 1.0 <= y <= 4.108 + 1.0
+            ):
+                return "Tower"
+        else:
+            if 0.0 <= x <= 3.0 and 3.962 - 1.0 <= y <= 3.962 + 1.0:
+                return "Tower"
+
+        # if we don't return Tower or Outpost, check to see if we're in one of the
+        # middle zones for path selection
+        return self.get_path_for_middle_zone(pose_to_check)
 
     def get_no_shoot_trigger(self) -> Trigger:
         return Trigger(lambda: self.in_restricted_zone())
