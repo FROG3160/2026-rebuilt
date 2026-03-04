@@ -15,19 +15,19 @@ def test_field_zones_in_restricted_zone():
 
     zones = FieldZones(pose_supplier, lambda: False, Field2d())
 
-    # Inside Blue Right Trench: {"x_min": 4.05, "x_max": 5.23, "y_min": 0.0, "y_max": 1.265}
+    # Inside Blue Right Trench: {"x_min": 4.022, "x_max": 5.229, "y_min": 0.0, "y_max": 1.265}
     pose_in_blue_right = Pose2d(5.0, 1.0, Rotation2d())
     assert zones.in_restricted_zone(pose_in_blue_right) == True
 
-    # Inside Blue Left Trench: {"x_min": 4.05, "x_max": 5.24, "y_min": 6.75, "y_max": 8.0}
+    # Inside Blue Left Trench: {"x_min": 4.022, "x_max": 5.229, "y_min": 6.75, "y_max": 8.0}
     pose_in_blue_left = Pose2d(5.0, 7.0, Rotation2d())
     assert zones.in_restricted_zone(pose_in_blue_left) == True
 
-    # Inside Red Left Trench: {"x_min": 11.33, "x_max": 12.53, "y_min": 0.0, "y_max": 1.265}
+    # Inside Red Left Trench: {"x_min": 11.312, "x_max": 12.519, "y_min": 0.0, "y_max": 1.265}
     pose_in_red_right = Pose2d(12.0, 1.0, Rotation2d())
     assert zones.in_restricted_zone(pose_in_red_right) == True
 
-    # Inside Red Right Trench: {"x_min": 11.33, "x_max": 12.53, "y_min": 6.75, "y_max": 8.0}
+    # Inside Red Right Trench: {"x_min": 11.312, "x_max": 12.519, "y_min": 6.75, "y_max": 8.0}
     pose_in_red_left = Pose2d(12.0, 7.5, Rotation2d())
     assert zones.in_restricted_zone(pose_in_red_left) == True
 

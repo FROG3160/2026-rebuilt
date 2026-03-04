@@ -183,24 +183,24 @@ class FieldZones(FROGSubsystem):
     # X bounds roughly align with the hubs (4.626 to 11.915).
     # We split this into 4 zones, leaving the very center of the field open.
     NO_SHOOT_ZONES = [
-        # Blue side trenches (X from blue hub to midline ~8.25)
+        # Blue side trenches (X from blue hub back wall 4.022 to front wall 5.229)
         {
-            "x_min": 4.05,
-            "x_max": 5.23,
+            "x_min": 4.022,
+            "x_max": 5.229,
             "y_min": 0.0,
             "y_max": 1.265,
         },  # Blue Right Trench
-        {"x_min": 4.05, "x_max": 5.24, "y_min": 6.75, "y_max": 8.0},  # Blue Left Trench
-        # Red side trenches (X from midline ~8.25 to red hub)
+        {"x_min": 4.022, "x_max": 5.229, "y_min": 6.75, "y_max": 8.0},  # Blue Left Trench
+        # Red side trenches (X from red hub front wall 11.312 to back wall 12.519)
         {
-            "x_min": 11.33,
-            "x_max": 12.53,
+            "x_min": 11.312,
+            "x_max": 12.519,
             "y_min": 0.0,
             "y_max": 1.265,
         },  # Red Left Trench
         {
-            "x_min": 11.33,
-            "x_max": 12.53,
+            "x_min": 11.312,
+            "x_max": 12.519,
             "y_min": 6.75,
             "y_max": 8.0,
         },  # Red Right Trench
