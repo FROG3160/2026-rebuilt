@@ -1,4 +1,5 @@
 from pathplannerlib.auto import NamedCommands, AutoBuilder
+from pathplannerlib.path import PathConstraints, PathPlannerPath
 
 from subsystems.climber import Climber
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
@@ -14,8 +15,9 @@ from FROGlib.subsystem import Direction
 from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger
 from commands2.button import Trigger
-from commands2 import StartEndCommand, cmd
+from commands2 import StartEndCommand, cmd, DeferredCommand
 import constants
+from wpimath.geometry import Pose2d, Rotation2d
 
 
 class RobotContainer:
@@ -66,6 +68,21 @@ class RobotContainer:
         # Set up PathPlanner autos and publish to dashboard
         # self.autochooser = AutoBuilder.buildAutoChooser()
         # SmartDashboard.putData("Auto Chooser", self.autochooser)
+
+    def get_pathfinding_command(self):
+        """Returns a command to pathfind to a scoring position based on the robot's location."""
+        path_name = self.field_zones.get_selection_zone()
+        if path_name:
+            path = PathPlannerPath.fromPathFile(path_name)
+            constraints = PathConstraints(
+                3.0,
+                3.0,  # Max velocity (m/s), Max accel (m/s^2)
+                4.0,
+                8.0,  # Max angular velocity (rad/s), Max angular accel (rad/s^2)
+            )
+            return AutoBuilder.pathfindThenFollowPath(path, constraints)
+
+        return cmd.none()
 
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
@@ -130,6 +147,10 @@ class RobotContainer:
 
         self.driver_xbox.leftBumper().onTrue(self.climber.deploy_command())
         self.driver_xbox.leftTrigger().whileTrue(self.climber.stow_command())
+
+        self.driver_xbox.rightBumper().whileTrue(
+            DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
+        )
 
     def configure_tactical_controls(self) -> None:
         """Configure button bindings for the tactical controller."""
