@@ -391,13 +391,15 @@ class FieldZones(FROGSubsystem):
             is_left = y > constants.kFieldMidlineY
 
         if is_close and is_left:
-            return "CloseLeftZonePath"
+            return "NearSweepRight"
         elif is_close and not is_left:
-            return "CloseRightZonePath"
+            return "NearSweepLeft"
         elif not is_close and is_left:
-            return "FarLeftZonePath"
+            return "FarSweepRight"
+        elif not is_close and not is_left:
+            return "FarSweepLeft"
         else:
-            return "FarRightZonePath"
+            return None  # not in any of the zones.
 
     def get_selection_zone(self, pose: Optional[Pose2d] = None) -> Optional[str]:
         """
@@ -419,10 +421,10 @@ class FieldZones(FROGSubsystem):
                 constants.kFieldLength - 3.0 <= x <= constants.kFieldLength
                 and constants.kFieldWidth - 2.0 <= y <= constants.kFieldWidth
             ):
-                return "Outpost"
+                return "OutpostApproach"
         else:
             if 0.0 <= x <= 3.0 and 0.0 <= y <= 2.0:
-                return "Outpost"
+                return "OutpostApproach"
 
         # Tower Zone (3m long, 2m wide, centered on tower)
         # Blue tower center: Y=3.962. Red tower center: Y=4.108.
@@ -431,10 +433,10 @@ class FieldZones(FROGSubsystem):
                 constants.kFieldLength - 3.0 <= x <= constants.kFieldLength
                 and 4.108 - 1.0 <= y <= 4.108 + 1.0
             ):
-                return "Tower"
+                return "TowerApproach"
         else:
             if 0.0 <= x <= 3.0 and 3.962 - 1.0 <= y <= 3.962 + 1.0:
-                return "Tower"
+                return "TowerApproach"
 
         # if we don't return Tower or Outpost, check to see if we're in one of the
         # middle zones for path selection
