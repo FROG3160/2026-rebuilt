@@ -6,7 +6,7 @@ from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d,
 # Camera Configs
 kCameraConfigs = (
     FROGCameraConfig(
-        "OV9281_AprilTag2",
+        "OV9281-AprilTag2",
         Transform3d(
             Translation3d(
                 inchesToMeters(10.5 + (1 / 16)),  # Forward from center
@@ -17,7 +17,7 @@ kCameraConfigs = (
         ),
     ),
     FROGCameraConfig(
-        "OV9281_Apriltag1",
+        "OV9281-AprilTag1",
         Transform3d(
             Translation3d(
                 inchesToMeters(12.5 + (1 / 16)),  # Forward from center
@@ -28,7 +28,7 @@ kCameraConfigs = (
         ),
     ),
 )
-kDetectorConfigs = (FROGCameraConfig("Obj_Detection", Transform3d()),)
+kDetectorConfigs = (FROGCameraConfig("Object1", Transform3d()),)
 
 ## CANCoder offsets
 ########################################
@@ -66,10 +66,13 @@ kVoltageHopperS = 0.12
 kDeployP = 1.0
 kDeployI = 0.0
 kDeployD = 0.0
-kDeployS = 0.0
-kDeployV = 0.0
+kDeployS = 0.61
+kDeployV = 4
 
-kDeployRatio = 45.0  # gear reduction for climber deploy motor (45:1)
+kDeployMM_V = 0.25
+kDeployMM_A = 0.25
+
+kDeployRatio = 36.0  # gear reduction for climber deploy motor (45:1)
 
 # climber lift gains
 kLiftP = 1.0
@@ -188,6 +191,10 @@ kDeadband = 0.15
 kDebouncePeriod = 0.5
 kTranslationSlew = 2
 kRotSlew = 2
+
+# Climber Deploy Positions
+kClimberStowed = 0.0
+kClimberDeployed = 0.3
 
 # Field Positions
 kBlueHub = Pose2d(4.626, 4.035, Rotation2d(0))  # Facing away from blue hub

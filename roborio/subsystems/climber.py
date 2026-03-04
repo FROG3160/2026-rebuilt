@@ -15,11 +15,12 @@ from phoenix6.signals import MotorAlignmentValue
 import wpilib
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
-
+from phoenix6.configs import MotionMagicConfigs
 from FROGlib.subsystem import FROGSubsystem
 
 deploy_slot0 = FROGSlotConfig(
     k_s=constants.kDeployS,
+    k_v=constants.kDeployV,
     k_p=constants.kDeployP,
     k_i=constants.kDeployI,
     k_d=constants.kDeployD,
@@ -32,12 +33,18 @@ lift_slot0 = FROGSlotConfig(
     k_i=constants.kLiftI,
     k_d=constants.kLiftD,
 )
+deploy_motion_magic_config = (
+    MotionMagicConfigs()
+    .with_motion_magic_cruise_velocity(constants.kDeployMM_V)
+    .with_motion_magic_acceleration(constants.kDeployMM_A)
+)
 deploy_motor_config = FROGTalonFXConfig(
     id=constants.kClimberDeployMotorID,
     can_bus="rio",
     motor_name="Deploy",
     parent_nt="Climber",
     motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
+    motion_magic=deploy_motion_magic_config,
     feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=constants.kDeployRatio),
     slot0=deploy_slot0,
 )
@@ -129,7 +136,7 @@ class Climber(FROGSubsystem):
     def _deploy_position(self, position: float) -> None:
         """Run the deploy motor to the specified position."""
         self.deploy_motor.set_control(
-            controls.PositionVoltage(position, enable_foc=False)
+            controls.MotionMagicVoltage(position, enable_foc=False)
         )
 
     def _set_deploy_voltage(self, volts: float) -> None:
@@ -173,10 +180,17 @@ class Climber(FROGSubsystem):
     def sysIdDynamicLift(self, direction: SysIdRoutine.Direction) -> Command:
         return self.sys_id_routine_lift.dynamic(direction)
 
-    # returns inline command to deploy climber to a position
-    def deploy_to_position(self, position: float) -> Command:
-        """Return a command to deploy the climber to the specified position."""
-        return self.runOnce(lambda: self._deploy_position(position))
+    def deploy_command(self) -> Command:
+        """Return a command to deploy the climber."""
+        return self.runOnce(
+            lambda: self._deploy_position(constants.kClimberDeployed),
+        )
+
+    def stow_command(self) -> Command:
+        """Return a command to stow the climber."""
+        return self.runOnce(
+            lambda: self._deploy_position(constants.kClimberStowed),
+        )
 
     # returns inline command to lift climber to a position
     def lift_to_position(self, position: float) -> Command:

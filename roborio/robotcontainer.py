@@ -88,7 +88,8 @@ class RobotContainer:
 
     def configure_driver_controls(self) -> None:
         """Configure button bindings for the driver controller."""
-        self.driver_xbox.a().whileTrue(
+        safe_to_shoot = self.field_zones.get_no_shoot_trigger().negate()
+        self.driver_xbox.a().and_(safe_to_shoot).whileTrue(
             ManualDriveAndAim(
                 self.field_zones.get_aim_target,
                 self.driver_xbox,
@@ -97,7 +98,19 @@ class RobotContainer:
                 self.field_zones.get_trench_velocity_limit,
                 "DriveAndAim",
             )
-        )
+            .alongWith(
+                cmd.sequence(
+                    cmd.runOnce(self.shooter.deploy_hood),
+                    cmd.waitUntil(self.shooter.is_hood_deployed),
+                    self.shooter.cmd_fire_at_set_speed().alongWith(
+                        cmd.waitUntil(self.shooter.is_at_speed).andThen(
+                            self.feeder.runForward()
+                        )
+                    ),
+                ).finallyDo(lambda interrupted: self.shooter.retract_hood())
+            )
+            .withName("Aim and Fire")
+        )  # name the command for better dashboard visibility
         self.driver_xbox.start().onTrue(
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
@@ -110,32 +123,13 @@ class RobotContainer:
             .withName("Eject All")
         )
 
-        self.driver_xbox.b().whileTrue(self.intake.runForward())
         self.fuel_detector.get_trigger_targets_close().whileTrue(
             self.intake.runForward()
         )
         self.driver_xbox.y().toggleOnTrue(self.intake.runForward())
 
-        safe_to_shoot = self.field_zones.get_no_shoot_trigger().negate()
-
-        self.driver_xbox.rightBumper().and_(safe_to_shoot).whileTrue(
-            cmd.sequence(
-                cmd.runOnce(self.shooter.deploy_hood),
-                cmd.waitUntil(self.shooter.is_hood_deployed),
-                self.shooter.cmd_fire_at_set_speed().alongWith(
-                    cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                        self.feeder.runForward()
-                    )
-                ),
-            )
-            .finallyDo(lambda interrupted: self.shooter.retract_hood())
-            .withName("Fire Command")
-        )  # max speed with 4" wheel is 33.8 m/s
-
-        self.driver_xbox.leftBumper().whileTrue(self.climber.deploy_to_position(0.0))
-        self.driver_xbox.leftTrigger().whileTrue(
-            self.climber.lift_to_position(10.0)
-        )  # 10.0 inches is arbitrary for now, will need to be tuned based on actual robot
+        self.driver_xbox.leftBumper().onTrue(self.climber.deploy_command())
+        self.driver_xbox.leftTrigger().whileTrue(self.climber.stow_command())
 
     def configure_tactical_controls(self) -> None:
         """Configure button bindings for the tactical controller."""
@@ -259,15 +253,11 @@ class RobotContainer:
 
         # Climber Manual Controls (Test Mode)
         # Deploy on D-Pad (POV)
-        self.driver_xbox.povUp().whileTrue(
-            self.climber.manual_deploy_voltage_command(4.0).withName(
-                "Manual Deploy Forward"
-            )
+        self.driver_xbox.povUp().onTrue(
+            self.climber.deploy_command().withName("Manual Deploy Forward")
         )
-        self.driver_xbox.povDown().whileTrue(
-            self.climber.manual_deploy_voltage_command(-4.0).withName(
-                "Manual Deploy Reverse"
-            )
+        self.driver_xbox.povDown().onTrue(
+            self.climber.stow_command().withName("Manual Deploy Reverse")
         )
 
         # Lift on Right Stick Y axis
