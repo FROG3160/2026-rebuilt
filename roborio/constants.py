@@ -6,29 +6,29 @@ from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d,
 # Camera Configs
 kCameraConfigs = (
     FROGCameraConfig(
-        "Arducam_OV9281_Apriltag_2",
+        "OV9281_AprilTag2",
         Transform3d(
             Translation3d(
-                inchesToMeters(7.45),  # 7.1998),  # Forward from center
-                inchesToMeters(-9.9),  # -8.125),  # Left from center
-                0.29,  # inchesToMeters(11.51),  # 11.375),  # Up from the floor
+                inchesToMeters(10.5 + (1 / 16)),  # Forward from center
+                inchesToMeters(-9.375),  # Left from center
+                0.435,  # Up from the floor
             ),
             Rotation3d(0, 0, -math.pi / 2),
         ),
     ),
     FROGCameraConfig(
-        "Arducam_OV9281_Apriltag_1",
+        "OV9281_Apriltag1",
         Transform3d(
             Translation3d(
-                inchesToMeters(7.0),  # 7.0625),  # Forward from center
-                inchesToMeters(9.9),  # 8.125),  # Left from center
-                0.69,  # inchesToMeters(27.32),  # 27.25),  # Up from the floor
+                inchesToMeters(12.5 + (1 / 16)),  # Forward from center
+                inchesToMeters(-3.25),  # Left from center
+                0.55,  # Up from the floor
             ),
-            Rotation3d(0, 0, math.pi / 2),
+            Rotation3d(0, 0, 0),
         ),
     ),
 )
-kDetectorConfigs = (FROGCameraConfig("Arducam_OV9782_Obj_Detection", Transform3d()),)
+kDetectorConfigs = (FROGCameraConfig("Obj_Detection", Transform3d()),)
 
 ## CANCoder offsets
 ########################################

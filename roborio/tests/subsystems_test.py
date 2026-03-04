@@ -24,10 +24,9 @@ def scheduler():
 
 def test_shooter_fire_command_logic():
     """Test that fire_command calculates speed based on distance."""
-    # Instantiate Shooter with a lambda returning a specific distance: 4 meters
-    # Formula in Shooter: (23 * distance - 2) / 3
-    # Calculation: (23 * 4 - 2) / 3 = 90 / 3 = 30.0
-    shooter = Shooter(lambda: 4.0)
+    # Instantiate Shooter with a lambda returning a specific distance: 3.57 meters
+    # This matches an exact key in the interpolation map which should return 21.40
+    shooter = Shooter(lambda: 3.57)
 
     # Get the command
     fire_cmd = shooter.cmd_fire_with_distance()
@@ -38,7 +37,7 @@ def test_shooter_fire_command_logic():
     fire_cmd.execute()
 
     # Check if the speed was set correctly on the shooter
-    assert shooter.get_commanded_speed() == 30.0
+    assert abs(shooter.get_commanded_speed() - 21.40) < 0.001
 
     # Check if is_at_speed returns False initially (simulated motor at 0)
     assert not shooter.is_at_speed()
