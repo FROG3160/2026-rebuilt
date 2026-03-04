@@ -29,6 +29,7 @@ from phoenix6.signals import MotorAlignmentValue
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 from FROGlib.subsystem import FROGSubsystem
+import numpy as np
 
 flywheel_gearing = DriveTrain(
     gear_stages=[], wheel_diameter=inchesToMeters(4.0)
@@ -117,6 +118,11 @@ class Shooter(FROGSubsystem):
             signal_profile=FROGTalonFX.SignalProfile.POSITION_MM,
         )
 
+        # Distance (meters) to Flywheel Speed (rotations/sec) interpolation data for Hub target
+        # Important: np.interp requires the x-coordinates to be in increasing order.
+        self.hub_distances = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
+        self.hub_speeds = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
+
         self._flywheel_tolerance = (
             constants.kFlywheelTolerance
         )  # RPM tolerance for "at speed" check
@@ -181,17 +187,12 @@ class Shooter(FROGSubsystem):
 
     def _get_speed_from_distance(self) -> float | None:
         """
-        Linearly interpolates speed based on distance.
-
-        Given:
-        - 1 meter → 7 units speed
-        - 4 meters → 30 units speed
-
-        Returns speed as a float.
-        Uses exact fraction: speed = (23 * distance - 2) / 3
+        Calculates speed based on an interpolation map for the Hub target.
+        (Distance, Speed) points: (2.06, 17.65), (2.2, 18.15), (2.89, 19.85), (3.57, 21.4), (5.05, 23.76)
         """
         if distance := self.distance_to_target_supplier():
-            return (23 * distance - 2) / 3
+            # TODO: Differentiate between Hub and Floor targets based on field zones or aim state.
+            return float(np.interp(distance, self.hub_distances, self.hub_speeds))
         else:
             return None
 
