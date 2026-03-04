@@ -183,24 +183,29 @@ class FieldZones(FROGSubsystem):
     # X bounds roughly align with the hubs (4.626 to 11.915).
     # We split this into 4 zones, leaving the very center of the field open.
     NO_SHOOT_ZONES = [
-        # Blue side trenches (X from blue hub to midline ~8.25)
+        # Blue side trenches (X from blue hub back wall 4.022 to front wall 5.229)
         {
-            "x_min": 4.05,
-            "x_max": 5.23,
+            "x_min": 4.022,
+            "x_max": 5.229,
             "y_min": 0.0,
             "y_max": 1.265,
         },  # Blue Right Trench
-        {"x_min": 4.05, "x_max": 5.24, "y_min": 6.75, "y_max": 8.0},  # Blue Left Trench
-        # Red side trenches (X from midline ~8.25 to red hub)
         {
-            "x_min": 11.33,
-            "x_max": 12.53,
+            "x_min": 4.022,
+            "x_max": 5.229,
+            "y_min": 6.75,
+            "y_max": 8.0,
+        },  # Blue Left Trench
+        # Red side trenches (X from red hub front wall 11.312 to back wall 12.519)
+        {
+            "x_min": 11.312,
+            "x_max": 12.519,
             "y_min": 0.0,
             "y_max": 1.265,
         },  # Red Left Trench
         {
-            "x_min": 11.33,
-            "x_max": 12.53,
+            "x_min": 11.312,
+            "x_max": 12.519,
             "y_min": 6.75,
             "y_max": 8.0,
         },  # Red Right Trench
@@ -218,8 +223,8 @@ class FieldZones(FROGSubsystem):
         Translation2d(4.5881798, 0.6444996),  # ID 28
     ]
     SPEED_SCALAR = 0.99
-    FORCEFIELD_OUTER_RADIUS = 1.5 # meters. Start slowing down here.
-    FORCEFIELD_INNER_RADIUS = 0.75 # meters. Complete stop here.
+    FORCEFIELD_OUTER_RADIUS = 1.5  # meters. Start slowing down here.
+    FORCEFIELD_INNER_RADIUS = 0.75  # meters. Complete stop here.
 
     def __init__(
         self,
@@ -258,7 +263,9 @@ class FieldZones(FROGSubsystem):
                 return True
         return False
 
-    def get_trench_velocity_limit(self, intended_velocity: Translation2d) -> Translation2d:
+    def get_trench_velocity_limit(
+        self, intended_velocity: Translation2d
+    ) -> Translation2d:
         """Applies a proportional forcefield if the hood is deployed.
         Scales down the velocity vector component moving TOWARD the tags, leaving
         motion away from tags unaffected.
@@ -270,49 +277,55 @@ class FieldZones(FROGSubsystem):
         robot_translation = pose.translation()
 
         closest_tag = None
-        min_dist = float('inf')
-        
+        min_dist = float("inf")
+
         for tag in self.TRENCH_TAGS:
             dist = robot_translation.distance(tag)
             if dist < min_dist:
                 min_dist = dist
                 closest_tag = tag
-                
+
         if closest_tag is None or min_dist >= self.FORCEFIELD_OUTER_RADIUS:
             return intended_velocity
-            
+
         # Calculate scalar between 0.0 (at inner radius) and 1.0 (at outer radius)
         if min_dist <= self.FORCEFIELD_INNER_RADIUS:
             allowed_forward_scalar = 0.0
         else:
             range_total = self.FORCEFIELD_OUTER_RADIUS - self.FORCEFIELD_INNER_RADIUS
-            allowed_forward_scalar = (min_dist - self.FORCEFIELD_INNER_RADIUS) / range_total
+            allowed_forward_scalar = (
+                min_dist - self.FORCEFIELD_INNER_RADIUS
+            ) / range_total
 
         # Vector pointing from robot TO the tag
-        to_tag_vector = (closest_tag - robot_translation)
+        to_tag_vector = closest_tag - robot_translation
         to_tag_norm = to_tag_vector.norm()
-        
+
         if to_tag_norm == 0:
-             return intended_velocity * allowed_forward_scalar
-             
+            return intended_velocity * allowed_forward_scalar
+
         to_tag_unit = to_tag_vector / to_tag_norm
-        
+
         # Calculate how much of our intended velocity is directly toward the tag
         # Dot product: V_intended • Unit_To_Tag
-        forward_component = intended_velocity.x * to_tag_unit.x + intended_velocity.y * to_tag_unit.y
-        
+        forward_component = (
+            intended_velocity.x * to_tag_unit.x + intended_velocity.y * to_tag_unit.y
+        )
+
         if forward_component <= 0:
             # We are driving parallel to or away from the tag. Don't restrict.
             return intended_velocity
-            
+
         # We are driving TOWARD the tag. Scale down only that forward component.
         restricted_forward_component = forward_component * allowed_forward_scalar
-        
+
         # Reconstruct the final velocity:
         # Intended - original forward component + restricted forward component
-        velocity_reduction = to_tag_unit * (forward_component - restricted_forward_component)
+        velocity_reduction = to_tag_unit * (
+            forward_component - restricted_forward_component
+        )
         final_velocity = intended_velocity - velocity_reduction
-        
+
         return final_velocity
 
     def get_aim_target(self, pose: Optional[Pose2d] = None) -> Optional[Pose2d]:
@@ -346,6 +359,46 @@ class FieldZones(FROGSubsystem):
                     return constants.kBlueLeftCorner
             else:
                 return constants.kBlueHub  # Default fallback
+
+    def get_path_for_middle_zone(self, pose: Optional[Pose2d] = None) -> Optional[str]:
+        """
+        Splits the middle of the field (5.229 <= X <= 11.312) into a 2x2 grid.
+        These X bounds correspond to the AprilTags on the Hubs that face the center of the field.
+        Returns a different PathPlanner path name based on which zone the robot is in.
+        This is alliance-aware, adjusting 'Close/Far' and 'Left/Right' based on driver station perspective.
+        """
+        pose_to_check = pose or self.pose_supplier()
+        x = pose_to_check.x
+        y = pose_to_check.y
+        alliance = wpilib.DriverStation.getAlliance()
+
+        # Check if we are in the middle field area
+        if not (5.229 <= x <= 11.312):
+            return None
+
+        is_red = alliance == wpilib.DriverStation.Alliance.kRed
+
+        # "Close" means closer to our alliance wall
+        # "Left" means to the left when standing at our alliance wall looking across the field
+        if is_red:
+            # Red wall is at X ~ 16.5, so X > 8.2705 is "Close" (midpoint of 5.229 and 11.312 is 8.2705)
+            is_close = x > 8.2705
+            # Red looks down -X. So +Y (Y > 4.1) is to their Right. Left is Y <= 4.1.
+            is_left = y <= 4.1
+        else:
+            # Blue wall is at X = 0, so X <= 8.2705 is "Close"
+            is_close = x <= 8.2705
+            # Blue looks up +X. So +Y (Y > 4.1) is to their Left.
+            is_left = y > 4.1
+
+        if is_close and is_left:
+            return "CloseLeftZonePath"
+        elif is_close and not is_left:
+            return "CloseRightZonePath"
+        elif not is_close and is_left:
+            return "FarLeftZonePath"
+        else:
+            return "FarRightZonePath"
 
     def get_no_shoot_trigger(self) -> Trigger:
         return Trigger(lambda: self.in_restricted_zone())
