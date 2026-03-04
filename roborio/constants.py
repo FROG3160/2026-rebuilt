@@ -197,8 +197,19 @@ kClimberStowed = 0.0
 kClimberDeployed = 0.3
 
 # Field Positions
-kBlueHub = Pose2d(4.626, 4.035, Rotation2d(0))  # Facing away from blue hub
-kRedHub = Pose2d(11.915, 4.035, Rotation2d(0))
+kFieldLength = 16.541
+kFieldWidth = 8.07
+kFieldMidlineX = kFieldLength / 2
+kFieldMidlineY = kFieldWidth / 2
+
+# Hub X boundaries (based on AprilTags)
+kHubXBlueFacingCenter = 5.229
+kHubXRedFacingCenter = 11.312
+kHubXBlueFacingAlliance = 4.022
+kHubXRedFacingAlliance = 12.519
+
+kBlueHub = Pose2d(4.626, kFieldMidlineY, Rotation2d(0))  # Facing away from blue hub
+kRedHub = Pose2d(11.915, kFieldMidlineY, Rotation2d(0))
 kBlueRightTrench = Pose2d(4.692, 0.635, Rotation2d(0))
 kBlueLeftTrench = Pose2d(4.692, 7.489, Rotation2d(0))
 kRedRightTrench = Pose2d(11.849, 0.635, Rotation2d(math.pi))
