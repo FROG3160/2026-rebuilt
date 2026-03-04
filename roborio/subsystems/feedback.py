@@ -336,10 +336,10 @@ class FieldZones(FROGSubsystem):
         alliance = wpilib.DriverStation.getAlliance()
 
         if alliance == wpilib.DriverStation.Alliance.kRed:
-            # Red Alliance: Alliance zone is X > 11.0, opponent zone is X < 5.5
-            if x > 11.0:
+            # Red Alliance: Alliance zone is X > 11.312, opponent zone is X < 5.229
+            if x > 11.312:
                 return constants.kRedHub
-            elif 5.5 <= x <= 11.0:
+            elif 5.229 <= x <= 11.312:
                 # Middle of the field -> closest Red corner (x=16.5)
                 if y < 4.1:
                     return constants.kRedRightCorner
@@ -348,10 +348,10 @@ class FieldZones(FROGSubsystem):
             else:
                 return constants.kRedHub  # Default fallback
         else:
-            # Blue Alliance (or fallback): Alliance zone is X < 5.5, opponent zone is X > 11.0
-            if x < 5.5:
+            # Blue Alliance (or fallback): Alliance zone is X < 5.229, opponent zone is X > 11.312
+            if x < 5.229:
                 return constants.kBlueHub
-            elif 5.5 <= x <= 11.0:
+            elif 5.229 <= x <= 11.312:
                 # Middle of the field -> closest Blue corner (x=0)
                 if y < 4.1:
                     return constants.kBlueRightCorner

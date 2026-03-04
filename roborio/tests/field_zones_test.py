@@ -79,7 +79,7 @@ def test_field_zones_get_aim_target():
     )
     wpilib.simulation.DriverStationSim.notifyNewData()
 
-    # In Blue alliance zone (X=3.0 < 5.5) -> should aim at kBlueHub
+    # In Blue alliance zone (X=3.0 < 5.229) -> should aim at kBlueHub
     current_pose[0] = Pose2d(3.0, 3.0, Rotation2d())
     assert zones.get_aim_target() == constants.kBlueHub
 
@@ -98,7 +98,7 @@ def test_field_zones_get_aim_target():
     wpilib.simulation.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kRed1)
     wpilib.simulation.DriverStationSim.notifyNewData()
 
-    # In Red alliance zone (X=13.0 > 11.0) -> should aim at kRedHub
+    # In Red alliance zone (X=13.0 > 11.312) -> should aim at kRedHub
     current_pose[0] = Pose2d(13.0, 3.0, Rotation2d())
     assert zones.get_aim_target() == constants.kRedHub
 
