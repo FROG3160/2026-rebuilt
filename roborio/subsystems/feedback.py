@@ -238,7 +238,7 @@ class FieldZones(FROGSubsystem):
         self.status = "Clear"
 
         self.field = field
-        self._setup_field2d_zones()
+        # self._setup_field2d_zones()
 
     def _setup_field2d_zones(self):
         for i, zone in enumerate(self.NO_SHOOT_ZONES):
@@ -431,6 +431,8 @@ class FieldZones(FROGSubsystem):
             if 0.0 <= x <= 3.0 and 2.962 <= y <= 4.962:
                 return "Tower"
 
+        # if we don't return Tower or Outpost, check to see if we're in one of the
+        # middle zones for path selection
         return self.get_path_for_middle_zone(pose_to_check)
 
     def get_no_shoot_trigger(self) -> Trigger:
