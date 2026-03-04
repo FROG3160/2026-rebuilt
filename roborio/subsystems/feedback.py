@@ -347,6 +347,45 @@ class FieldZones(FROGSubsystem):
             else:
                 return constants.kBlueHub  # Default fallback
 
+    def get_path_for_middle_zone(self, pose: Optional[Pose2d] = None) -> Optional[str]:
+        """
+        Splits the middle of the field (5.5 <= X <= 11.0) into a 2x2 grid.
+        Returns a different PathPlanner path name based on which zone the robot is in.
+        This is alliance-aware, adjusting 'Close/Far' and 'Left/Right' based on driver station perspective.
+        """
+        pose_to_check = pose or self.pose_supplier()
+        x = pose_to_check.x
+        y = pose_to_check.y
+        alliance = wpilib.DriverStation.getAlliance()
+
+        # Check if we are in the middle field area
+        if not (5.5 <= x <= 11.0):
+            return None
+
+        is_red = (alliance == wpilib.DriverStation.Alliance.kRed)
+
+        # "Close" means closer to our alliance wall
+        # "Left" means to the left when standing at our alliance wall looking across the field
+        if is_red:
+            # Red wall is at X ~ 16.5, so X > 8.25 is "Close"
+            is_close = x > 8.25
+            # Red looks down -X. So +Y (Y > 4.1) is to their Right. Left is Y <= 4.1.
+            is_left = y <= 4.1
+        else:
+            # Blue wall is at X = 0, so X <= 8.25 is "Close"
+            is_close = x <= 8.25
+            # Blue looks up +X. So +Y (Y > 4.1) is to their Left.
+            is_left = y > 4.1
+
+        if is_close and is_left:
+            return "CloseLeftZonePath"
+        elif is_close and not is_left:
+            return "CloseRightZonePath"
+        elif not is_close and is_left:
+            return "FarLeftZonePath"
+        else:
+            return "FarRightZonePath"
+
     def get_no_shoot_trigger(self) -> Trigger:
         return Trigger(lambda: self.in_restricted_zone())
 
