@@ -176,6 +176,21 @@ kProfiledRotationP = 0.4
 kProfiledRotationI = 0.0
 kProfiledRotationD = 0.0
 
+## PathPlanner Constants
+#########################################
+kPPTranslationP = 2.0
+kPPTranslationI = 0.0
+kPPTranslationD = 0.0
+
+kPPRotationP = 4.0
+kPPRotationI = 0.0
+kPPRotationD = 0.0
+
+kPPMaxVelocity = 3.0
+kPPMaxAcceleration = 3.0
+kPPMaxAngularVelocity = 4.0
+kPPMaxAngularAcceleration = 8.0
+
 ## Network Tables names
 #########################################
 kComponentSubtableName = "FROGSubsystems"

@@ -180,19 +180,19 @@ def test_field_zones_get_path_for_middle_zone():
 
     # Blue Close Left (X <= 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(6.0, 6.0, Rotation2d())
-    assert zones.get_path_for_middle_zone() == "CloseLeftZonePath"
+    assert zones.get_path_for_middle_zone() == "NearSweepRight"
 
     # Blue Close Right (X <= 8.2705, Y <= 4.1)
     current_pose[0] = Pose2d(6.0, 2.0, Rotation2d())
-    assert zones.get_path_for_middle_zone() == "CloseRightZonePath"
+    assert zones.get_path_for_middle_zone() == "NearSweepLeft"
 
     # Blue Far Left (X > 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(10.0, 6.0, Rotation2d())
-    assert zones.get_path_for_middle_zone() == "FarLeftZonePath"
+    assert zones.get_path_for_middle_zone() == "FarSweepRight"
 
     # Blue Far Right (X > 8.2705, Y <= 4.1)
     current_pose[0] = Pose2d(10.0, 2.0, Rotation2d())
-    assert zones.get_path_for_middle_zone() == "FarRightZonePath"
+    assert zones.get_path_for_middle_zone() == "FarSweepLeft"
 
     # Simulate Red Alliance
     wpilib.simulation.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kRed1)
@@ -200,19 +200,19 @@ def test_field_zones_get_path_for_middle_zone():
 
     # Red Close Left (X > 8.2705, Y <= 4.1)
     current_pose[0] = Pose2d(10.0, 2.0, Rotation2d())
-    assert zones.get_path_for_middle_zone() == "CloseLeftZonePath"
+    assert zones.get_path_for_middle_zone() == "NearSweepRight"
 
     # Red Close Right (X > 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(10.0, 6.0, Rotation2d())
-    assert zones.get_path_for_middle_zone() == "CloseRightZonePath"
+    assert zones.get_path_for_middle_zone() == "NearSweepLeft"
 
     # Red Far Left (X <= 8.2705, Y <= 4.1)
     current_pose[0] = Pose2d(6.0, 2.0, Rotation2d())
-    assert zones.get_path_for_middle_zone() == "FarLeftZonePath"
+    assert zones.get_path_for_middle_zone() == "FarSweepRight"
 
     # Red Far Right (X <= 8.2705, Y > 4.1)
     current_pose[0] = Pose2d(6.0, 6.0, Rotation2d())
-    assert zones.get_path_for_middle_zone() == "FarRightZonePath"
+    assert zones.get_path_for_middle_zone() == "FarSweepLeft"
 
 
 def test_field_zones_get_selection_zone():
@@ -229,15 +229,15 @@ def test_field_zones_get_selection_zone():
 
     # Blue Outpost (X [0, 3], Y [0, 2])
     current_pose[0] = Pose2d(1.5, 1.0, Rotation2d())
-    assert zones.get_selection_zone() == "Outpost"
+    assert zones.get_selection_zone() == "OutpostApproach"
 
     # Blue Tower (X [0, 3], Y [2.962, 4.962])
     current_pose[0] = Pose2d(1.5, 4.0, Rotation2d())
-    assert zones.get_selection_zone() == "Tower"
+    assert zones.get_selection_zone() == "TowerApproach"
 
     # Blue Middle Zone Fallback
     current_pose[0] = Pose2d(6.0, 6.0, Rotation2d())
-    assert zones.get_selection_zone() == "CloseLeftZonePath"
+    assert zones.get_selection_zone() == "NearSweepRight"
 
     # Simulate Red Alliance
     wpilib.simulation.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kRed1)
@@ -245,12 +245,12 @@ def test_field_zones_get_selection_zone():
 
     # Red Outpost (X [13.54, 16.54], Y [6.07, 8.07])
     current_pose[0] = Pose2d(15.0, 7.0, Rotation2d())
-    assert zones.get_selection_zone() == "Outpost"
+    assert zones.get_selection_zone() == "OutpostApproach"
 
     # Red Tower (X [13.54, 16.54], Y [3.108, 5.108])
     current_pose[0] = Pose2d(15.0, 4.0, Rotation2d())
-    assert zones.get_selection_zone() == "Tower"
+    assert zones.get_selection_zone() == "TowerApproach"
 
     # Red Middle Zone Fallback
     current_pose[0] = Pose2d(10.0, 2.0, Rotation2d())
-    assert zones.get_selection_zone() == "CloseLeftZonePath"
+    assert zones.get_selection_zone() == "NearSweepRight"
