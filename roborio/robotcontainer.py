@@ -87,10 +87,10 @@ class RobotContainer:
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
         # The hopper should run forward whenever either the intake OR the feed motors are running forward.
-        Trigger(
-            lambda: self.intake.get_direction() == Direction.FORWARD
-            or self.feeder.get_direction() == Direction.FORWARD
-        ).whileTrue(self.hopper.runForward())
+        # Trigger(
+        #     lambda: self.intake.get_direction() == Direction.FORWARD
+        #     or self.feeder.get_direction() == Direction.FORWARD
+        # ).whileTrue(self.hopper.runForward())
         # The hopper should run backward whenever either the intake OR the feed motors are running backward.
         Trigger(
             lambda: self.intake.get_direction() == Direction.REVERSE
