@@ -47,11 +47,11 @@ kSteerS = 0.215
 kSteerV = 0.10583
 
 # drive motor gains
-kDriveFeedForward = 0.53
-kDutyCycleDriveV = 0.00916
-kDutyCycleDriveS = 0.01125
+# kDriveFeedForward = 0.53
+# kDutyCycleDriveV = 0.00916
+# kDutyCycleDriveS = 0.01125
 
-kVoltageDriveV = 2.0164  # 1.795
+kVoltageDriveV = 1.8  # 2.0164  # 1.795
 kVoltageDriveS = 0.060831  # 0.211
 kVoltageDriveP = 2.9646  # 0.5
 kVoltageDriveA = 0.14705  # 0.027631
