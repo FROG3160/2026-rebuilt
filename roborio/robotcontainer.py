@@ -75,10 +75,10 @@ class RobotContainer:
         if path_name:
             path = PathPlannerPath.fromPathFile(path_name)
             constraints = PathConstraints(
-                3.0,
-                3.0,  # Max velocity (m/s), Max accel (m/s^2)
-                4.0,
-                8.0,  # Max angular velocity (rad/s), Max angular accel (rad/s^2)
+                constants.kPPMaxVelocity,
+                constants.kPPMaxAcceleration,
+                constants.kPPMaxAngularVelocity,
+                constants.kPPMaxAngularAcceleration,
             )
             return AutoBuilder.pathfindThenFollowPath(path, constraints)
 
