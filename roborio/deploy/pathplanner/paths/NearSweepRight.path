@@ -68,7 +68,7 @@
   "reversed": false,
   "folder": "TeleopPaths",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 3.0,
     "rotation": -110.0
   },
   "useDefaultConstraints": true

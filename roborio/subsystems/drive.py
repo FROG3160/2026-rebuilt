@@ -199,7 +199,7 @@ class Drive(FROGSubsystem, SwerveChassis):
         autobuilder_config = RobotConfig.fromGUISettings()
 
         self.holonomic_drive_ctrl = PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
-            PIDConstants(4.0, 0.0, 0.0),  # Translation PID constants
+            PIDConstants(2.0, 0.0, 0.0),  # Translation PID constants
             PIDConstants(4.0, 0.0, 0.0),  # Rotation PID constants
         )
 
