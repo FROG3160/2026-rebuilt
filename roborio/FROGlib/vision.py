@@ -289,8 +289,8 @@ class FROGDetector(PhotonCamera):
 
     def has_targets_close(
         self,
-        yaw_threshold_deg: float = 10.0,
-        pitch_threshold_deg: float = -18.0,
+        yaw_threshold_deg: float = 20.0,
+        pitch_threshold_deg: float = -10.0,
         min_area: float = 0.0,
     ) -> bool:
         if len(self._yaws) == 0:
@@ -304,8 +304,8 @@ class FROGDetector(PhotonCamera):
 
     def get_trigger_targets_close(
         self,
-        yaw_threshold_deg: float = 10.0,
-        pitch_threshold_deg: float = -18.0,
+        yaw_threshold_deg: float = 20.0,
+        pitch_threshold_deg: float = -10.0,
     ) -> Trigger:
         return Trigger(
             lambda: self.has_targets_close(yaw_threshold_deg, pitch_threshold_deg)
