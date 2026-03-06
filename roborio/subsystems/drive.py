@@ -425,6 +425,16 @@ class Drive(FROGSubsystem, SwerveChassis):
     def get_distance_to_target(self):
         return self._distance_to_target
 
+    def calculate_vT_to_target(self, target: Pose2d) -> float:
+        """Calculates the required rotational velocity to face the given target,
+        adjusted for robot motion.
+        """
+        new_target = self.getMotionAdjustedTarget(target)
+        return self.profiledRotationController.calculate(
+            self.getRotation2d().radians(),
+            self.calculateHeadingToTarget(new_target),
+        )
+
     def getPathPlannerPath(self, pathname: str) -> PathPlannerPath:
         return PathPlannerPath.fromPathFile(pathname)
 
