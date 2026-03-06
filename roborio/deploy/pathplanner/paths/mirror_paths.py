@@ -54,14 +54,35 @@ def mirror_path(input_path, output_path):
 if __name__ == "__main__":
     base_path = os.path.dirname(os.path.abspath(__file__))
 
-    # 1. Mirror CloseSweepLeft to CloseSweepRight
-    input_close = os.path.join(base_path, "NearSweepLeft.path")
-    output_close = os.path.join(base_path, "NearSweepRight.path")
-    mirror_path(input_close, output_close)
+    # Find all paths in the directory that contain "Left", but not the words "Tower", "Outpost", or "Corral
+    # " in their name
+    def check_name(name):
+        return "Tower" not in name and "Outpost" not in name and "Corral" not in name
 
-    # 2. Mirror FarSweepLeft to FarSweepRight
-    input_far = os.path.join(base_path, "FarSweepLeft.path")
-    output_far = os.path.join(base_path, "FarSweepRight.path")
-    mirror_path(input_far, output_far)
+    left_paths_to_mirror = [
+        f for f in os.listdir(base_path) if check_name(f) and f.endswith(".path")
+    ]
+    # ]
+
+    for path in left_paths_to_mirror:
+        input_path = os.path.join(base_path, path)
+        output_path = os.path.join(base_path, path.replace("Left", "Right"))
+        print(f"Mirroring {input_path} to {output_path}")
+        mirror_path(input_path, output_path)
 
     print("Successfully mirrored Left paths to Right.")
+
+    # # 1. Mirror CloseSweepLeft to CloseSweepRight
+    # input_close = os.path.join(base_path, "NearSweepLeft.path")
+    # output_close = os.path.join(base_path, "NearSweepRight.path")
+    # mirror_path(input_close, output_close)
+
+    # # 2. Mirror FarSweepLeft to FarSweepRight
+    # input_far = os.path.join(base_path, "FarSweepLeft.path")
+    # output_far = os.path.join(base_path, "FarSweepRight.path")
+    # mirror_path(input_far, output_far)
+
+    # input_loop = os.path.join(base_path, "LeftSideLoop.path")
+    # output_loop = os.path.join(base_path, "RightSideLoop.path")
+
+    # print("Successfully mirrored Left paths to Right.")
