@@ -146,7 +146,7 @@ class Shooter(FROGSubsystem):
             hood_plant = LinearSystemId.DCMotorSystem(
                 hood_gearbox, J_hood, hood_gearing
             )
-            self.hood_motor.simulation_init(hood_plant, hood_gearbox)
+            self.hood_motor.simulation_init(hood_plant, hood_gearbox, invert_sim=True)
 
         # Set up SysID routine for the shooter
         self.sys_id_routine = SysIdRoutine(
@@ -279,6 +279,14 @@ class Shooter(FROGSubsystem):
     @FROGSubsystem.telemetry("Flywheel Closed Loop Error")
     def flywheel_closed_loop_error_telem(self) -> float:
         return self.motor.get_closed_loop_error().value
+
+    @FROGSubsystem.telemetry("Hood Position")
+    def hood_position_telem(self) -> float:
+        return self.hood_motor.get_position().value
+
+    @FROGSubsystem.telemetry("Hood Velocity")
+    def hood_velocity_telem(self) -> float:
+        return self.hood_motor.get_velocity().value
 
     @FROGSubsystem.telemetry("At Speed")
     def at_speed_telem(self) -> bool:
