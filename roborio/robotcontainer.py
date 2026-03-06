@@ -23,7 +23,6 @@ import constants
 from wpimath.geometry import Pose2d, Rotation2d
 
 
-
 class RobotContainer:
     """
     This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -72,7 +71,6 @@ class RobotContainer:
         # Set up PathPlanner autos and publish to dashboard
         self.auto_chooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Auto Chooser", self.auto_chooser)
-
 
     def get_pathfinding_command(self):
         """Returns a command to pathfind to a scoring position based on the robot's location."""
@@ -208,15 +206,15 @@ class RobotContainer:
             .withName("Eject All")
         )
 
-        self.driver_xbox.y().whileTrue(self.intake.runForward())
+        self.driver_xbox.leftTrigger().whileTrue(self.intake.runForward())
 
         is_endgame = Trigger(self.shift_tracker.is_endgame)
         self.driver_xbox.leftBumper().and_(is_endgame).onTrue(
             self.climber.deploy_command()
         )
-        self.driver_xbox.leftTrigger().and_(is_endgame).whileTrue(
-            self.climber.stow_command()
-        )
+        # self.driver_xbox.leftTrigger().and_(is_endgame).whileTrue(
+        #     self.climber.stow_command()
+        # )
 
         # POV lift controls only when deployed AND in endgame
         is_deployed = Trigger(self.climber.is_deployed)
