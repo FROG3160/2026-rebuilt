@@ -1,5 +1,6 @@
 from pathplannerlib.auto import NamedCommands, AutoBuilder
 from pathplannerlib.path import PathConstraints, PathPlannerPath
+from wpilib import SmartDashboard
 
 from subsystems.climber import Climber
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
@@ -68,8 +69,9 @@ class RobotContainer:
         )
 
         # Set up PathPlanner autos and publish to dashboard
-        # self.autochooser = AutoBuilder.buildAutoChooser()
-        # SmartDashboard.putData("Auto Chooser", self.autochooser)
+        self.auto_chooser = AutoBuilder.buildAutoChooser()
+        SmartDashboard.putData("Auto Chooser", self.auto_chooser)
+
 
     def get_pathfinding_command(self):
         """Returns a command to pathfind to a scoring position based on the robot's location."""

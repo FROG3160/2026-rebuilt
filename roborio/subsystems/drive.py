@@ -34,6 +34,7 @@ from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from pathplannerlib.path import PathPlannerPath
+from pathplannerlib.telemetry import PPLibTelemetry
 from photonlibpy.estimatedRobotPose import EstimatedRobotPose
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from FROGlib.swerve import SwerveModuleConfig
@@ -450,6 +451,8 @@ class Drive(FROGSubsystem, SwerveChassis):
         )
         # updates field2d object with the latest estimated pose
         self.estimator_field.setRobotPose(self.swerve_estimator_pose)
+
+        PPLibTelemetry.setCurrentPose(self.swerve_estimator_pose)
 
         # update estimator with photonvision estimates
         for estimator in self.photon_estimators:
