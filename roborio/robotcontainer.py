@@ -212,6 +212,15 @@ class RobotContainer:
         self.driver_xbox.leftBumper().onTrue(self.climber.deploy_command())
         self.driver_xbox.leftTrigger().whileTrue(self.climber.stow_command())
 
+        # POV lift controls only when deployed
+        is_deployed = Trigger(self.climber.is_deployed)
+        self.driver_xbox.povUp().and_(is_deployed).whileTrue(
+            self.climber.lift_forward_cmd()
+        )
+        self.driver_xbox.povDown().and_(is_deployed).whileTrue(
+            self.climber.lift_reverse_cmd()
+        )
+
         self.driver_xbox.rightBumper().whileTrue(
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
         )
