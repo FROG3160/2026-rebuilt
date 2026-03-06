@@ -146,7 +146,7 @@ class Shooter(FROGSubsystem):
             hood_plant = LinearSystemId.DCMotorSystem(
                 hood_gearbox, J_hood, hood_gearing
             )
-            self.hood_motor.simulation_init(hood_plant, hood_gearbox)
+            self.hood_motor.simulation_init(hood_plant, hood_gearbox, invert_sim=True)
 
         # Set up SysID routine for the shooter
         self.sys_id_routine = SysIdRoutine(
