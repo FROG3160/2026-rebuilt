@@ -87,15 +87,18 @@ class RobotContainer:
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
         # The hopper should run forward whenever either the intake OR the feed motors are running forward.
-        # Trigger(
-        #     lambda: self.intake.get_direction() == Direction.FORWARD
-        #     or self.feeder.get_direction() == Direction.FORWARD
-        # ).whileTrue(self.hopper.runForward())
+        Trigger(lambda: self.feeder.get_direction() == Direction.FORWARD).whileTrue(
+            self.hopper.runForward()
+        )
         # The hopper should run backward whenever either the intake OR the feed motors are running backward.
         Trigger(
             lambda: self.intake.get_direction() == Direction.REVERSE
             or self.feeder.get_direction() == Direction.REVERSE
         ).whileTrue(self.hopper.runBackward())
+
+        self.fuel_detector.get_trigger_targets_close().whileTrue(
+            self.intake.runForward()
+        )
 
     def configure_xbox_bindings(self) -> None:
         """Configure button bindings for the xboxcontrollers."""
@@ -140,10 +143,7 @@ class RobotContainer:
             .withName("Eject All")
         )
 
-        self.fuel_detector.get_trigger_targets_close().whileTrue(
-            self.intake.runForward()
-        )
-        self.driver_xbox.y().toggleOnTrue(self.intake.runForward())
+        self.driver_xbox.y().whileTrue(self.intake.runForward())
 
         self.driver_xbox.leftBumper().onTrue(self.climber.deploy_command())
         self.driver_xbox.leftTrigger().whileTrue(self.climber.stow_command())
@@ -295,7 +295,7 @@ class RobotContainer:
             raw_y = self.driver_xbox.getRightY()
             if abs(raw_y) < constants.kDeadband:
                 return 0.0
-            return raw_y * -12.0
+            return raw_y * -2.0
 
         # We need a trigger that evaluates to True when the stick is outside deadband
         right_stick_active = Trigger(

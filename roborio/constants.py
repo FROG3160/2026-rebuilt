@@ -1,5 +1,5 @@
 import math
-from wpimath.units import feetToMeters, inchesToMeters
+from wpimath.units import degreesToRadians, feetToMeters, inchesToMeters
 from FROGlib.vision import FROGCameraConfig
 from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d, Pose2d
 
@@ -20,11 +20,11 @@ kCameraConfigs = (
         "OV9281-AprilTag1",
         Transform3d(
             Translation3d(
-                inchesToMeters(12.5 + (1 / 16)),  # Forward from center
-                inchesToMeters(-3.25),  # Left from center
-                0.55,  # Up from the floor
+                inchesToMeters((25.25 / 2) - 0.75),  # Forward from center
+                inchesToMeters(0),  # Left from center
+                inchesToMeters(19.25),  # Up from the floor
             ),
-            Rotation3d(0, 0, 0),
+            Rotation3d(0, degreesToRadians(35), 0),
         ),
     ),
 )
