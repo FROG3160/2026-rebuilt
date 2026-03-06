@@ -280,6 +280,14 @@ class Shooter(FROGSubsystem):
     def flywheel_closed_loop_error_telem(self) -> float:
         return self.motor.get_closed_loop_error().value
 
+    @FROGSubsystem.telemetry("Hood Position")
+    def hood_position_telem(self) -> float:
+        return self.hood_motor.get_position().value
+
+    @FROGSubsystem.telemetry("Hood Velocity")
+    def hood_velocity_telem(self) -> float:
+        return self.hood_motor.get_velocity().value
+
     @FROGSubsystem.telemetry("At Speed")
     def at_speed_telem(self) -> bool:
         return self.is_at_speed()
