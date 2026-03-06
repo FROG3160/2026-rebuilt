@@ -131,6 +131,7 @@ class Shooter(FROGSubsystem):
         # these attributes won't show as being referenced in the code,
         # but they're referenced by name as a string in simulationPeriodic.
         self._commanded_flywheel_speed = 0.0
+        self._speed_multiplier = 1.1
         if wpilib.RobotBase.isSimulation():
             flywheel_gearbox = DCMotor.falcon500(2)
             J_flywheel = 0.001
@@ -180,7 +181,7 @@ class Shooter(FROGSubsystem):
         self._apply_commanded_speed()
 
     def _set_commanded_speed(self, speed: float):
-        self._commanded_flywheel_speed = speed
+        self._commanded_flywheel_speed = speed + self._speed_multiplier
 
     def _apply_commanded_speed(self):
         self.motor.set_control(controls.VelocityVoltage(self._commanded_flywheel_speed))
@@ -315,6 +316,10 @@ class Shooter(FROGSubsystem):
     @FROGSubsystem.tunable(constants.kFlywheelD, "Flywheel K_D")
     def flywheel_kd(self, val):
         self._updateFlywheelSlot(k_d=val)
+
+    @FROGSubsystem.tunable(0.0, "Flywheel Speed Multiplier")
+    def speed_multiplier(self, val):
+        self._speed_multiplier = val
 
     @FROGSubsystem.tunable(0.0, "Flywheel Commanded Speed")
     def commanded_speed(self, val):
