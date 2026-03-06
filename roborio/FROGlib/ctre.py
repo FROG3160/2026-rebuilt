@@ -7,7 +7,11 @@ from phoenix6.configs.cancoder_configs import (
     MagnetSensorConfigs,
     SensorDirectionValue,
 )
-from phoenix6.configs.talon_fx_configs import TalonFXConfiguration, MotorOutputConfigs
+from phoenix6.configs.talon_fx_configs import (
+    TalonFXConfiguration,
+    MotorOutputConfigs,
+    CurrentLimitsConfigs,
+)
 from phoenix6.hardware.cancoder import CANcoder
 from phoenix6.hardware.pigeon2 import Pigeon2
 from phoenix6.hardware.talon_fx import TalonFX
@@ -201,6 +205,13 @@ class FROGTalonFXConfig(TalonFXConfiguration):
         self.motor_name = motor_name
         self.parent_nt = parent_nt
         super().__init__()
+        self.current_limits = (
+            CurrentLimitsConfigs()
+            .with_supply_current_limit(40)
+            .with_supply_current_limit_enable(True)
+            .with_stator_current_limit(60)
+            .with_stator_current_limit_enable(True)
+        )
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -305,7 +316,9 @@ class FROGTalonFX(TalonFX):
         velocity = abs(self.get_rotor_velocity().value)
         return stator_current > current_threshold and velocity < velocity_threshold
 
-    def simulation_init(self, plant, gearbox, measurement_std_devs=None, invert_sim=False):
+    def simulation_init(
+        self, plant, gearbox, measurement_std_devs=None, invert_sim=False
+    ):
         """Initialize physics-based simulation for this motor.
 
         Args:
