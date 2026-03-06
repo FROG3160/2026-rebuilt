@@ -180,6 +180,23 @@ class Climber(FROGSubsystem):
     def sysIdDynamicLift(self, direction: SysIdRoutine.Direction) -> Command:
         return self.sys_id_routine_lift.dynamic(direction)
 
+    def is_deployed(self) -> bool:
+        """Returns True if the deploy motor is at the deployed position."""
+        # Check if the deploy motor is at least 90% of the way to the deployed position
+        return self.deploy_motor.get_position().value > (
+            constants.kClimberDeployed * 0.9
+        )
+
+    def lift_forward_cmd(self) -> Command:
+        """Runs the lift motor forward at 1V."""
+        return self.manual_lift_voltage_command(lambda: 1.0).withName("Lift Forward 1V")
+
+    def lift_reverse_cmd(self) -> Command:
+        """Runs the lift motor in reverse at 1V."""
+        return self.manual_lift_voltage_command(lambda: -1.0).withName(
+            "Lift Reverse 1V"
+        )
+
     def deploy_command(self) -> Command:
         """Return a command to deploy the climber."""
         return self.runOnce(
