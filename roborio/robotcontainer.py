@@ -23,6 +23,7 @@ import constants
 from wpimath.geometry import Pose2d, Rotation2d
 
 
+
 class RobotContainer:
     """
     This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -209,8 +210,22 @@ class RobotContainer:
 
         self.driver_xbox.y().whileTrue(self.intake.runForward())
 
-        self.driver_xbox.leftBumper().onTrue(self.climber.deploy_command())
-        self.driver_xbox.leftTrigger().whileTrue(self.climber.stow_command())
+        is_endgame = Trigger(self.shift_tracker.is_endgame)
+        self.driver_xbox.leftBumper().and_(is_endgame).onTrue(
+            self.climber.deploy_command()
+        )
+        self.driver_xbox.leftTrigger().and_(is_endgame).whileTrue(
+            self.climber.stow_command()
+        )
+
+        # POV lift controls only when deployed AND in endgame
+        is_deployed = Trigger(self.climber.is_deployed)
+        self.driver_xbox.povUp().and_(is_deployed).and_(is_endgame).whileTrue(
+            self.climber.lift_forward_cmd()
+        )
+        self.driver_xbox.povDown().and_(is_deployed).and_(is_endgame).whileTrue(
+            self.climber.lift_reverse_cmd()
+        )
 
         self.driver_xbox.rightBumper().whileTrue(
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
