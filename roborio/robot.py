@@ -21,6 +21,14 @@ class FROGBot(commands2.TimedCommandRobot):
         wpilib.DataLogManager.start()
         DriverStation.startDataLog(wpilib.DataLogManager.getLog(), True)
 
+        try:
+            import version
+
+            wpilib.DataLogManager.log(f"CODE_VERSION: {version.VERSION_STR}")
+            SmartDashboard.putString("Metadata/CodeVersion", version.VERSION_STR)
+        except ImportError:
+            wpilib.DataLogManager.log("CODE_VERSION: No version info found")
+
         SignalLogger.enable_auto_logging(True)
         SignalLogger.start()
 

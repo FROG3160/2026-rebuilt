@@ -167,12 +167,12 @@ kWheelBaseMeters = inchesToMeters(19.75)  # 0.5
 kMaxMetersPerSecond = feetToMeters(16)  # 16 feet per second
 kMaxChassisRadiansPerSec = 2 * math.tau  # revolutions per sec * tau
 
-kProfiledRotationMaxVelocity = kMaxChassisRadiansPerSec
+kProfiledRotationMaxVelocity = kMaxChassisRadiansPerSec * 2
 kProfiledRotationMaxAccel = (
-    kMaxChassisRadiansPerSec * 2
-)  # 2 rotations per second per second
+    kMaxChassisRadiansPerSec * 4
+)  # 4 rotations per second per second
 
-kProfiledRotationP = 0.4
+kProfiledRotationP = 0.6
 kProfiledRotationI = 0.0
 kProfiledRotationD = 0.0
 
