@@ -207,11 +207,7 @@ class RobotContainer:
         # self.driver_xbox.y().whileTrue(self.climber.lift_to_position(7.3))
 
         # Reverse intake and feed motors to empty the hopper (hopper will follow automatically via triggers)
-        self.driver_xbox.x().whileTrue(
-            self.intake.runBackward()
-            .alongWith(self.feeder.runBackward())
-            .withName("Eject All")
-        )
+        self.driver_xbox.x().whileTrue(self.feeder.runBackward().withName("Unjam"))
 
         self.driver_xbox.leftTrigger().whileTrue(self.intake.runForward())
 
