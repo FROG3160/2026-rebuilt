@@ -80,6 +80,14 @@ class Intake(FROGSubsystem):
             self._run_intake_motor_backward, self._stop_intake_motor
         ).withName("Intake Backward")
 
+    def stop(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
+        return self.runOnce(self._stop_intake_motor)
+
     # Alternative style using run() + explicit stop condition (if you prefer)
     # This version keeps running the execute lambda every loop until interrupted
     def runForwardContinuous(self):
