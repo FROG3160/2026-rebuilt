@@ -1,5 +1,6 @@
 from pathplannerlib.auto import NamedCommands, AutoBuilder
 from pathplannerlib.path import PathConstraints, PathPlannerPath
+from wpilib import SmartDashboard
 
 from subsystems.climber import Climber
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
@@ -15,8 +16,10 @@ from FROGlib.subsystem import Direction
 from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger
 from commands2.button import Trigger
-from commands2 import StartEndCommand, cmd, DeferredCommand
+from commands2 import Command, StartEndCommand, cmd, DeferredCommand
+from typing import Optional, Callable
 import constants
+
 from wpimath.geometry import Pose2d, Rotation2d
 
 
@@ -66,8 +69,8 @@ class RobotContainer:
         )
 
         # Set up PathPlanner autos and publish to dashboard
-        # self.autochooser = AutoBuilder.buildAutoChooser()
-        # SmartDashboard.putData("Auto Chooser", self.autochooser)
+        self.auto_chooser = AutoBuilder.buildAutoChooser()
+        SmartDashboard.putData("Auto Chooser", self.auto_chooser)
 
     def get_pathfinding_command(self):
         """Returns a command to pathfind to a scoring position based on the robot's location."""
@@ -83,6 +86,66 @@ class RobotContainer:
             return AutoBuilder.pathfindThenFollowPath(path, constraints)
 
         return cmd.none()
+
+    def get_firing_command_group(
+        self, target_supplier: Optional[Callable[[], Optional[Pose2d]]] = None
+    ) -> Command:
+        """Returns the full sequence for deploying hood, spinning up, and feeding.
+        If target_supplier is provided, it will also update the distance calculation
+        every loop and override the drive rotation feedback (useful for Auto).
+        """
+        # Command to update distance every loop. We don't add Drive requirement
+        # here so it can run alongside manual drive or paths.
+        update_dist_cmd = cmd.none()
+        if target_supplier:
+            update_dist_cmd = cmd.run(
+                lambda: (
+                    self.drive.getMotionAdjustedTarget(target)
+                    if (target := target_supplier())
+                    else None
+                )
+            )
+
+        firing_sequence = cmd.sequence(
+            cmd.runOnce(self.shooter.deploy_hood),
+            cmd.waitUntil(self.shooter.is_hood_deployed),
+            self.shooter.cmd_fire_with_distance().alongWith(
+                cmd.waitUntil(self.shooter.is_at_speed).andThen(
+                    self.feeder.runForward()
+                )
+            ),
+        )
+
+        # For the rotation override (used during autonomous paths)
+        def get_vT_supplier():
+            if target_supplier:
+                if target := target_supplier():
+                    return self.drive.calculate_vT_to_target(target)
+            return 0.0
+
+        return (
+            firing_sequence.alongWith(update_dist_cmd)
+            .beforeStarting(
+                lambda: (
+                    self.drive.holonomic_drive_ctrl.overrideRotationFeedback(
+                        get_vT_supplier
+                    )
+                    if target_supplier
+                    else None
+                )
+            )
+            .finallyDo(
+                lambda interrupted: (
+                    self.shooter.retract_hood(),
+                    (
+                        self.drive.holonomic_drive_ctrl.clearRotationFeedbackOverride()
+                        if target_supplier
+                        else None
+                    ),
+                )
+            )
+            .withName("Firing Group")
+        )
 
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
@@ -143,10 +206,24 @@ class RobotContainer:
             .withName("Eject All")
         )
 
-        self.driver_xbox.y().whileTrue(self.intake.runForward())
+        self.driver_xbox.leftTrigger().whileTrue(self.intake.runForward())
 
-        self.driver_xbox.leftBumper().onTrue(self.climber.deploy_command())
-        self.driver_xbox.leftTrigger().whileTrue(self.climber.stow_command())
+        is_endgame = Trigger(self.shift_tracker.is_endgame)
+        self.driver_xbox.leftBumper().and_(is_endgame).onTrue(
+            self.climber.deploy_command()
+        )
+        # self.driver_xbox.leftTrigger().and_(is_endgame).whileTrue(
+        #     self.climber.stow_command()
+        # )
+
+        # POV lift controls only when deployed AND in endgame
+        is_deployed = Trigger(self.climber.is_deployed)
+        self.driver_xbox.povUp().and_(is_deployed).and_(is_endgame).whileTrue(
+            self.climber.lift_forward_cmd()
+        )
+        self.driver_xbox.povDown().and_(is_deployed).and_(is_endgame).whileTrue(
+            self.climber.lift_reverse_cmd()
+        )
 
         self.driver_xbox.rightBumper().whileTrue(
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
@@ -160,8 +237,9 @@ class RobotContainer:
     def register_named_commands(self) -> None:
         """Register named commands for use in autonomous routines."""
         # Register named commands
-        # NamedCommands.registerCommand("shoot", ShootCommand(self.shooter))
-        pass
+        NamedCommands.registerCommand(
+            "Fire", self.get_firing_command_group(self.field_zones.get_aim_target)
+        )
 
     def configureSysIDFeederButtonBindings(self) -> None:
         """Configure button bindings for Feeder SysId routine tests."""

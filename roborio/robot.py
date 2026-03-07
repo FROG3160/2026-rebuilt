@@ -48,8 +48,17 @@ class FROGBot(commands2.TimedCommandRobot):
             self.container.driver_xbox.set_alliance(self.alliance)
 
     def autonomousInit(self):
-
         self.container.drive.enable()
+        self.autonomous_command = self.container.auto_chooser.getSelected()
+        if self.autonomous_command:
+            self.autonomous_command.schedule()
+
+    def autonomousPeriodic(self):
+        pass
+
+    def autonomousExit(self):
+        if self.autonomous_command:
+            self.autonomous_command.cancel()
 
     def teleopInit(self) -> None:
         self.setAlliance()
@@ -85,4 +94,4 @@ class FROGBot(commands2.TimedCommandRobot):
         # Publish power and battery data
         SmartDashboard.putNumber("Power/TotalCurrent", self.pdh.getTotalCurrent())
         SmartDashboard.putNumber("Power/BatteryVoltage", self.pdh.getVoltage())
-        SmartDashboard.putNumber("Power/ShooterCurrent", self.pdh.getCurrent(constants.kShooterPDHChannel))
+        # SmartDashboard.putNumber("Power/ShooterCurrent", self.pdh.getCurrent(constants.kShooterPDHChannel))

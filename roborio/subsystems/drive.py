@@ -34,6 +34,7 @@ from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from pathplannerlib.path import PathPlannerPath
+from pathplannerlib.telemetry import PPLibTelemetry
 from photonlibpy.estimatedRobotPose import EstimatedRobotPose
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from FROGlib.swerve import SwerveModuleConfig
@@ -425,6 +426,16 @@ class Drive(FROGSubsystem, SwerveChassis):
     def get_distance_to_target(self):
         return self._distance_to_target
 
+    def calculate_vT_to_target(self, target: Pose2d) -> float:
+        """Calculates the required rotational velocity to face the given target,
+        adjusted for robot motion.
+        """
+        new_target = self.getMotionAdjustedTarget(target)
+        return self.profiledRotationController.calculate(
+            self.getRotation2d().radians(),
+            self.calculateHeadingToTarget(new_target),
+        )
+
     def getPathPlannerPath(self, pathname: str) -> PathPlannerPath:
         return PathPlannerPath.fromPathFile(pathname)
 
@@ -440,6 +451,8 @@ class Drive(FROGSubsystem, SwerveChassis):
         )
         # updates field2d object with the latest estimated pose
         self.estimator_field.setRobotPose(self.swerve_estimator_pose)
+
+        PPLibTelemetry.setCurrentPose(self.swerve_estimator_pose)
 
         # update estimator with photonvision estimates
         for estimator in self.photon_estimators:

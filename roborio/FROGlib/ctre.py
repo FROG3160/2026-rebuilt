@@ -7,7 +7,11 @@ from phoenix6.configs.cancoder_configs import (
     MagnetSensorConfigs,
     SensorDirectionValue,
 )
-from phoenix6.configs.talon_fx_configs import TalonFXConfiguration, MotorOutputConfigs
+from phoenix6.configs.talon_fx_configs import (
+    TalonFXConfiguration,
+    MotorOutputConfigs,
+    CurrentLimitsConfigs,
+)
 from phoenix6.hardware.cancoder import CANcoder
 from phoenix6.hardware.pigeon2 import Pigeon2
 from phoenix6.hardware.talon_fx import TalonFX
@@ -201,6 +205,13 @@ class FROGTalonFXConfig(TalonFXConfiguration):
         self.motor_name = motor_name
         self.parent_nt = parent_nt
         super().__init__()
+        self.current_limits = (
+            CurrentLimitsConfigs()
+            .with_supply_current_limit(40)
+            .with_supply_current_limit_enable(True)
+            .with_stator_current_limit(60)
+            .with_stator_current_limit_enable(True)
+        )
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -305,18 +316,22 @@ class FROGTalonFX(TalonFX):
         velocity = abs(self.get_rotor_velocity().value)
         return stator_current > current_threshold and velocity < velocity_threshold
 
-    def simulation_init(self, plant, gearbox, measurement_std_devs=None):
+    def simulation_init(
+        self, plant, gearbox, measurement_std_devs=None, invert_sim=False
+    ):
         """Initialize physics-based simulation for this motor.
 
         Args:
             plant: LinearSystemId plant (e.g., DCMotorSystem)
             gearbox: DCMotor object
             measurement_std_devs: List of [pos_std, vel_std] for noise, defaults to [0.0, 0.0]
+            invert_sim (bool): Whether to invert the simulation state relative to voltage.
         """
         if measurement_std_devs is None:
             measurement_std_devs = [0.0, 0.0]
         self.physim = DCMotorSim(plant, gearbox, np.array(measurement_std_devs))
         self.physim.setState(0.0, 0.0)
+        self.invert_sim = invert_sim
 
     def simulation_update(
         self,
@@ -347,6 +362,11 @@ class FROGTalonFX(TalonFX):
             self.physim.update(dt)
             pos_rot = self.physim.getAngularPositionRotations()
             vel_rps = radiansToRotations(self.physim.getAngularVelocity())
+
+            if self.invert_sim:
+                pos_rot = -pos_rot
+                vel_rps = -vel_rps
+
             self.sim_state.set_raw_rotor_position(pos_rot)
             self.sim_state.set_rotor_velocity(vel_rps)
             if coupled_motors:

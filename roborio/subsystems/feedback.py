@@ -170,6 +170,10 @@ class ShiftTracker(FROGSubsystem):
     def current_shift_number_telem(self) -> int:
         return self.current_shift_number
 
+    def is_endgame(self) -> bool:
+        """Returns True if the match is in the endgame period (last 30s)"""
+        return self.current_shift_number == 5
+
 
 from typing import Callable, Optional
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
