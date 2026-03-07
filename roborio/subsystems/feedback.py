@@ -174,6 +174,16 @@ class ShiftTracker(FROGSubsystem):
         """Returns True if the match is in the endgame period (last 30s)"""
         return self.current_shift_number == 5
 
+    def is_shift_ending_soon(self) -> bool:
+        """Returns True if the current shift has between 4.5 and 5.0 seconds remaining.
+        This is intended to be used for a one-shot rumble notification.
+        """
+        # Only rumble for alliance shifts (1-4), not transition (0) or endgame (5)
+        if 1 <= self.current_shift_number <= 4:
+            time_left = self.time_remaining_in_current_shift()
+            return 4.5 <= time_left <= 5.0
+        return False
+
 
 from typing import Callable, Optional
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d

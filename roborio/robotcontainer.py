@@ -163,6 +163,13 @@ class RobotContainer:
             self.intake.runForward()
         )
 
+        # Rumble driver controller when shift is ending soon (5s left)
+        Trigger(self.shift_tracker.is_shift_ending_soon).onTrue(
+            cmd.startEnd(self.driver_xbox.leftRumble, self.driver_xbox.stopLeftRumble)
+            .withTimeout(0.5)
+            .ignoringDisable(True)
+        )
+
     def configure_xbox_bindings(self) -> None:
         """Configure button bindings for the xboxcontrollers."""
         self.configure_driver_controls()
