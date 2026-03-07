@@ -34,7 +34,7 @@ class RobotContainer:
     def __init__(self):
         self.alliance = None
 
-        self.climber = Climber()
+        # self.climber = Climber()
         self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
         self.drive = Drive()
         self.intake = Intake()
@@ -215,22 +215,22 @@ class RobotContainer:
 
         self.driver_xbox.leftTrigger().whileTrue(self.intake.runForward())
 
-        is_endgame = Trigger(self.shift_tracker.is_endgame)
-        self.driver_xbox.leftBumper().and_(is_endgame).onTrue(
-            self.climber.deploy_command()
-        )
+        # is_endgame = Trigger(self.shift_tracker.is_endgame)
+        # self.driver_xbox.leftBumper().and_(is_endgame).onTrue(
+        #     self.climber.deploy_command()
+        # )
         # self.driver_xbox.leftTrigger().and_(is_endgame).whileTrue(
         #     self.climber.stow_command()
         # )
 
         # POV lift controls only when deployed AND in endgame
-        is_deployed = Trigger(self.climber.is_deployed)
-        self.driver_xbox.povUp().and_(is_deployed).and_(is_endgame).whileTrue(
-            self.climber.lift_forward_cmd()
-        )
-        self.driver_xbox.povDown().and_(is_deployed).and_(is_endgame).whileTrue(
-            self.climber.lift_reverse_cmd()
-        )
+        # is_deployed = Trigger(self.climber.is_deployed)
+        # self.driver_xbox.povUp().and_(is_deployed).and_(is_endgame).whileTrue(
+        #     self.climber.lift_forward_cmd()
+        # )
+        # self.driver_xbox.povDown().and_(is_deployed).and_(is_endgame).whileTrue(
+        #     self.climber.lift_reverse_cmd()
+        # )
 
         self.driver_xbox.rightBumper().whileTrue(
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
@@ -282,25 +282,25 @@ class RobotContainer:
         self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
         self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
-    def configureSysIDClimberButtonBindings(self) -> None:
-        """Configure button bindings for Climber SysId routine tests."""
-        # Deploy routines on A/B/X/Y
-        self.driver_xbox.a().whileTrue(
-            self.climber.sysIdQuasistaticDeploy(SysIdRoutine.Direction.kForward)
-        )
-        self.driver_xbox.b().whileTrue(
-            self.climber.sysIdQuasistaticDeploy(SysIdRoutine.Direction.kReverse)
-        )
-        self.driver_xbox.x().whileTrue(
-            self.climber.sysIdDynamicDeploy(SysIdRoutine.Direction.kForward)
-        )
-        self.driver_xbox.y().whileTrue(
-            self.climber.sysIdDynamicDeploy(SysIdRoutine.Direction.kReverse)
-        )
-        # Lift routines on triggers maybe? Or just keep it separate.
-        # Let's put lift on D-pad for now if needed, but usually we do one mechanism at a time.
-        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
-        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
+    # def configureSysIDClimberButtonBindings(self) -> None:
+    #     """Configure button bindings for Climber SysId routine tests."""
+    #     # Deploy routines on A/B/X/Y
+    #     self.driver_xbox.a().whileTrue(
+    #         self.climber.sysIdQuasistaticDeploy(SysIdRoutine.Direction.kForward)
+    #     )
+    #     self.driver_xbox.b().whileTrue(
+    #         self.climber.sysIdQuasistaticDeploy(SysIdRoutine.Direction.kReverse)
+    #     )
+    #     self.driver_xbox.x().whileTrue(
+    #         self.climber.sysIdDynamicDeploy(SysIdRoutine.Direction.kForward)
+    #     )
+    #     self.driver_xbox.y().whileTrue(
+    #         self.climber.sysIdDynamicDeploy(SysIdRoutine.Direction.kReverse)
+    #     )
+    #     # Lift routines on triggers maybe? Or just keep it separate.
+    #     # Let's put lift on D-pad for now if needed, but usually we do one mechanism at a time.
+    #     self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
+    #     self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
     def configureSysIDButtonBindings(self) -> None:
         """Configure button bindings for SysId routine tests."""
@@ -359,16 +359,16 @@ class RobotContainer:
 
         # Climber Manual Controls (Test Mode)
         # Deploy on D-Pad (POV)
-        self.driver_xbox.povUp().whileTrue(
-            self.climber.manual_deploy_voltage_command(1.5).withName(
-                "Manual Climber Deploy"
-            )
-        )
-        self.driver_xbox.povDown().whileTrue(
-            self.climber.manual_deploy_voltage_command(-1.5).withName(
-                "Manual ClimberRetract"
-            )
-        )
+        # self.driver_xbox.povUp().whileTrue(
+        #     self.climber.manual_deploy_voltage_command(1.5).withName(
+        #         "Manual Climber Deploy"
+        #     )
+        # )
+        # self.driver_xbox.povDown().whileTrue(
+        #     self.climber.manual_deploy_voltage_command(-1.5).withName(
+        #         "Manual ClimberRetract"
+        #     )
+        # )
 
         # Lift on Right Stick Y axis
         # Assuming the right stick Y value is positive when pushed down,
@@ -386,8 +386,8 @@ class RobotContainer:
         right_stick_active = Trigger(
             lambda: abs(self.driver_xbox.getRightY()) > constants.kDeadband
         )
-        right_stick_active.whileTrue(
-            self.climber.manual_lift_voltage_command(get_lift_voltage).withName(
-                "Manual Lift"
-            )
-        )
+        # right_stick_active.whileTrue(
+        #     self.climber.manual_lift_voltage_command(get_lift_voltage).withName(
+        #         "Manual Lift"
+        #     )
+        # )
