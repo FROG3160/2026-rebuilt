@@ -169,10 +169,10 @@ kMaxChassisRadiansPerSec = 2 * math.tau  # revolutions per sec * tau
 
 kProfiledRotationMaxVelocity = kMaxChassisRadiansPerSec
 kProfiledRotationMaxAccel = (
-    kMaxChassisRadiansPerSec * 2
-)  # 2 rotations per second per second
+    kMaxChassisRadiansPerSec * 4
+)  # 4 rotations per second per second
 
-kProfiledRotationP = 0.4
+kProfiledRotationP = 0.8
 kProfiledRotationI = 0.0
 kProfiledRotationD = 0.0
 
