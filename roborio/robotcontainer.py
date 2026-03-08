@@ -243,6 +243,8 @@ class RobotContainer:
         NamedCommands.registerCommand(
             "Fire", self.get_firing_command_group(self.field_zones.get_aim_target)
         )
+        NamedCommands.registerCommand("Intake", self.intake.runForward())
+        NamedCommands.registerCommand("Stop Intake", self.intake.stop())
 
     def configureSysIDFeederButtonBindings(self) -> None:
         """Configure button bindings for Feeder SysId routine tests."""
