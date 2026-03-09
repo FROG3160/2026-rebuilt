@@ -2,6 +2,11 @@
     "terminal.integrated.automationProfile.windows": {
         "env": {"VIRTUAL_ENV": "${workspaceFolder}/.venv"}
     },
+    "python.analysis.extraPaths": [
+        "./circuitpy-stubs"
+    ],
+    "python.defaultInterpreterPath": ".\\.venv\\Scripts\\python.exe",
+
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,
