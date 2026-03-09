@@ -57,6 +57,20 @@ All robot data is organized under the `FROGSubsystems` NetworkTable root. This s
 - Python 3.12+
 - [RobotPy](https://robotpy.readthedocs.io/en/stable/install/index.html)
 
+### Repository Setup & Git Hooks
+
+To ensure that version metadata is correctly logged, you should install the provided git hooks. These hooks automatically run `generate_version.py` after every commit and checkout.
+
+1.  **Install the hooks**:
+    ```powershell
+    .\.venv\Scripts\python.exe install_hooks.py
+    ```
+
+2.  **Manual Version Generation** (if needed):
+    ```powershell
+    .\.venv\Scripts\python.exe generate_version.py
+    ```
+
 ### Running Tests
 ```powershell
 # From the project root
