@@ -220,3 +220,4 @@ background_agent.py
 roborio/logs/
 GEMINI.md
 roborio/version.py
+circuitpy-stubs/
