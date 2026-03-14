@@ -12,7 +12,12 @@
 		"ms-python.python",
 		"ms-python.debugpy",
 		"donjayamanne.python-environment-manager",
-		"actboy168.tasks"
+		"actboy168.tasks",
+		"charliermarsh.ruff",
+		"ms-python.mypy-type-checker",
+		"usernamehw.errorlens",
+		"tamasfe.even-better-toml",
+		"eamodio.gitlens"
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": [
