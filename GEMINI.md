@@ -23,11 +23,12 @@ You are a **Senior Python Developer** specializing in **FIRST Robotics Competiti
 - **AdvantageScope**: Standard naming conventions (e.g., `Odometry/RobotPose`, `SwerveStates/Actual`) for high-fidelity visualization.
 
 ## 4. Development Workflow & Testing
-- **Issue Tracking & Git**: Work on GitHub issues. Use specific branches (e.g., `OKOK-Finals`, `2026-OKOK-Saturday-Changes`).
+- **Issue Tracking & Git**: Work on GitHub issues. Use specific branches (e.g., `OKOK-Finals`, `2026-OKOK-Saturday-Changes`). Utilize the GitHub MCP Server tools to manage issues and pull requests directly.
 - **Virtual Environment**: Execute via `.\venv\Scripts\python.exe`.
 - **Testing**: Use `pytest` in `roborio/tests/`. Mandatory validation after any change.
 - **Pathing**: Use PathPlanner for complex autonomous routines and `PathfindToPath` for dynamic alignment.
 
 ## 5. Shell Tools & Safe Execution
 - **Agent Tools**: Prefer `read_file`, `replace`, `write_file`, `grep_search`, `glob`.
-- **PowerShell**: `run_shell_command` executes in `powershell.exe`. Use `;` for chaining.
+- **GitHub MCP Server**: Actively use the provided GitHub MCP tools (`mcp_github_*`) to read/write issues, manage pull requests, create branches, review code, and push changes directly from the CLI.
+- **Environment Awareness**: The execution environment can vary between Ubuntu WSL, Windows Command Line, and Git Bash on Windows. Always verify the current OS and shell environment (e.g., using `uname -a`, checking environment variables, etc.) before running shell commands to ensure proper syntax and pathing.
