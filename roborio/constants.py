@@ -58,6 +58,11 @@ kVoltageDriveA = 0.14705  # 0.027631
 
 # intake gains
 kVoltageIntakeS = 0.12
+kIntakeV = 0.0  # V/(m/s) feedforward - set to 0.0 until characterized with SysId
+kIntakeP = 0.0  # velocity PID proportional gain - set to 0.0 until characterized with SysId
+kIntakeMinSpeed = 1.0  # m/s - minimum intake surface speed floor
+kIntakeSpeedMultiplier = 1.5  # intake speed = max(min, robot_speed * multiplier)
+kIntakeReverseSpeed = 2.0  # m/s - fixed reverse speed for ejecting
 
 # hopper gains
 kVoltageHopperS = 0.12

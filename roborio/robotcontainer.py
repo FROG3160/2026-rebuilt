@@ -37,7 +37,7 @@ class RobotContainer:
         # self.climber = Climber()
         self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
         self.drive = Drive()
-        self.intake = Intake()
+        self.intake = Intake(self.drive.get_linear_speed)
         self.hopper = Hopper()
         self.shooter = Shooter(self.drive.get_distance_to_target)
         self.feeder = Feeder()

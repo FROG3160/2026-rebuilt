@@ -426,6 +426,10 @@ class Drive(FROGSubsystem, SwerveChassis):
     def get_distance_to_target(self):
         return self._distance_to_target
 
+    def get_linear_speed(self) -> float:
+        """Returns the robot's current linear speed in m/s (magnitude of vx/vy)."""
+        return math.sqrt(self.chassisSpeeds.vx**2 + self.chassisSpeeds.vy**2)
+
     def calculate_vT_to_target(self, target: Pose2d) -> float:
         """Calculates the required rotational velocity to face the given target,
         adjusted for robot motion.
