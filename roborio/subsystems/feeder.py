@@ -39,7 +39,7 @@ feed_motor_config = FROGTalonFXConfig(
     can_bus="rio",
     parent_nt=f"{constants.kComponentSubtableName}/Feeder",
     motor_output=MOTOR_OUTPUT_CWP_COAST,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=5.0),
+    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=11.5425),
     slot0=feed_velocity_slot,
     # slot1=feed_position_slot,
 )
@@ -57,7 +57,7 @@ class Feeder(FROGSubsystem):
             ).with_motor_name("Feed Motor"),
             signal_profile=FROGTalonFX.SignalProfile.BASIC,
         )
-        self._feed_velocity = 20.0 / 3  # rotations per second
+        self._feed_velocity = 4.81  # m/s
         self._back_off_target = 0.0
 
         # Set up SysID routine for the feeder
@@ -142,7 +142,7 @@ class Feeder(FROGSubsystem):
         battery_v = wpilib.RobotController.getBatteryVoltage()
         self.motor.simulation_update(dt, battery_v)
 
-    @FROGSubsystem.tunable(20.0 / 3, "Commanded Velocity")
+    @FROGSubsystem.tunable(4.81, "Commanded Velocity")
     def feed_velocity_tunable(self, val):
         self._feed_velocity = val
 
