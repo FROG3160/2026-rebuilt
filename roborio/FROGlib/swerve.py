@@ -326,9 +326,7 @@ class SwerveChassis:
                     for x in self.modules
                 ]
             ),
-            Pose2d(),  # TODO:  Determine if we want vision data to supply initial pose
-            # last year, setFieldPosition was called and passed the vision pose during
-            # robotInit()
+            Pose2d(),  # Initial pose set to empty by design; vision initialization handled separately if needed.
         )
 
         # Swerve Characteristics

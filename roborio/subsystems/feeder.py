@@ -25,23 +25,12 @@ feed_velocity_slot = FROGSlotConfig(
     k_d=constants.kFeedVelocityD,
 )
 
-# TODO #67: get position control running again.
-# Slot 1: position control for back-off move
-# feed_position_slot = FROGSlotConfig(
-#     k_s=constants.kFeedS,
-#     k_v=constants.kFeedV,
-#     k_p=constants.kFeedPositionP,
-#     k_i=constants.kFeedPositionI,
-#     k_d=constants.kFeedPositionD,
-# )
-
 feed_motor_config = FROGTalonFXConfig(
     can_bus="rio",
     parent_nt=f"{constants.kComponentSubtableName}/Feeder",
     motor_output=MOTOR_OUTPUT_CWP_COAST,
     feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=11.5425),
     slot0=feed_velocity_slot,
-    # slot1=feed_position_slot,
 )
 
 kBackOffRotations = 0.15  # rotations to retract from flywheel

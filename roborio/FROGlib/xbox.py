@@ -4,8 +4,6 @@ from wpilib.event import EventLoop
 from commands2.button import CommandXboxController, Trigger
 from commands2 import CommandScheduler
 from typing import Optional
-
-# from commands2.button import CommandXboxController
 from wpimath.filter import SlewRateLimiter
 from wpimath import applyDeadband
 from wpilib.interfaces import GenericHID

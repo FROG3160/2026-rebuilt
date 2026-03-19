@@ -251,7 +251,6 @@ class FieldZones(FROGSubsystem):
         self.status = "Clear"
 
         self.field = field
-        # self._setup_field2d_zones()
 
     def _setup_field2d_zones(self):
         for i, zone in enumerate(self.NO_SHOOT_ZONES):

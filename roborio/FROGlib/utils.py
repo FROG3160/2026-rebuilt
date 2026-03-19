@@ -234,16 +234,3 @@ class DriveTrain:
         wheel_rotations = self.output_rotations(rotations)
         return wheel_rotations * self.circumference
 
-
-# from robotpy_apriltag import loadAprilTagLayoutField, AprilTagField
-# from wpimath.geometry import Pose3d, Rotation3d
-
-# field = loadAprilTagLayoutField(AprilTagField.k2024Crescendo)
-# field.setOrigin(field.OriginPosition.kBlueAllianceWallRightSide)
-# robotPose = Pose3d(14, 5, 0.04, Rotation3d(0, 0, 0))
-# tagPose = field.getTagPose(5)
-# test = robotPose - tagPose 
-# isBlueAlliance = True
-# rrt = RobotRelativeTarget(robotPose, tagPose, isBlueAlliance)
-
-pass

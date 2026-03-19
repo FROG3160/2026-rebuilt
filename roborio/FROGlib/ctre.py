@@ -388,7 +388,6 @@ class FROGTalonFX(TalonFX):
             self.sim_state.add_rotor_position(position_change)
 
 
-# TODO: #7 Refactor gyro class as a subclass of Pigeon2
 class FROGPigeonGyro(Pigeon2):
     "Gyro class that creates an instance of the Pigeon 2.0 Gyro"
 

@@ -98,7 +98,6 @@ kFeedA = 0.1092
 kFeedVelocityP = 0.0  # velocity PID
 kFeedVelocityI = 0.0
 kFeedVelocityD = 0.0
-# TODO: #66 Test Position PID for feeder if we want to use it for backoff command
 kFeedPositionP = 9.9692
 kFeedPositionI = 0.0
 kFeedPositionD = 0.62293

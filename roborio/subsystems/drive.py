@@ -53,7 +53,6 @@ from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from copy import deepcopy
 from FROGlib.subsystem import FROGSubsystem
 
-# TODO: #3 Switch gear_stages to correct swerve module gearing when available
 drivetrain = DriveTrain(gear_stages=MK5I_R3_GEARING, wheel_diameter=WHEEL_DIAMETER)
 
 drive_slot0 = FROGSlotConfig(
@@ -460,7 +459,6 @@ class Drive(FROGSubsystem, SwerveChassis):
 
         # update estimator with photonvision estimates
         for estimator in self.photon_estimators:
-            # TODO: #20 pass in swerve estimator pose and move the distance check into FROGPoseEstimator
             if RobotBase.isSimulation():
                 vision_estimated_pose = self.simulateEstimatedPose()
             else:

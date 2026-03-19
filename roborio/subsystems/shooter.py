@@ -3,7 +3,7 @@ from commands2 import Command
 from wpimath.units import inchesToMeters, volts
 from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6.hardware import TalonFX
-from phoenix6.configs import MotionMagicConfigs, SoftwareLimitSwitchConfigs
+from phoenix6.configs import MotionMagicConfigs
 from FROGlib.ctre import (
     MOTOR_OUTPUT_CWP_BRAKE,
     FROGSlotConfig,
@@ -73,13 +73,6 @@ hood_motor_config = FROGTalonFXConfig(
     motion_magic=hood_motion_magic_config,
     slot0=hood_slot0,
 )
-# hood_software_limits = (
-#     SoftwareLimitSwitchConfigs()
-#     .with_forward_soft_limit_threshold(constants.kHoodForwardLimit)
-#     .with_reverse_soft_limit_threshold(constants.kHoodReverseLimit)
-#     .with_forward_soft_limit_enable(True)
-#     .with_forward_soft_limit_enable(True)
-# )
 
 
 from typing import Callable, Optional
@@ -192,7 +185,7 @@ class Shooter(FROGSubsystem):
         (Distance, Speed) points: (2.06, 17.65), (2.2, 18.15), (2.89, 19.85), (3.57, 21.4), (5.05, 23.76)
         """
         if distance := self.distance_to_target_supplier():
-            # TODO: Differentiate between Hub and Floor targets based on field zones or aim state.
+            # TODO: Differentiate flywheel speed between Hub and Floor targets based on field zone or aim state.
             return float(np.interp(distance, self.hub_distances, self.hub_speeds))
         else:
             return None
@@ -229,8 +222,6 @@ class Shooter(FROGSubsystem):
 
     def _set_hood_position(self):
         self.hood_motor.set_position(0)
-        # self.hood_motor.config.software_limit_switch = hood_software_limits
-        # self.hood_motor.configurator.apply(self.hood_motor.config)
 
     def zero_hood_cmd(self) -> Command:
         """Drive the hood slowly into its reverse hard stop, zero the position sensor, then stop."""
