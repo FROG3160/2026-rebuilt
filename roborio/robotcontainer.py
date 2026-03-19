@@ -34,7 +34,6 @@ class RobotContainer:
     def __init__(self):
         self.alliance = None
 
-        # self.climber = Climber()
         self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
         self.drive = Drive()
         self.intake = Intake(self.drive.get_linear_speed)
@@ -204,29 +203,11 @@ class RobotContainer:
         self.driver_xbox.start().onTrue(
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
-        # self.driver_xbox.y().whileTrue(self.climber.lift_to_position_cmd(7.3))
 
         # Reverse intake and feed motors to empty the hopper (hopper will follow automatically via triggers)
         self.driver_xbox.x().whileTrue(self.feeder.run_backward_cmd().withName("Unjam"))
 
         self.driver_xbox.leftTrigger().whileTrue(self.intake.run_forward_cmd())
-
-        # is_endgame = Trigger(self.shift_tracker.is_endgame)
-        # self.driver_xbox.leftBumper().and_(is_endgame).onTrue(
-        #     self.climber.deploy_cmd()
-        # )
-        # self.driver_xbox.leftTrigger().and_(is_endgame).whileTrue(
-        #     self.climber.stow_cmd()
-        # )
-
-        # POV lift controls only when deployed AND in endgame
-        # is_deployed = Trigger(self.climber.is_deployed)
-        # self.driver_xbox.povUp().and_(is_deployed).and_(is_endgame).whileTrue(
-        #     self.climber.lift_forward_cmd()
-        # )
-        # self.driver_xbox.povDown().and_(is_deployed).and_(is_endgame).whileTrue(
-        #     self.climber.lift_reverse_cmd()
-        # )
 
         self.driver_xbox.rightBumper().whileTrue(
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
@@ -279,26 +260,6 @@ class RobotContainer:
         )
         self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
         self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
-
-    # def configureSysIDClimberButtonBindings(self) -> None:
-    #     """Configure button bindings for Climber SysId routine tests."""
-    #     # Deploy routines on A/B/X/Y
-    #     self.driver_xbox.a().whileTrue(
-    #         self.climber.sysIdQuasistaticDeploy(SysIdRoutine.Direction.kForward)
-    #     )
-    #     self.driver_xbox.b().whileTrue(
-    #         self.climber.sysIdQuasistaticDeploy(SysIdRoutine.Direction.kReverse)
-    #     )
-    #     self.driver_xbox.x().whileTrue(
-    #         self.climber.sysIdDynamicDeploy(SysIdRoutine.Direction.kForward)
-    #     )
-    #     self.driver_xbox.y().whileTrue(
-    #         self.climber.sysIdDynamicDeploy(SysIdRoutine.Direction.kReverse)
-    #     )
-    #     # Lift routines on triggers maybe? Or just keep it separate.
-    #     # Let's put lift on D-pad for now if needed, but usually we do one mechanism at a time.
-    #     self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
-    #     self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
     def configureSysIDButtonBindings(self) -> None:
         """Configure button bindings for SysId routine tests."""
@@ -354,38 +315,3 @@ class RobotContainer:
                 self.shooter._stop_flywheel,
             ).withName("Run Flywheel")
         )
-
-        # Climber Manual Controls (Test Mode)
-        # Deploy on D-Pad (POV)
-        # self.driver_xbox.povUp().whileTrue(
-        #     self.climber.manual_deploy_voltage_cmd(1.5).withName(
-        #         "Manual Climber Deploy"
-        #     )
-        # )
-        # self.driver_xbox.povDown().whileTrue(
-        #     self.climber.manual_deploy_voltage_cmd(-1.5).withName(
-        #         "Manual ClimberRetract"
-        #     )
-        # )
-
-        # Lift on Right Stick Y axis
-        # Assuming the right stick Y value is positive when pushed down,
-        # we negate it and multiply by max voltage (e.g. 12.0)
-        def get_lift_voltage():
-            # Apply deadband manually if FROGXboxDriver doesn't have a direct helper for right stick Y with deadband
-            # Get raw right Y. WPILib XboxController returns negative for up, positive for down.
-            # We want UP to lift (positive voltage), DOWN to lower (negative voltage).
-            raw_y = self.driver_xbox.getRightY()
-            if abs(raw_y) < constants.kDeadband:
-                return 0.0
-            return raw_y * -2.0
-
-        # We need a trigger that evaluates to True when the stick is outside deadband
-        right_stick_active = Trigger(
-            lambda: abs(self.driver_xbox.getRightY()) > constants.kDeadband
-        )
-        # right_stick_active.whileTrue(
-        #     self.climber.manual_lift_voltage_cmd(get_lift_voltage).withName(
-        #         "Manual Lift"
-        #     )
-        # )

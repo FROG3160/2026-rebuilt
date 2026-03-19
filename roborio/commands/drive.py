@@ -35,15 +35,6 @@ class ManualDrive(Command):
         self.velocity_limit_modifier = velocity_limit_modifier if velocity_limit_modifier else lambda v: v
         self.addRequirements(self.drive)
         self.resetController = True
-        # profiledRotationConstraints = TrapezoidProfileRadians.Constraints(
-        #     constants.kProfiledRotationMaxVelocity, constants.kProfiledRotationMaxAccel
-        # )
-        # self.profiledRotationController = ProfiledPIDControllerRadians(
-        #     constants.kProfiledRotationP,
-        #     constants.kProfiledRotationI,
-        #     constants.kProfiledRotationD,
-        #     profiledRotationConstraints,
-        # )
         self.nt_table = f"{table}/{type(self).__name__}"
         self._calculated_vTPub = (
             NetworkTableInstance.getDefault()
@@ -56,11 +47,6 @@ class ManualDrive(Command):
             .publish()
         )
 
-    # def resetRotationController(self):
-    #     self.profiledRotationController.reset(
-    #         self.drive.getRotation2d().radians(),
-    #         self.drive.gyro.getRadiansPerSecCCW(),
-    #     )
 
     def execute(self) -> None:
 
@@ -71,11 +57,6 @@ class ManualDrive(Command):
         
         vT = self.controller.getSlewLimitedFieldRotation() * scalar
         self._rotation_degreesPub.set(driveRotation2d.degrees())
-
-        # pov = self.controller.getPOVDebounced()
-        # if pov != -1:
-        #     vX, vY = povSpeeds[pov]
-        # else:
 
         vX = self.controller.getSlewLimitedFieldForward() * scalar
         vY = self.controller.getSlewLimitedFieldLeft() * scalar
@@ -88,7 +69,6 @@ class ManualDrive(Command):
         vY = limited_velocity.y
 
         self.drive.fieldOrientedDrive(
-            # self._vX, self._vY, self._vT, self._throttle
             vX,
             vY,
             vT,

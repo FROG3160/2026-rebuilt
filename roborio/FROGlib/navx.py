@@ -10,12 +10,9 @@ class FROGNavXGyro:
     moving left as positive."""
 
     def __init__(self):
-        # TODO Make sure if we need this.
         self.gyro = AHRS.create_spi()
         self.starting_angle = 0.0
         self.offset = 0
-        # self.field_heading = 360-242
-        # self.gyro.reset()
         self.gyro.setAngleAdjustment(self.offset)
 
     def getAngleCCW(self):

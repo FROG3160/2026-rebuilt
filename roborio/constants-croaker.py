@@ -86,7 +86,6 @@ kFlywheelA = 0.00002
 
 ## CAN ID assignments
 ########################################
-# TODO: Update these CAN IDs to match the robot
 # Swerve Drive Motor/Encoder IDs
 kFrontLeftDriveID = 11
 kFrontLeftSteerID = 21
