@@ -209,11 +209,12 @@ class Shooter(FROGSubsystem):
     def _stop_flywheel(self):
         self.motor.stopMotor()
 
-    # generate a command to fire
     def fire_with_distance_cmd(self) -> Command:
+        """Spin up the flywheel to a speed interpolated from the current target distance, stopping when interrupted."""
         return self.runEnd(self._apply_speed_by_distance, self._stop_flywheel)
 
     def fire_at_set_speed_cmd(self) -> Command:
+        """Spin up the flywheel to the last commanded speed, stopping when interrupted."""
         return self.runEnd(self._apply_commanded_speed, self._stop_flywheel)
 
     def deploy_hood(self):
@@ -231,7 +232,8 @@ class Shooter(FROGSubsystem):
         # self.hood_motor.config.software_limit_switch = hood_software_limits
         # self.hood_motor.configurator.apply(self.hood_motor.config)
 
-    def zero_hood_cmd(self):
+    def zero_hood_cmd(self) -> Command:
+        """Drive the hood slowly into its reverse hard stop, zero the position sensor, then stop."""
         return (
             self.runOnce(
                 lambda: self.hood_motor.set_control(controls.VoltageOut(-0.18))

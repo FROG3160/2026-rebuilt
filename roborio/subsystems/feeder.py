@@ -113,13 +113,15 @@ class Feeder(FROGSubsystem):
             < kBackOffTolerance
         )
 
-    def run_forward_cmd(self):
+    def run_forward_cmd(self) -> Command:
+        """Run the feeder motor forward at the configured feed velocity, stopping when interrupted."""
         return self.runEnd(self._runForward, self.stop)
 
-    def run_backward_cmd(self):
+    def run_backward_cmd(self) -> Command:
+        """Run the feeder motor backward at the configured feed velocity, stopping when interrupted."""
         return self.runEnd(self._runBackward, self.stop)
 
-    def back_off_cmd(self):
+    def back_off_cmd(self) -> Command:
         """Back the feeder off 0.15 rotations away from the flywheel using position control."""
         return self.runOnce(self._startBackOff).andThen(
             self.run(self._applyBackOff).until(self._atBackOffTarget)
