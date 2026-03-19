@@ -109,9 +109,9 @@ class RobotContainer:
         firing_sequence = cmd.sequence(
             cmd.runOnce(self.shooter.deploy_hood),
             cmd.waitUntil(self.shooter.is_hood_deployed),
-            self.shooter.cmd_fire_with_distance().alongWith(
+            self.shooter.fire_with_distance_cmd().alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                    self.feeder.runForward()
+                    self.feeder.run_forward_cmd()
                 )
             ),
         )
@@ -151,16 +151,16 @@ class RobotContainer:
         """Configure automation bindings for the robot."""
         # The hopper should run forward whenever either the intake OR the feed motors are running forward.
         Trigger(lambda: self.feeder.get_direction() == Direction.FORWARD).whileTrue(
-            self.hopper.runForward()
+            self.hopper.run_forward_cmd()
         )
         # The hopper should run backward whenever either the intake OR the feed motors are running backward.
         Trigger(
             lambda: self.intake.get_direction() == Direction.REVERSE
             or self.feeder.get_direction() == Direction.REVERSE
-        ).whileTrue(self.hopper.runBackward())
+        ).whileTrue(self.hopper.run_backward_cmd())
 
         self.fuel_detector.get_trigger_targets_close().whileTrue(
-            self.intake.runForward()
+            self.intake.run_forward_cmd()
         )
 
         # Rumble driver controller when shift is ending soon (5s left)
@@ -192,9 +192,9 @@ class RobotContainer:
                 cmd.sequence(
                     cmd.runOnce(self.shooter.deploy_hood),
                     cmd.waitUntil(self.shooter.is_hood_deployed),
-                    self.shooter.cmd_fire_with_distance().alongWith(
+                    self.shooter.fire_with_distance_cmd().alongWith(
                         cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                            self.feeder.runForward()
+                            self.feeder.run_forward_cmd()
                         )
                     ),
                 ).finallyDo(lambda interrupted: self.shooter.retract_hood())
@@ -204,19 +204,19 @@ class RobotContainer:
         self.driver_xbox.start().onTrue(
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
-        # self.driver_xbox.y().whileTrue(self.climber.lift_to_position(7.3))
+        # self.driver_xbox.y().whileTrue(self.climber.lift_to_position_cmd(7.3))
 
         # Reverse intake and feed motors to empty the hopper (hopper will follow automatically via triggers)
-        self.driver_xbox.x().whileTrue(self.feeder.runBackward().withName("Unjam"))
+        self.driver_xbox.x().whileTrue(self.feeder.run_backward_cmd().withName("Unjam"))
 
-        self.driver_xbox.leftTrigger().whileTrue(self.intake.runForward())
+        self.driver_xbox.leftTrigger().whileTrue(self.intake.run_forward_cmd())
 
         # is_endgame = Trigger(self.shift_tracker.is_endgame)
         # self.driver_xbox.leftBumper().and_(is_endgame).onTrue(
-        #     self.climber.deploy_command()
+        #     self.climber.deploy_cmd()
         # )
         # self.driver_xbox.leftTrigger().and_(is_endgame).whileTrue(
-        #     self.climber.stow_command()
+        #     self.climber.stow_cmd()
         # )
 
         # POV lift controls only when deployed AND in endgame
@@ -243,8 +243,8 @@ class RobotContainer:
         NamedCommands.registerCommand(
             "Fire", self.get_firing_command_group(self.field_zones.get_aim_target)
         )
-        NamedCommands.registerCommand("Intake", self.intake.runForward())
-        NamedCommands.registerCommand("Stop Intake", self.intake.stop())
+        NamedCommands.registerCommand("Intake", self.intake.run_forward_cmd())
+        NamedCommands.registerCommand("Stop Intake", self.intake.stop_cmd())
 
     def configureSysIDFeederButtonBindings(self) -> None:
         """Configure button bindings for Feeder SysId routine tests."""
@@ -324,26 +324,26 @@ class RobotContainer:
 
         # Intake toggle forward
         self.driver_xbox.a().toggleOnTrue(
-            self.intake.runForward().withName("Toggle Intake Forward")
+            self.intake.run_forward_cmd().withName("Toggle Intake Forward")
         )
 
         # intake reverse toggles
         self.driver_xbox.b().toggleOnTrue(
-            self.intake.runBackward().withName("Toggle Intake Reverse")
+            self.intake.run_backward_cmd().withName("Toggle Intake Reverse")
         )
 
         # Hopper toggles - forward
         self.driver_xbox.x().toggleOnTrue(
-            self.hopper.runForward().withName("Toggle Hopper Forward")
+            self.hopper.run_forward_cmd().withName("Toggle Hopper Forward")
         )
         # reverse
         self.driver_xbox.y().toggleOnTrue(
-            self.hopper.runBackward().withName("Toggle Hopper Reverse")
+            self.hopper.run_backward_cmd().withName("Toggle Hopper Reverse")
         )
 
         # Shooter feed toggle
         self.driver_xbox.leftBumper().toggleOnTrue(
-            self.feeder.runForward().withName("Run Feeder")
+            self.feeder.run_forward_cmd().withName("Run Feeder")
         )
 
         # Flywheel: Using triggers as hold-to-run (common for speed control).
@@ -358,12 +358,12 @@ class RobotContainer:
         # Climber Manual Controls (Test Mode)
         # Deploy on D-Pad (POV)
         # self.driver_xbox.povUp().whileTrue(
-        #     self.climber.manual_deploy_voltage_command(1.5).withName(
+        #     self.climber.manual_deploy_voltage_cmd(1.5).withName(
         #         "Manual Climber Deploy"
         #     )
         # )
         # self.driver_xbox.povDown().whileTrue(
-        #     self.climber.manual_deploy_voltage_command(-1.5).withName(
+        #     self.climber.manual_deploy_voltage_cmd(-1.5).withName(
         #         "Manual ClimberRetract"
         #     )
         # )
@@ -385,7 +385,7 @@ class RobotContainer:
             lambda: abs(self.driver_xbox.getRightY()) > constants.kDeadband
         )
         # right_stick_active.whileTrue(
-        #     self.climber.manual_lift_voltage_command(get_lift_voltage).withName(
+        #     self.climber.manual_lift_voltage_cmd(get_lift_voltage).withName(
         #         "Manual Lift"
         #     )
         # )

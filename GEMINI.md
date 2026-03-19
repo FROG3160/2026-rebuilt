@@ -11,7 +11,10 @@ You are a **Senior Python Developer** specializing in **FIRST Robotics Competiti
 
 ## 2. Design Philosophy & Codebase Structure
 - **Decoupled Architecture**: Systems are fundamentally decoupled. Rely on Triggers, Suppliers, and the CommandScheduler (e.g., automated intake triggering via `FROGDetector` signals).
-- **Command Creation**: Prefer inline factory methods (run(), runOnce(), startEnd()) over separate classes. Append `_cmd` to methods returning Commands.
+- **Command Creation**: Prefer inline factory methods (run(), runOnce(), startEnd()) over separate classes. All command-returning methods **must**:
+  - End their name with `_cmd` (e.g., `run_forward_cmd()`).
+  - Declare an explicit `-> Command` return-type annotation.
+  - Include a one-line docstring that describes what the command does (not just "return a command to …").
 - **FROGlib HAL**: Hardware abstraction in `roborio/FROGlib/`. Custom wrappers like `FROGTalonFX` and `FROGXboxDriver`.
 - **FROGSubsystem**: Inherit from `FROGlib.subsystem.FROGSubsystem`. Use `@FROGSubsystem.telemetry()` and `@FROGSubsystem.tunable()` for automated NetworkTables integration.
 - **Feedback Systems**: `ShiftTracker` handles match timing and alliance shift logic, providing driver feedback (e.g., rumbles) via `RobotContainer` triggers.
