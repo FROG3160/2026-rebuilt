@@ -29,7 +29,7 @@ def test_shooter_fire_command_logic():
     shooter = Shooter(lambda: 3.57)
 
     # Get the command
-    fire_cmd = shooter.cmd_fire_with_distance()
+    fire_cmd = shooter.fire_with_distance_cmd()
 
     # Initialize the command
     fire_cmd.initialize()
@@ -48,7 +48,7 @@ def test_shooter_fire_command_logic():
 def test_shooter_fire_command_no_target():
     """Test behavior when no target is found (None returned)."""
     shooter = Shooter(lambda: None)
-    fire_cmd = shooter.cmd_fire_with_distance()
+    fire_cmd = shooter.fire_with_distance_cmd()
 
     fire_cmd.initialize()
     fire_cmd.execute()
@@ -60,7 +60,7 @@ def test_shooter_fire_command_no_target():
 def test_feeder_run_forward():
     """Test that the feeder command schedules correctly."""
     feeder = Feeder()
-    run_cmd = feeder.runForward()
+    run_cmd = feeder.run_forward_cmd()
 
     # Schedule the command
     CommandScheduler.getInstance().schedule(run_cmd)

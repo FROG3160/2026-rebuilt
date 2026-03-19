@@ -87,19 +87,19 @@ class Intake(FROGSubsystem):
     #          Command Factory Methods
     # ────────────────────────────────────────────────
 
-    def runForward(self):
+    def run_forward_cmd(self):
         """Runs the intake forward, tracking robot speed with a minimum floor."""
         return self.startEnd(
             self._run_intake_motor_forward, self._stop_intake_motor
         ).withName("Intake Forward")
 
-    def runBackward(self):
+    def run_backward_cmd(self):
         """Runs the intake backward (eject/reverse) at fixed speed until interrupted."""
         return self.startEnd(
             self._run_intake_motor_backward, self._stop_intake_motor
         ).withName("Intake Backward")
 
-    def stop(self):
+    def stop_cmd(self):
         """_summary_
 
         Returns:
@@ -109,7 +109,7 @@ class Intake(FROGSubsystem):
 
     # Alternative style using run() + explicit stop condition (if you prefer)
     # This version keeps running the execute lambda every loop until interrupted
-    def runForwardContinuous(self):
+    def run_forward_continuous_cmd(self):
         return (
             self.run(self._run_intake_motor_forward)
             .finallyDo(lambda interrupted: self._stop_intake_motor())
@@ -118,7 +118,7 @@ class Intake(FROGSubsystem):
 
     # Very simple one-shot version (runs once then ends immediately)
     # Useful if you just want a quick "pulse"
-    def pulseForward(self):
+    def pulse_forward_cmd(self):
         return (
             self.runOnce(self._run_intake_motor_forward)
             .withTimeout(0.15)

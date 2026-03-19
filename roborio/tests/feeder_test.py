@@ -35,45 +35,45 @@ def test_feeder_default_velocity(feeder):
     assert feeder._feed_velocity > 0
 
 
-# ── runForward ───────────────────────────────────────────────────────────────
+# ── run_forward_cmd ───────────────────────────────────────────────────────────
 
 
 def test_run_forward_schedules(feeder):
-    cmd = feeder.runForward()
+    cmd = feeder.run_forward_cmd()
     CommandScheduler.getInstance().schedule(cmd)
     assert CommandScheduler.getInstance().isScheduled(cmd)
 
 
 def test_run_forward_executes_without_error(feeder):
-    cmd = feeder.runForward()
+    cmd = feeder.run_forward_cmd()
     CommandScheduler.getInstance().schedule(cmd)
     CommandScheduler.getInstance().run()  # initialize + execute
     cmd.cancel()
     assert not CommandScheduler.getInstance().isScheduled(cmd)
 
 
-# ── runBackward ──────────────────────────────────────────────────────────────
+# ── run_backward_cmd ──────────────────────────────────────────────────────────
 
 
 def test_run_backward_schedules(feeder):
-    cmd = feeder.runBackward()
+    cmd = feeder.run_backward_cmd()
     CommandScheduler.getInstance().schedule(cmd)
     assert CommandScheduler.getInstance().isScheduled(cmd)
 
 
 def test_run_backward_executes_without_error(feeder):
-    cmd = feeder.runBackward()
+    cmd = feeder.run_backward_cmd()
     CommandScheduler.getInstance().schedule(cmd)
     CommandScheduler.getInstance().run()
     cmd.cancel()
     assert not CommandScheduler.getInstance().isScheduled(cmd)
 
 
-# ── backOffCmd ───────────────────────────────────────────────────────────────
+# ── back_off_cmd ───────────────────────────────────────────────────────────────
 
 
 def test_back_off_cmd_schedules(feeder):
-    cmd = feeder.backOffCmd()
+    cmd = feeder.back_off_cmd()
     CommandScheduler.getInstance().schedule(cmd)
     assert CommandScheduler.getInstance().isScheduled(cmd)
 

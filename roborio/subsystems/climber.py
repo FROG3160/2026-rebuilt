@@ -189,37 +189,37 @@ class Climber(FROGSubsystem):
 
     def lift_forward_cmd(self) -> Command:
         """Runs the lift motor forward at 1V."""
-        return self.manual_lift_voltage_command(lambda: 1.0).withName("Lift Forward 1V")
+        return self.manual_lift_voltage_cmd(lambda: 1.0).withName("Lift Forward 1V")
 
     def lift_reverse_cmd(self) -> Command:
         """Runs the lift motor in reverse at 1V."""
-        return self.manual_lift_voltage_command(lambda: -1.0).withName(
+        return self.manual_lift_voltage_cmd(lambda: -1.0).withName(
             "Lift Reverse 1V"
         )
 
-    def deploy_command(self) -> Command:
+    def deploy_cmd(self) -> Command:
         """Return a command to deploy the climber."""
         return self.runOnce(
             lambda: self._deploy_position(constants.kClimberDeployed),
         )
 
-    def stow_command(self) -> Command:
+    def stow_cmd(self) -> Command:
         """Return a command to stow the climber."""
         return self.runOnce(
             lambda: self._deploy_position(constants.kClimberStowed),
         )
 
     # returns inline command to lift climber to a position
-    def lift_to_position(self, position: float) -> Command:
+    def lift_to_position_cmd(self, position: float) -> Command:
         """Return a command to lift the climber to the specified position."""
         return self.runOnce(lambda: self._lift_position(position))
         # No need to wait for lift to reach position since it's follower
 
-    def manual_deploy_voltage_command(self, volts: float) -> Command:
+    def manual_deploy_voltage_cmd(self, volts: float) -> Command:
         """Runs the deploy motor at a constant voltage while the command is active."""
         return self.runEnd(lambda: self._set_deploy_voltage(volts), self._stop_deploy)
 
-    def manual_lift_voltage_command(self, voltage_supplier) -> Command:
+    def manual_lift_voltage_cmd(self, voltage_supplier) -> Command:
         """Runs the lift motor using a voltage supplier while the command is active."""
         return self.runEnd(
             lambda: self._set_lift_voltage(voltage_supplier()), self._stop_lift
