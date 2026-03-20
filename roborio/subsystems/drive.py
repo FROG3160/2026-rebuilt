@@ -1,13 +1,34 @@
 import math
 import random
 from typing import Optional
-from FROGlib.swerve import SwerveChassis, RotationControllerConfig
+from FROGlib.swerve import SwerveChassis, RotationControllerConfig, SwerveModuleConfig
 from FROGlib.ctre import (
-    FROGCANCoderConfig,
-    FROGFeedbackConfig,
     FROGPigeonGyro,
     FROGTalonFX,
+    get_frog_talon_config,
+    get_frog_cancoder_config,
+    MOTOR_OUTPUT_CCWP_BRAKE,
+    MOTOR_OUTPUT_CWP_BRAKE,
 )
+from phoenix6.configs import (
+    TalonFXConfiguration,
+    CANcoderConfiguration,
+    Slot0Configs,
+    FeedbackConfigs,
+    MotorOutputConfigs,
+    MagnetSensorConfigs,
+)
+from phoenix6.signals.spn_enums import SensorDirectionValue
+from FROGlib.sds import MK5I_R3_GEARING, WHEEL_DIAMETER
+from FROGlib.vision import (
+    FROGPoseEstimator,
+)
+from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
+from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
+from copy import deepcopy
+from FROGlib.subsystem import FROGSubsystem
+from FROGlib.utils import DriveTrain, remap
+import constants
 from wpilib import DriverStation, Field2d, RobotBase, SmartDashboard
 from wpimath.geometry import (
     Pose2d,
@@ -23,8 +44,6 @@ from wpilib.sysid import SysIdRoutineLog
 from wpiutil import Sendable, SendableBuilder
 from commands2 import Command
 from commands2.sysid import SysIdRoutine
-from FROGlib.utils import DriveTrain, remap
-import constants
 from phoenix6.controls import (
     PositionVoltage,
     VoltageOut,
@@ -37,51 +56,41 @@ from pathplannerlib.path import PathPlannerPath
 from pathplannerlib.telemetry import PPLibTelemetry
 from photonlibpy.estimatedRobotPose import EstimatedRobotPose
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
-from FROGlib.swerve import SwerveModuleConfig
-from FROGlib.ctre import (
-    FROGTalonFXConfig,
-    FROGSlotConfig,
-    MOTOR_OUTPUT_CCWP_BRAKE,
-    MOTOR_OUTPUT_CWP_BRAKE,
-)
-from FROGlib.sds import MK5I_R3_GEARING, WHEEL_DIAMETER
-from FROGlib.vision import (
-    FROGPoseEstimator,
-)
-from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
-from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
-from copy import deepcopy
-from FROGlib.subsystem import FROGSubsystem
+
 
 drivetrain = DriveTrain(gear_stages=MK5I_R3_GEARING, wheel_diameter=WHEEL_DIAMETER)
 
-drive_slot0 = FROGSlotConfig(
-    k_s=constants.kVoltageDriveS,
-    k_v=constants.kVoltageDriveV,
-    k_a=constants.kVoltageDriveA,
-    k_p=constants.kVoltageDriveP,
+drive_slot0 = (
+    Slot0Configs()
+    .with_k_s(constants.kVoltageDriveS)
+    .with_k_v(constants.kVoltageDriveV)
+    .with_k_a(constants.kVoltageDriveA)
+    .with_k_p(constants.kVoltageDriveP)
 )
-steer_slot0 = FROGSlotConfig(
-    k_p=constants.kSteerP,
-    k_i=constants.kSteerI,
-    k_s=constants.kSteerS,
-    k_v=constants.kSteerV,
+steer_slot0 = (
+    Slot0Configs()
+    .with_k_p(constants.kSteerP)
+    .with_k_i(constants.kSteerI)
+    .with_k_s(constants.kSteerS)
+    .with_k_v(constants.kSteerV)
 )
 
 # configure drive motor used for all swerve modules
-drive_config = FROGTalonFXConfig(
-    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=drivetrain.system_reduction),
-    slot0=drive_slot0,
-    motor_name="Drive",
+drive_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CWP_BRAKE)
+    .with_feedback(
+        FeedbackConfigs().with_sensor_to_mechanism_ratio(drivetrain.system_reduction)
+    )
+    .with_slot0(drive_slot0)
 )
 # configure steer motor used for all swerve modules
-steer_config = FROGTalonFXConfig(
-    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
+steer_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CCWP_BRAKE)
     # set continuous wrap to wrap around the 180 degree point
-    closed_loop_general=ClosedLoopGeneralConfigs().with_continuous_wrap(True),
-    slot0=steer_slot0,
-    motor_name="Steer",
+    .with_closed_loop_general(ClosedLoopGeneralConfigs().with_continuous_wrap(True))
+    .with_slot0(steer_slot0)
 )
 
 
@@ -90,11 +99,17 @@ front_left_module_config = {
     "location": Translation2d(
         constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters / 2
     ),
-    "drive_motor_config": deepcopy(drive_config.with_id(constants.kFrontLeftDriveID)),
-    "steer_motor_config": deepcopy(steer_config.with_id(constants.kFrontLeftSteerID)),
-    "cancoder_config": FROGCANCoderConfig()
-    .with_id(constants.kFrontLeftSensorID)
-    .with_offset(constants.kFrontLeftOffset),
+    "drive_motor_id": constants.kFrontLeftDriveID,
+    "drive_motor_config": drive_config,
+    "steer_motor_id": constants.kFrontLeftSteerID,
+    "steer_motor_config": steer_config,
+    "cancoder_id": constants.kFrontLeftSensorID,
+    "cancoder_config": get_frog_cancoder_config().with_magnet_sensor(
+        MagnetSensorConfigs()
+        .with_magnet_offset(constants.kFrontLeftOffset)
+        .with_absolute_sensor_discontinuity_point(0.5)
+        .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
+    ),
     "wheel_diameter": WHEEL_DIAMETER,
 }
 front_right_module_config = {
@@ -102,11 +117,17 @@ front_right_module_config = {
     "location": Translation2d(
         constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters / 2
     ),
-    "drive_motor_config": deepcopy(drive_config.with_id(constants.kFrontRightDriveID)),
-    "steer_motor_config": deepcopy(steer_config.with_id(constants.kFrontRightSteerID)),
-    "cancoder_config": FROGCANCoderConfig()
-    .with_id(constants.kFrontRightSensorID)
-    .with_offset(constants.kFrontRightOffset),
+    "drive_motor_id": constants.kFrontRightDriveID,
+    "drive_motor_config": drive_config,
+    "steer_motor_id": constants.kFrontRightSteerID,
+    "steer_motor_config": steer_config,
+    "cancoder_id": constants.kFrontRightSensorID,
+    "cancoder_config": get_frog_cancoder_config().with_magnet_sensor(
+        MagnetSensorConfigs()
+        .with_magnet_offset(constants.kFrontRightOffset)
+        .with_absolute_sensor_discontinuity_point(0.5)
+        .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
+    ),
     "wheel_diameter": WHEEL_DIAMETER,
 }
 back_left_module_config = {
@@ -114,11 +135,17 @@ back_left_module_config = {
     "location": Translation2d(
         -constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters / 2
     ),
-    "drive_motor_config": deepcopy(drive_config.with_id(constants.kBackLeftDriveID)),
-    "steer_motor_config": deepcopy(steer_config.with_id(constants.kBackLeftSteerID)),
-    "cancoder_config": FROGCANCoderConfig()
-    .with_id(constants.kBackLeftSensorID)
-    .with_offset(constants.kBackLeftOffset),
+    "drive_motor_id": constants.kBackLeftDriveID,
+    "drive_motor_config": drive_config,
+    "steer_motor_id": constants.kBackLeftSteerID,
+    "steer_motor_config": steer_config,
+    "cancoder_id": constants.kBackLeftSensorID,
+    "cancoder_config": get_frog_cancoder_config().with_magnet_sensor(
+        MagnetSensorConfigs()
+        .with_magnet_offset(constants.kBackLeftOffset)
+        .with_absolute_sensor_discontinuity_point(0.5)
+        .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
+    ),
     "wheel_diameter": WHEEL_DIAMETER,
 }
 back_right_module_config = {
@@ -126,11 +153,17 @@ back_right_module_config = {
     "location": Translation2d(
         -constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters / 2
     ),
-    "drive_motor_config": deepcopy(drive_config.with_id(constants.kBackRightDriveID)),
-    "steer_motor_config": deepcopy(steer_config.with_id(constants.kBackRightSteerID)),
-    "cancoder_config": FROGCANCoderConfig()
-    .with_id(constants.kBackRightSensorID)
-    .with_offset(constants.kBackRightOffset),
+    "drive_motor_id": constants.kBackRightDriveID,
+    "drive_motor_config": drive_config,
+    "steer_motor_id": constants.kBackRightSteerID,
+    "steer_motor_config": steer_config,
+    "cancoder_id": constants.kBackRightSensorID,
+    "cancoder_config": get_frog_cancoder_config().with_magnet_sensor(
+        MagnetSensorConfigs()
+        .with_magnet_offset(constants.kBackRightOffset)
+        .with_absolute_sensor_discontinuity_point(0.5)
+        .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
+    ),
     "wheel_diameter": WHEEL_DIAMETER,
 }
 

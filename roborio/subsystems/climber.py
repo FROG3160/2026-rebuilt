@@ -3,59 +3,60 @@ from typing import Callable
 from commands2 import Subsystem, Command
 from phoenix6.hardware import TalonFX
 from FROGlib.ctre import (
-    FROGSlotConfig,
     FROGTalonFX,
-    FROGTalonFXConfig,
-    FROGFeedbackConfig,
+    get_frog_talon_config,
+    MOTOR_OUTPUT_CWP_BRAKE,
+    MOTOR_OUTPUT_CCWP_BRAKE,
+)
+from phoenix6.configs import (
+    TalonFXConfiguration,
+    Slot0Configs,
+    FeedbackConfigs,
+    MotorOutputConfigs,
 )
 import constants
 from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6 import controls, SignalLogger
-from FROGlib.ctre import MOTOR_OUTPUT_CWP_BRAKE, MOTOR_OUTPUT_CCWP_BRAKE
 from phoenix6.signals import MotorAlignmentValue
 import wpilib
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 from phoenix6.configs import MotionMagicConfigs
 from FROGlib.subsystem import FROGSubsystem
-
-deploy_slot0 = FROGSlotConfig(
-    k_s=constants.kDeployS,
-    k_v=constants.kDeployV,
-    k_p=constants.kDeployP,
-    k_i=constants.kDeployI,
-    k_d=constants.kDeployD,
+deploy_slot0 = (
+    Slot0Configs()
+    .with_k_s(constants.kDeployS)
+    .with_k_v(constants.kDeployV)
+    .with_k_p(constants.kDeployP)
+    .with_k_i(constants.kDeployI)
+    .with_k_d(constants.kDeployD)
 )
-lift_slot0 = FROGSlotConfig(
-    k_s=constants.kLiftS,
-    k_v=constants.kLiftV,
-    k_g=constants.kLiftG,
-    k_p=constants.kLiftP,
-    k_i=constants.kLiftI,
-    k_d=constants.kLiftD,
+lift_slot0 = (
+    Slot0Configs()
+    .with_k_s(constants.kLiftS)
+    .with_k_v(constants.kLiftV)
+    .with_k_g(constants.kLiftG)
+    .with_k_p(constants.kLiftP)
+    .with_k_i(constants.kLiftI)
+    .with_k_d(constants.kLiftD)
 )
 deploy_motion_magic_config = (
     MotionMagicConfigs()
     .with_motion_magic_cruise_velocity(constants.kDeployMM_V)
     .with_motion_magic_acceleration(constants.kDeployMM_A)
 )
-deploy_motor_config = FROGTalonFXConfig(
-    id=constants.kClimberDeployMotorID,
-    can_bus="rio",
-    motor_name="Deploy",
-    parent_nt="Climber",
-    motor_output=MOTOR_OUTPUT_CCWP_BRAKE,
-    motion_magic=deploy_motion_magic_config,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=constants.kDeployRatio),
-    slot0=deploy_slot0,
+deploy_motor_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CCWP_BRAKE)
+    .with_motion_magic(deploy_motion_magic_config)
+    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(constants.kDeployRatio))
+    .with_slot0(deploy_slot0)
 )
-lift_motor_config = FROGTalonFXConfig(
-    can_bus="rio",
-    motor_name="LeftLift",
-    parent_nt="Climber",
-    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=constants.kLiftRatio),
-    slot0=lift_slot0,
+lift_motor_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CWP_BRAKE)
+    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(constants.kLiftRatio))
+    .with_slot0(lift_slot0)
 )
 
 
@@ -64,19 +65,21 @@ class Climber(FROGSubsystem):
         """Initialize the Climber subsystem."""
         super().__init__()
         self.deploy_motor = FROGTalonFX(
+            id=constants.kClimberDeployMotorID,
             motor_config=deploy_motor_config,
+            motor_name="Deploy",
             signal_profile=FROGTalonFX.SignalProfile.POSITION_MM,
         )
         self.left_lift_motor = FROGTalonFX(
-            motor_config=deepcopy(lift_motor_config).with_id(
-                constants.kClimberLeftLiftMotorID
-            ),
+            id=constants.kClimberLeftLiftMotorID,
+            motor_config=deepcopy(lift_motor_config),
+            motor_name="LeftLift",
             signal_profile=FROGTalonFX.SignalProfile.FLYWHEEL,
         )
         self.right_lift_motor = FROGTalonFX(
-            motor_config=deepcopy(lift_motor_config)
-            .with_motor_name("RightLift")
-            .with_id(constants.kClimberRightLiftMotorID),
+            id=constants.kClimberRightLiftMotorID,
+            motor_config=deepcopy(lift_motor_config),
+            motor_name="RightLift",
             signal_profile=FROGTalonFX.SignalProfile.FOLLOWER,
         )
         self.right_lift_motor.set_control(

@@ -1,37 +1,42 @@
 from phoenix6.hardware import TalonFX
 from commands2 import Command
 from FROGlib.ctre import (
-    FROGSlotConfig,
     FROGTalonFX,
-    FROGTalonFXConfig,
-    FROGFeedbackConfig,
+    get_frog_talon_config,
+    MOTOR_OUTPUT_CWP_COAST,
+    MOTOR_OUTPUT_CCWP_COAST,
+)
+from phoenix6.configs import (
+    TalonFXConfiguration,
+    Slot0Configs,
+    FeedbackConfigs,
+    MotorOutputConfigs,
 )
 import constants
 from phoenix6 import controls
-from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
 from FROGlib.subsystem import FROGSubsystem
 import wpilib
 
 
-hopper_slot0 = FROGSlotConfig(
-    k_s=constants.kVoltageHopperS,
-)
+hopper_slot0 = Slot0Configs().with_k_s(constants.kVoltageHopperS)
 
-hopper_motor_config = FROGTalonFXConfig(
-    id=constants.kHopperMotorID,
-    can_bus="rio",
-    motor_name="Hopper",
-    parent_nt="Hopper",
-    motor_output=MOTOR_OUTPUT_CCWP_COAST,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=1.0),
-    slot0=hopper_slot0,
+hopper_motor_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
+    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(1.0))
+    .with_slot0(hopper_slot0)
 )
 
 
 class Hopper(FROGSubsystem):
     def __init__(self):
         super().__init__()
-        self.motor = FROGTalonFX(motor_config=hopper_motor_config)
+        self.motor = FROGTalonFX(
+            id=constants.kHopperMotorID,
+            motor_config=hopper_motor_config,
+            canbus="rio",
+            motor_name="Hopper",
+        )
         self._default_voltage = 4
 
         if wpilib.RobotBase.isSimulation():
