@@ -13,5 +13,8 @@
     },
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnPaste": false,
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/src"
+    ]
 }
