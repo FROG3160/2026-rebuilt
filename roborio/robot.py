@@ -44,6 +44,7 @@ class FROGBot(commands2.TimedCommandRobot):
         self.test_chooser.setDefaultOption(
             "SysId Drive Characterization", "sysid_drive"
         )
+        self.test_chooser.addOption("SysId Steer Characterization", "sysid_steer")
         self.test_chooser.addOption("SysId Feeder Characterization", "sysid_feeder")
         self.test_chooser.addOption("SysId Shooter Characterization", "sysid_shooter")
         self.test_chooser.addOption("SysId Climber Characterization", "sysid_climber")
@@ -84,6 +85,8 @@ class FROGBot(commands2.TimedCommandRobot):
         selected = self.test_chooser.getSelected()
         if selected == "sysid_drive":
             self.container.configureSysIDButtonBindings()
+        elif selected == "sysid_steer":
+            self.container.configureSysIDSteerButtonBindings()
         elif selected == "sysid_feeder":
             self.container.configureSysIDFeederButtonBindings()
         elif selected == "sysid_shooter":

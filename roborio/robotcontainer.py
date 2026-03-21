@@ -262,7 +262,7 @@ class RobotContainer:
         self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
     def configureSysIDButtonBindings(self) -> None:
-        """Configure button bindings for SysId routine tests."""
+        """Configure button bindings for SysId drive motor routine tests."""
         # Bind full set of SysId routine tests to buttons; a complete routine should run each of these
         # once.
         self.driver_xbox.a().whileTrue(
@@ -277,6 +277,27 @@ class RobotContainer:
         self.driver_xbox.y().whileTrue(
             self.drive.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse)
         )
+        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
+        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
+
+    def configureSysIDSteerButtonBindings(self) -> None:
+        """Configure button bindings for SysId steer motor routine tests."""
+        # Bind full set of SysId routine tests to buttons; a complete routine should run each of these
+        # once.
+        self.driver_xbox.a().whileTrue(
+            self.drive.sysIdQuasistaticSteer(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.b().whileTrue(
+            self.drive.sysIdQuasistaticSteer(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.x().whileTrue(
+            self.drive.sysIdDynamicSteer(SysIdRoutine.Direction.kForward)
+        )
+        self.driver_xbox.y().whileTrue(
+            self.drive.sysIdDynamicSteer(SysIdRoutine.Direction.kReverse)
+        )
+        self.driver_xbox.leftBumper().onTrue(cmd.runOnce(SignalLogger.start))
+        self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
     def configureComponentTestBindings(self) -> None:
         """Button bindings for manual component testing in test mode.
