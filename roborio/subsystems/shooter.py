@@ -5,21 +5,22 @@ from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6.hardware import TalonFX
 from phoenix6.configs import MotionMagicConfigs
 from FROGlib.ctre import (
-    MOTOR_OUTPUT_CWP_BRAKE,
-    FROGSlotConfig,
     FROGTalonFX,
-    FROGTalonFXConfig,
-    FROGFeedbackConfig,
-)
-import constants
-from phoenix6 import controls, SignalLogger
-from FROGlib.ctre import (
+    get_frog_talon_config,
+    MOTOR_OUTPUT_CWP_BRAKE,
     MOTOR_OUTPUT_CWP_COAST,
     MOTOR_OUTPUT_CCWP_COAST,
     MOTOR_OUTPUT_CCWP_BRAKE,
 )
+from phoenix6.configs import (
+    TalonFXConfiguration,
+    Slot0Configs,
+    FeedbackConfigs,
+    MotorOutputConfigs,
+)
+import constants
+from phoenix6 import controls, SignalLogger
 from FROGlib.utils import DriveTrain
-from phoenix6.configs import SlotConfigs
 from wpiutil import Sendable, SendableBuilder
 import wpilib
 from commands2.button import Trigger
@@ -35,29 +36,32 @@ flywheel_gearing = DriveTrain(
     gear_stages=[], wheel_diameter=inchesToMeters(4.0)
 )  # for velocity conversions, etc.
 
-flywheel_slot0 = FROGSlotConfig(
-    k_s=constants.kFlywheelS,
-    k_v=constants.kFlywheelV,
-    k_a=constants.kFlywheelA,
-    k_p=constants.kFlywheelP,
-    k_i=constants.kFlywheelI,
-    k_d=constants.kFlywheelD,
+flywheel_slot0 = (
+    Slot0Configs()
+    .with_k_s(constants.kFlywheelS)
+    .with_k_v(constants.kFlywheelV)
+    .with_k_a(constants.kFlywheelA)
+    .with_k_p(constants.kFlywheelP)
+    .with_k_i(constants.kFlywheelI)
+    .with_k_d(constants.kFlywheelD)
 )
-hood_slot0 = FROGSlotConfig(
-    k_s=constants.kHoodS,
-    k_p=constants.kHoodP,
-    k_g=constants.kHoodG,
-    k_v=constants.kHoodV,
+hood_slot0 = (
+    Slot0Configs()
+    .with_k_s(constants.kHoodS)
+    .with_k_p(constants.kHoodP)
+    .with_k_g(constants.kHoodG)
+    .with_k_v(constants.kHoodV)
 )
 
-flywheel_motor_config = FROGTalonFXConfig(
-    can_bus="rio",
-    parent_nt="Shooter",
-    motor_output=MOTOR_OUTPUT_CCWP_COAST,
-    feedback=FROGFeedbackConfig(
-        sensor_to_mechanism_ratio=flywheel_gearing.system_reduction
-    ),
-    slot0=flywheel_slot0,
+flywheel_motor_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
+    .with_feedback(
+        FeedbackConfigs().with_sensor_to_mechanism_ratio(
+            flywheel_gearing.system_reduction
+        )
+    )
+    .with_slot0(flywheel_slot0)
 )
 
 hood_motion_magic_config = (
@@ -65,13 +69,12 @@ hood_motion_magic_config = (
     .with_motion_magic_cruise_velocity(constants.kHoodMMV)
     .with_motion_magic_acceleration(constants.kHoodMMA)
 )
-hood_motor_config = FROGTalonFXConfig(
-    can_bus="rio",
-    parent_nt="Shooter",
-    motor_output=MOTOR_OUTPUT_CWP_BRAKE,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=1.0),
-    motion_magic=hood_motion_magic_config,
-    slot0=hood_slot0,
+hood_motor_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CWP_BRAKE)
+    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(1.0))
+    .with_motion_magic(hood_motion_magic_config)
+    .with_slot0(hood_slot0)
 )
 
 
@@ -82,17 +85,19 @@ class Shooter(FROGSubsystem):
     def __init__(self, distance_to_target_supplier: Callable[[], Optional[float]]):
         super().__init__()
         self.motor = FROGTalonFX(
-            motor_config=deepcopy(flywheel_motor_config)
-            .with_id(constants.kShooterLeftFlywheelID)
-            .with_motor_name("LeftFlywheel")
-            .with_motor_output(MOTOR_OUTPUT_CCWP_COAST),
+            id=constants.kShooterLeftFlywheelID,
+            motor_config=deepcopy(flywheel_motor_config).with_motor_output(
+                MOTOR_OUTPUT_CCWP_COAST
+            ),
+            canbus="rio",
+            motor_name="LeftFlywheel",
             signal_profile=FROGTalonFX.SignalProfile.FLYWHEEL,
         )
         self._follower = FROGTalonFX(
-            motor_config=deepcopy(flywheel_motor_config)
-            .with_id(constants.kShooterRightFlywheelID)
-            .with_motor_name("RightFlywheel")
-            .with_slot0(FROGSlotConfig()),
+            id=constants.kShooterRightFlywheelID,
+            motor_config=deepcopy(flywheel_motor_config).with_slot0(Slot0Configs()),
+            canbus="rio",
+            motor_name="RightFlywheel",
             signal_profile=FROGTalonFX.SignalProfile.FOLLOWER,
         )
         self._follower.set_control(
@@ -105,9 +110,10 @@ class Shooter(FROGSubsystem):
         self.distance_to_target_supplier = distance_to_target_supplier
 
         self.hood_motor = FROGTalonFX(
-            motor_config=hood_motor_config.with_id(
-                constants.kHoodMotorID
-            ).with_motor_name("Hood Motor"),
+            id=constants.kHoodMotorID,
+            motor_config=hood_motor_config,
+            canbus="rio",
+            motor_name="Hood Motor",
             signal_profile=FROGTalonFX.SignalProfile.POSITION_MM,
         )
 

@@ -33,16 +33,21 @@ from .ctre import (
     MOTOR_OUTPUT_CCWP_BRAKE,
     MOTOR_OUTPUT_CWP_BRAKE,
     MAGNET_CONFIG_CONTWRAP_CCWP,
-    FROGCANCoderConfig,
-    FROGFeedbackConfig,
-    FROGMotorOutputConfig,
     FROGPigeonGyro,
     FROGTalonFX,
-    FROGTalonFXConfig,
     FROGCanCoder,
+    get_frog_talon_config,
+    get_frog_cancoder_config,
 )
 
 from .utils import DriveTrain
+from phoenix6.configs import (
+    TalonFXConfiguration,
+    CANcoderConfiguration,
+    Slot0Configs,
+    FeedbackConfigs,
+    MotorOutputConfigs,
+)
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from wpilib import Timer
 from dataclasses import dataclass, field
@@ -59,9 +64,12 @@ class SwerveModuleConfig:
         self,
         name: str = "undefined",
         location: Translation2d = field(default_factory=Translation2d),
-        drive_motor_config: FROGTalonFXConfig = FROGTalonFXConfig(),
-        steer_motor_config: FROGTalonFXConfig = FROGTalonFXConfig(),
-        cancoder_config: FROGCANCoderConfig = FROGCANCoderConfig(),
+        drive_motor_id: int = 0,
+        steer_motor_id: int = 0,
+        cancoder_id: int = 0,
+        drive_motor_config: TalonFXConfiguration = get_frog_talon_config(),
+        steer_motor_config: TalonFXConfiguration = get_frog_talon_config(),
+        cancoder_config: CANcoderConfiguration = get_frog_cancoder_config(),
         wheel_diameter: float = 0.0,
     ):
         """Config parameters for the individual swerve modules
@@ -76,6 +84,9 @@ class SwerveModuleConfig:
         """
         self.name = name
         self.location = location
+        self.drive_motor_id = drive_motor_id
+        self.steer_motor_id = steer_motor_id
+        self.cancoder_id = cancoder_id
         self.drive_motor_config = drive_motor_config
         self.steer_motor_config = steer_motor_config
         self.cancoder_config = cancoder_config
@@ -115,26 +126,29 @@ class SwerveModule:
         # set module name
         self.name = module_config.name
         nt_table = f"{parent_nt}/{self.name}"
-        module_config.drive_motor_config.parent_nt = nt_table
-        module_config.steer_motor_config.parent_nt = nt_table
 
         # create/configure drive motor
         self.drive_motor = FROGTalonFX(
-            module_config.drive_motor_config,
+            id=module_config.drive_motor_id,
+            motor_config=module_config.drive_motor_config,
+            motor_name=f"{self.name} Drive",
             signal_profile=FROGTalonFX.SignalProfile.SWERVE_DRIVE,
         )
 
         # create/configure cancoder
-        self.steer_encoder = FROGCanCoder(module_config.cancoder_config)
+        self.steer_encoder = FROGCanCoder(
+            id=module_config.cancoder_id, config=module_config.cancoder_config
+        )
 
         # create/configure steer motor using a feedback config that uses the steer encoder as a remote sensor
         self.steer_motor = FROGTalonFX(
-            module_config.steer_motor_config.with_feedback(
-                FROGFeedbackConfig(
-                    feedback_remote_sensor_id=self.steer_encoder.device_id,
-                    feedback_sensor_source=FeedbackSensorSourceValue.REMOTE_CANCODER,
-                )
+            id=module_config.steer_motor_id,
+            motor_config=module_config.steer_motor_config.with_feedback(
+                FeedbackConfigs()
+                .with_feedback_remote_sensor_id(self.steer_encoder.device_id)
+                .with_feedback_sensor_source(FeedbackSensorSourceValue.REMOTE_CANCODER)
             ),
+            motor_name=f"{self.name} Steer",
             signal_profile=FROGTalonFX.SignalProfile.SWERVE_AZIMUTH,
         )
 
@@ -317,15 +331,15 @@ class SwerveChassis:
             # each SwerveModule in the same order we use here.
             *[m.location for m in self.modules]
         )
+        # the swerve estimator needs to know the initial position of each module to start tracking the pose of the robot.
+        # We start with an initial distance of 0 for each module and the current steer azimuth.
+        initial_module_positions = tuple(
+            [SwerveModulePosition(0, x.getCurrentSteerAzimuth()) for x in self.modules]
+        )
         self.swerve_estimator = SwerveDrive4PoseEstimator(
             self.swerve_kinematics,
             self.gyro.getRotation2d(),
-            tuple(
-                [
-                    SwerveModulePosition(0, x.getCurrentSteerAzimuth())
-                    for x in self.modules
-                ]
-            ),
+            initial_module_positions,
             Pose2d(),  # Initial pose set to empty by design; vision initialization handled separately if needed.
         )
 

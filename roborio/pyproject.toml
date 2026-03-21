@@ -26,3 +26,7 @@ requires = [
     #"robotpy-pykit",
     "phoenix6 > 26.0.0",
     "robotpy-pathplannerlib"]
+
+[tool.mypy]
+mypy_path = "roborio" # Replace "src" with the actual name of your source folder
+explicit_package_bases = true

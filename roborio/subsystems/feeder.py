@@ -6,31 +6,35 @@ from FROGlib.subsystem import FROGSubsystem, Direction
 from phoenix6.controls import VoltageOut
 from phoenix6 import controls, SignalLogger
 from FROGlib.ctre import (
-    FROGSlotConfig,
     FROGTalonFX,
-    FROGTalonFXConfig,
-    FROGFeedbackConfig,
+    get_frog_talon_config,
     MOTOR_OUTPUT_CWP_COAST,
+)
+from phoenix6.configs import (
+    TalonFXConfiguration,
+    Slot0Configs,
+    FeedbackConfigs,
+    MotorOutputConfigs,
 )
 import constants
 import wpilib
 from wpiutil import SendableBuilder
 
 # Slot 0: velocity control for normal run forward/backward
-feed_velocity_slot = FROGSlotConfig(
-    k_s=constants.kFeedS,
-    k_v=constants.kFeedV,
-    k_p=constants.kFeedVelocityP,
-    k_i=constants.kFeedVelocityI,
-    k_d=constants.kFeedVelocityD,
+feed_velocity_slot = (
+    Slot0Configs()
+    .with_k_s(constants.kFeedS)
+    .with_k_v(constants.kFeedV)
+    .with_k_p(constants.kFeedVelocityP)
+    .with_k_i(constants.kFeedVelocityI)
+    .with_k_d(constants.kFeedVelocityD)
 )
 
-feed_motor_config = FROGTalonFXConfig(
-    can_bus="rio",
-    parent_nt=f"{constants.kComponentSubtableName}/Feeder",
-    motor_output=MOTOR_OUTPUT_CWP_COAST,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=11.5425),
-    slot0=feed_velocity_slot,
+feed_motor_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CWP_COAST)
+    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(11.5425))
+    .with_slot0(feed_velocity_slot)
 )
 
 kBackOffRotations = 0.15  # rotations to retract from flywheel
@@ -41,9 +45,10 @@ class Feeder(FROGSubsystem):
     def __init__(self):
         super().__init__()
         self.motor = FROGTalonFX(
-            motor_config=feed_motor_config.with_id(
-                constants.kFeedMotorID
-            ).with_motor_name("Feed Motor"),
+            id=constants.kFeedMotorID,
+            motor_config=feed_motor_config,
+            canbus="rio",
+            motor_name="Feed Motor",
             signal_profile=FROGTalonFX.SignalProfile.BASIC,
         )
         self._feed_velocity = 4.81  # m/s

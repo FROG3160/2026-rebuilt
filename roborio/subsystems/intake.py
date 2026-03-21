@@ -3,14 +3,19 @@ from typing import Callable
 from commands2 import Command
 from phoenix6.hardware import TalonFX
 from FROGlib.ctre import (
-    FROGSlotConfig,
     FROGTalonFX,
-    FROGTalonFXConfig,
-    FROGFeedbackConfig,
+    get_frog_talon_config,
+    MOTOR_OUTPUT_CWP_COAST,
+    MOTOR_OUTPUT_CCWP_COAST,
+)
+from phoenix6.configs import (
+    TalonFXConfiguration,
+    Slot0Configs,
+    FeedbackConfigs,
+    MotorOutputConfigs,
 )
 import constants
 from phoenix6 import controls
-from FROGlib.ctre import MOTOR_OUTPUT_CWP_COAST, MOTOR_OUTPUT_CCWP_COAST
 from FROGlib.subsystem import FROGSubsystem, Direction
 import wpilib
 
@@ -23,20 +28,18 @@ _SENSOR_TO_MECHANISM_RATIO = 1.0 / (math.pi * _ROLLER_DIAMETER_M)  # ≈ 12.5331
 # Falcon 500 free-speed used for simple simulation model
 _FALCON500_MAX_RPS = 6380.0 / 60.0  # ≈ 106.33 RPS
 
-intake_slot0 = FROGSlotConfig(
-    k_s=constants.kVoltageIntakeS,
-    k_v=constants.kIntakeV,
-    k_p=constants.kIntakeP,
+intake_slot0 = (
+    Slot0Configs()
+    .with_k_s(constants.kVoltageIntakeS)
+    .with_k_v(constants.kIntakeV)
+    .with_k_p(constants.kIntakeP)
 )
 
-intake_motor_config = FROGTalonFXConfig(
-    id=constants.kIntakeMotorID,
-    can_bus="rio",
-    motor_name="Intake",
-    parent_nt="Intake",
-    motor_output=MOTOR_OUTPUT_CCWP_COAST,
-    feedback=FROGFeedbackConfig(sensor_to_mechanism_ratio=_SENSOR_TO_MECHANISM_RATIO),
-    slot0=intake_slot0,
+intake_motor_config = (
+    get_frog_talon_config()
+    .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
+    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(_SENSOR_TO_MECHANISM_RATIO))
+    .with_slot0(intake_slot0)
 )
 
 
@@ -45,7 +48,10 @@ class Intake(FROGSubsystem):
         super().__init__()
         self._robot_speed_supplier = robot_speed_supplier
         self.motor = FROGTalonFX(
+            id=constants.kIntakeMotorID,
             motor_config=intake_motor_config,
+            canbus="rio",
+            motor_name="Intake",
         )
         self._min_speed = constants.kIntakeMinSpeed
         self._speed_multiplier = constants.kIntakeSpeedMultiplier
@@ -67,9 +73,7 @@ class Intake(FROGSubsystem):
         self.motor.set_control(controls.VelocityVoltage(target, slot=0))
 
     def _run_intake_motor_backward(self):
-        self.motor.set_control(
-            controls.VelocityVoltage(-self._reverse_speed, slot=0)
-        )
+        self.motor.set_control(controls.VelocityVoltage(-self._reverse_speed, slot=0))
 
     def _stop_intake_motor(self):
         self.motor.stopMotor()
@@ -150,4 +154,3 @@ class Intake(FROGSubsystem):
     @FROGSubsystem.tunable(constants.kIntakeSpeedMultiplier, "Speed Multiplier")
     def speed_multiplier_tunable(self, val):
         self._speed_multiplier = val
-
