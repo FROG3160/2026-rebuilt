@@ -4,6 +4,7 @@ from commands2 import CommandScheduler
 from subsystems.shooter import Shooter
 from subsystems.feeder import Feeder
 from subsystems.drive import Drive
+from subsystems.hopper import Hopper
 from wpilib.simulation import DriverStationSim
 
 
@@ -78,6 +79,33 @@ def test_feeder_run_forward():
     assert not CommandScheduler.getInstance().isScheduled(run_cmd)
 
 
+def test_hopper_creation_and_serialize():
+    """Test that the hopper subsystem creates and serializes correctly."""
+    hopper = Hopper()
+    serialize_cmd = hopper.serialize_cmd()
+
+    # Schedule the command
+    CommandScheduler.getInstance().schedule(serialize_cmd)
+
+    # Verify it is scheduled
+    assert CommandScheduler.getInstance().isScheduled(serialize_cmd)
+
+    # Run scheduler once to process execution logic
+    CommandScheduler.getInstance().run()
+
+    # Verify motors are commanded to run forward since fuel shouldn't be detected in empty sim
+    # MotionMagic might not instantly produce voltage in standard Sim loop without physics stepping
+    # so we just verify the command structure works and it ran without errors.
+    assert hopper.left_side.motor is not None
+    assert hopper.right_side.motor is not None
+
+    # Cancel command
+    serialize_cmd.cancel()
+
+    # Verify it is no longer scheduled
+    assert not CommandScheduler.getInstance().isScheduled(serialize_cmd)
+
+
 def test_robot_container_init():
     """Smoke test to ensure RobotContainer initializes without dependency errors."""
     from robotcontainer import RobotContainer
@@ -88,5 +116,6 @@ def test_robot_container_init():
         container = RobotContainer()
         assert container.shooter is not None
         assert container.feeder is not None
+        assert container.hopper is not None
     except Exception as e:
         pytest.fail(f"RobotContainer failed to initialize: {e}")

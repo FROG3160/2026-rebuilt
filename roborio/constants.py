@@ -66,6 +66,12 @@ kIntakeReverseSpeed = 2.0  # m/s - fixed reverse speed for ejecting
 
 # hopper gains
 kVoltageHopperS = 0.12
+kHopperV = 0.11 # estimated V/(rad/s)
+kHopperP = 0.5  # Position PID proportional gain
+kHopperI = 0.0
+kHopperD = 0.0
+kHopperMM_V = 20.0  # Max velocity (RPS) for MotionMagic
+kHopperMM_A = 40.0  # Max acceleration (RPS/s) for MotionMagic
 
 # climber gains
 kDeployP = 1.0
@@ -147,7 +153,10 @@ kBackRightSensorID = 34
 kGyroID = 39
 
 kIntakeMotorID = 40
-kHopperMotorID = 41
+kHopperLeftMotorID = 46
+kHopperRightMotorID = 47
+kHopperLeftSensorID = 48
+kHopperRightSensorID = 49
 kFeedMotorID = 42
 kShooterLeftFlywheelID = 43
 kShooterRightFlywheelID = 44
