@@ -261,7 +261,7 @@ class RobotContainer:
         self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
     def configureSysIDButtonBindings(self) -> None:
-        """Configure button bindings for SysId routine tests."""
+        """Configure button bindings for SysId drive motor routine tests."""
         # Bind full set of SysId routine tests to buttons; a complete routine should run each of these
         # once.
         self.driver_xbox.a().whileTrue(
