@@ -58,11 +58,23 @@ kVoltageDriveA = 0.14705  # 0.027631
 
 # intake gains
 kVoltageIntakeS = 0.12
-kIntakeV = 0.0  # V/(m/s) feedforward - set to 0.0 until characterized with SysId
+kIntakeV = 1.41  # V/(m/s) feedforward - approx 12V / 8.48 m/s free speed
 kIntakeP = 0.0  # velocity PID proportional gain - set to 0.0 until characterized with SysId
-kIntakeMinSpeed = 1.0  # m/s - minimum intake surface speed floor
+kIntakeMinSpeed = 2.0  # m/s - minimum intake surface speed floor
 kIntakeSpeedMultiplier = 1.5  # intake speed = max(min, robot_speed * multiplier)
-kIntakeReverseSpeed = 2.0  # m/s - fixed reverse speed for ejecting
+kIntakeReverseSpeed = 3.0  # m/s - fixed reverse speed for ejecting
+
+# intake deploy gains
+kIntakeDeployDistancePerRotation = 0.151613 # meters
+kIntakeDeployTargetMeters = 0.26113
+kIntakeDeployP = 10.0
+kIntakeDeployI = 0.0
+kIntakeDeployD = 0.0
+kIntakeDeployS = 0.0
+kIntakeDeployV = 0.0
+kIntakeDeployMM_V = 2.0  # m/s
+kIntakeDeployMM_A = 8.0  # m/s^2
+kIntakeDeployCurrentLimit = 20.0 # Amps
 
 # hopper gains
 kVoltageHopperS = 0.12
@@ -153,6 +165,7 @@ kBackRightSensorID = 34
 kGyroID = 39
 
 kIntakeMotorID = 40
+kIntakeDeployMotorID = 41
 kHopperLeftMotorID = 46
 kHopperRightMotorID = 47
 kHopperLeftSensorID = 48
