@@ -1,6 +1,8 @@
 import math
 import random
 from typing import Optional
+
+import wpilib
 from FROGlib.swerve import SwerveChassis, RotationControllerConfig, SwerveModuleConfig
 from FROGlib.ctre import (
     FROGPigeonGyro,
@@ -583,3 +585,13 @@ class Drive(FROGSubsystem, SwerveChassis):
     @FROGSubsystem.telemetry("Estimated Pose")
     def estimated_pose_telem(self) -> Pose2d:
         return self.swerve_estimator_pose
+
+    def simulationPeriodic(self):
+        for module in self.modules:
+            module.drive_motor.simulation_update(
+                0.02, wpilib.RobotController.getBatteryVoltage()
+            )
+            module.steer_motor.simulation_update(
+                0.02, wpilib.RobotController.getBatteryVoltage()
+            )
+            # module.steer_encoder is updated by the motor since it's a remote sensor in Phoenix 6

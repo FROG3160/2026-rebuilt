@@ -57,6 +57,8 @@ class RobotContainer:
         self.register_named_commands()
         self.configure_automation_bindings()
 
+        self.hopper.setDefaultCommand(self.hopper.serialize_cmd())
+
         self.drive.setDefaultCommand(
             ManualDrive(
                 self.driver_xbox,
