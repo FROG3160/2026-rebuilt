@@ -21,7 +21,7 @@ from phoenix6.configs import (
     MagnetSensorConfigs,
 )
 from phoenix6.signals.spn_enums import SensorDirectionValue
-from FROGlib.sds import MK5I_R3_GEARING, WHEEL_DIAMETER
+from FROGlib.sds import MK5I_R2_GEARING, WHEEL_DIAMETER
 from FROGlib.vision import (
     FROGPoseEstimator,
 )
@@ -60,7 +60,7 @@ from photonlibpy.estimatedRobotPose import EstimatedRobotPose
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
 
-drivetrain = DriveTrain(gear_stages=MK5I_R3_GEARING, wheel_diameter=WHEEL_DIAMETER)
+drivetrain = DriveTrain(gear_stages=MK5I_R2_GEARING, wheel_diameter=WHEEL_DIAMETER)
 
 drive_slot0 = (
     Slot0Configs()
