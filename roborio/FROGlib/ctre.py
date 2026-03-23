@@ -233,6 +233,8 @@ class FROGTalonFX(TalonFX):
                     m.sim_state.set_rotor_velocity(vel_rps)
         else:
             # Simple voltage-based simulation
+            if max_velocity_rps is None:
+                max_velocity_rps = 100.0  # Default RPS at 12V
             self.sim_state.set_supply_voltage(battery_v)
             applied_voltage = self.sim_state.motor_voltage
             target_velocity = (applied_voltage / 12.0) * max_velocity_rps  # type: ignore
