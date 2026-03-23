@@ -185,8 +185,8 @@ class FROGTalonFX(TalonFX):
         measurement_std_devs: Optional[list[float]] = None,
     ):
         """Initialize physics-based simulation for this motor.
-        Automatically uses sensor_to_mechanism_ratio and inverted state
-        from the motor's applied configuration if not overridden.
+        Automatically uses sensor_to_mechanism_ratio from the motor's 
+        applied configuration if not overridden.
 
         Args:
             moi: Moment of Inertia (kg·m²) for the mechanism.
@@ -197,12 +197,11 @@ class FROGTalonFX(TalonFX):
         if motor_model is None:
             motor_model = self.motor_model or DCMotor.falcon500(1)
 
-        # Extract gearing and inversion from the applied configuration
+        # Extract gearing from the applied configuration
         if gearing is None:
             gearing = self.config.feedback.sensor_to_mechanism_ratio
         
         self._sim_gearing = gearing
-        invert_sim = self.config.motor_output.inverted == InvertedValue.CLOCKWISE_POSITIVE
 
         plant = LinearSystemId.DCMotorSystem(motor_model, moi, self._sim_gearing)
 
@@ -211,7 +210,6 @@ class FROGTalonFX(TalonFX):
 
         self.physim = DCMotorSim(plant, motor_model, np.array(measurement_std_devs))
         self.physim.setState(0.0, 0.0)
-        self.invert_sim = invert_sim
 
     def simulation_update(
         self,
@@ -249,10 +247,6 @@ class FROGTalonFX(TalonFX):
             # Convert to rotor rotations/RPS by multiplying by gearing
             pos_rot = pos_output * self._sim_gearing
             vel_rps = vel_output * self._sim_gearing
-
-            if self.invert_sim:
-                pos_rot = -pos_rot
-                vel_rps = -vel_rps
 
             self.sim_state.set_raw_rotor_position(pos_rot)
             self.sim_state.set_rotor_velocity(vel_rps)
