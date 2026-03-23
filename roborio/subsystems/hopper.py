@@ -101,6 +101,7 @@ class Spindexer:
         
         self.mock_detected = False
         if wpilib.RobotBase.isSimulation():
+            SmartDashboard.putBoolean(f"Hopper/{self.name}_Mock_Detected", self.mock_detected)
             self.motor.simulation_init(
                 LinearSystemId.DCMotorSystem(DCMotor.krakenX44(1), 0.001, 1.0),
                 DCMotor.krakenX44(1),
