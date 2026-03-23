@@ -71,17 +71,7 @@ class Feeder(FROGSubsystem):
         )
 
         if wpilib.RobotBase.isSimulation():
-            feed_gearbox = DCMotor.falcon500(1)
-            J_feed = 0.001  # kg·m², feed roller moment of inertia
-            gearing = (
-                self.motor.config.feedback.sensor_to_mechanism_ratio
-            )  # matches sensor_to_mechanism_ratio
-            feed_plant = LinearSystemId.DCMotorSystem(
-                feed_gearbox,
-                J_feed,
-                gearing,
-            )
-            self.motor.simulation_init(feed_plant, feed_gearbox)
+            self.motor.simulation_init(moi=0.001)
 
     def sysIdQuasistatic(self, direction: SysIdRoutine.Direction) -> Command:
         return self.sys_id_routine.quasistatic(direction)

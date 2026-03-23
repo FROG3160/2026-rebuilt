@@ -96,18 +96,11 @@ class Intake(FROGSubsystem):
         self._reverse_speed = constants.kIntakeReverseSpeed
 
         if wpilib.RobotBase.isSimulation():
-            # Roller simulation using built-in FROGlib method
-            roller_gearbox = DCMotor.falcon500(1)
-            roller_plant = LinearSystemId.DCMotorSystem(roller_gearbox, 0.001, 1.0)
-            self.motor.simulation_init(roller_plant, roller_gearbox)
+            # Roller simulation
+            self.motor.simulation_init(moi=0.001)
 
-            # Deploy motor simulation using built-in FROGlib method
-            deploy_gearbox = DCMotor.falcon500(1)
-            deploy_gearing = 1.0 / constants.kIntakeDeployDistancePerRotation # ~6.59 rotations/meter
-            deploy_plant = LinearSystemId.DCMotorSystem(deploy_gearbox, 0.01, deploy_gearing)
-            
-            deploy_inverted = bool(self.deploy_motor.config.motor_output.inverted.value)
-            self.deploy_motor.simulation_init(deploy_plant, deploy_gearbox, invert_sim=deploy_inverted)
+            # Deploy motor simulation
+            self.deploy_motor.simulation_init(moi=0.01)
 
     def _compute_target_speed(self) -> float:
         """Compute intake target speed (m/s) based on robot linear speed."""

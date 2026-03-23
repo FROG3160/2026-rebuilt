@@ -121,21 +121,12 @@ class Climber(FROGSubsystem):
         )
 
         if wpilib.RobotBase.isSimulation():
-            deploy_gearbox = DCMotor.falcon500(1)
-            J_deploy = 0.001
-            gearing_deploy = 1.0
-            deploy_plant = LinearSystemId.DCMotorSystem(
-                deploy_gearbox, J_deploy, gearing_deploy
-            )
-            self.deploy_motor.simulation_init(deploy_plant, deploy_gearbox)
+            # Deploy simulation
+            self.deploy_motor.simulation_init(moi=0.001)
 
-            lift_gearbox = DCMotor.falcon500(1)
-            J_lift = 0.001
-            gearing_lift = 1.0
-            lift_plant = LinearSystemId.DCMotorSystem(
-                lift_gearbox, J_lift, gearing_lift
-            )
-            self.left_lift_motor.simulation_init(lift_plant, lift_gearbox)
+            # Lift simulation
+            # Left lift motor is the primary, right lift is a follower
+            self.left_lift_motor.simulation_init(moi=0.001)
 
     def _deploy_position(self, position: float) -> None:
         """Run the deploy motor to the specified position."""
