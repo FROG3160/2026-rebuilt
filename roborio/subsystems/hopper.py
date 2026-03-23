@@ -102,7 +102,7 @@ class Spindexer:
         self.mock_detected = False
         if wpilib.RobotBase.isSimulation():
             SmartDashboard.putBoolean(f"Hopper/{self.name}_Mock_Detected", self.mock_detected)
-            self.motor.simulation_init(moi=0.001)
+            self.motor.simulation_init(moi=0.001, motor_model=DCMotor.krakenX44(1))
 
     def execute_serialize(self):
         """Run the serialization state machine for this side."""

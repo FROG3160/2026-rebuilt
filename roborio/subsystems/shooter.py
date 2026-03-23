@@ -132,11 +132,13 @@ class Shooter(FROGSubsystem):
         self._commanded_flywheel_speed = 0.0
         self._speed_multiplier = 1.07
         if wpilib.RobotBase.isSimulation():
-            # Flywheel simulation
-            self.motor.simulation_init(moi=0.001)
+            # Flywheel simulation - override gearing to 1.0 (actual mechanical ratio)
+            # as the config uses rotations/meter (~3.13)
+            self.motor.simulation_init(moi=0.001, motor_model=DCMotor.falcon500(2), gearing=1.0)
 
-            # Hood simulation
-            self.hood_motor.simulation_init(moi=0.001)
+            # Hood simulation - override gearing to 60.0 (actual mechanical ratio)
+            # as the config uses 1.0
+            self.hood_motor.simulation_init(moi=0.001, motor_model=DCMotor.falcon500(1), gearing=60.0)
 
         # Set up SysID routine for the shooter
         self.sys_id_routine = SysIdRoutine(
@@ -253,6 +255,10 @@ class Shooter(FROGSubsystem):
             if hasattr(self._hood_slot0, k):
                 setattr(self._hood_slot0, k, v)
         self.hood_motor.configurator.apply(self._hood_slot0)
+
+    @FROGSubsystem.telemetry("Flywheel Commanded Speed")
+    def commanded_speed_telem(self) -> float:
+        return self._commanded_flywheel_speed
 
     @FROGSubsystem.telemetry("Flywheel Rotor Velocity")
     def flywheel_rotor_velocity_telem(self) -> float:

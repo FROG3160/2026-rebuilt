@@ -181,25 +181,30 @@ class FROGTalonFX(TalonFX):
         self,
         moi: float,
         motor_model: Optional[DCMotor] = None,
+        gearing: Optional[float] = None,
         measurement_std_devs: Optional[list[float]] = None,
     ):
         """Initialize physics-based simulation for this motor.
         Automatically uses sensor_to_mechanism_ratio and inverted state
-        from the motor's applied configuration.
+        from the motor's applied configuration if not overridden.
 
         Args:
             moi: Moment of Inertia (kg·m²) for the mechanism.
             motor_model: Optional DCMotor model. Defaults to self.motor_model or Falcon 500.
+            gearing: Optional gear ratio override. Defaults to config.feedback.sensor_to_mechanism_ratio.
             measurement_std_devs: List of [pos_std, vel_std] for noise, defaults to [0.0, 0.0]
         """
         if motor_model is None:
             motor_model = self.motor_model or DCMotor.falcon500(1)
 
         # Extract gearing and inversion from the applied configuration
-        gearing = self.config.feedback.sensor_to_mechanism_ratio
+        if gearing is None:
+            gearing = self.config.feedback.sensor_to_mechanism_ratio
+        
+        self._sim_gearing = gearing
         invert_sim = self.config.motor_output.inverted == InvertedValue.CLOCKWISE_POSITIVE
 
-        plant = LinearSystemId.DCMotorSystem(motor_model, moi, gearing)
+        plant = LinearSystemId.DCMotorSystem(motor_model, moi, self._sim_gearing)
 
         if measurement_std_devs is None:
             measurement_std_devs = [0.0, 0.0]
@@ -235,8 +240,15 @@ class FROGTalonFX(TalonFX):
             applied_v = self.sim_state.motor_voltage
             self.physim.setInputVoltage(applied_v)
             self.physim.update(dt)
-            pos_rot = self.physim.getAngularPositionRotations()
-            vel_rps = radiansToRotations(self.physim.getAngularVelocity())
+            
+            # Get output shaft state and convert to motor rotor state
+            # pos_rot and vel_rps are in output units (e.g. meters or rotations)
+            pos_output = self.physim.getAngularPositionRotations()
+            vel_output = radiansToRotations(self.physim.getAngularVelocity())
+            
+            # Convert to rotor rotations/RPS by multiplying by gearing
+            pos_rot = pos_output * self._sim_gearing
+            vel_rps = vel_output * self._sim_gearing
 
             if self.invert_sim:
                 pos_rot = -pos_rot
