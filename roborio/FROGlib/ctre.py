@@ -1,5 +1,6 @@
 from enum import Enum
 import math
+from typing import Optional
 from ntcore import NetworkTableInstance
 from phoenix6 import StatusSignal
 from phoenix6.configs.cancoder_configs import (
@@ -126,6 +127,7 @@ class FROGTalonFX(TalonFX):
         canbus: str = "rio",
         motor_name: str = "",
         signal_profile: SignalProfile = SignalProfile.BASIC,
+        motor_model: Optional[DCMotor] = None,
     ):
         """Creates a TalonFX motor object with applied configuration
 
@@ -135,10 +137,12 @@ class FROGTalonFX(TalonFX):
             canbus (str): The CAN bus string.
             motor_name (str): The name of the motor for logging purposes.
             signal_profile (SignalProfile): The signal profile.
+            motor_model (Optional[DCMotor]): The motor model for simulation purposes.
         """
         super().__init__(device_id=id, canbus=CANBus(canbus))
         self.motor_name = motor_name if motor_name else f"TalonFX({id})"
         self.config = motor_config
+        self.motor_model = motor_model
         self.configurator.apply(self.config)
         self.apply_usage_mode(signal_profile)
 
@@ -174,19 +178,33 @@ class FROGTalonFX(TalonFX):
         return stator_current > current_threshold and velocity < velocity_threshold
 
     def simulation_init(
-        self, plant, gearbox, measurement_std_devs=None, invert_sim=False
+        self,
+        moi: float,
+        motor_model: Optional[DCMotor] = None,
+        measurement_std_devs: Optional[list[float]] = None,
     ):
         """Initialize physics-based simulation for this motor.
+        Automatically uses sensor_to_mechanism_ratio and inverted state
+        from the motor's applied configuration.
 
         Args:
-            plant: LinearSystemId plant (e.g., DCMotorSystem)
-            gearbox: DCMotor object
+            moi: Moment of Inertia (kg·m²) for the mechanism.
+            motor_model: Optional DCMotor model. Defaults to self.motor_model or Falcon 500.
             measurement_std_devs: List of [pos_std, vel_std] for noise, defaults to [0.0, 0.0]
-            invert_sim (bool): Whether to invert the simulation state relative to voltage.
         """
+        if motor_model is None:
+            motor_model = self.motor_model or DCMotor.falcon500(1)
+
+        # Extract gearing and inversion from the applied configuration
+        gearing = self.config.feedback.sensor_to_mechanism_ratio
+        invert_sim = self.config.motor_output.inverted == InvertedValue.CLOCKWISE_POSITIVE
+
+        plant = LinearSystemId.DCMotorSystem(motor_model, moi, gearing)
+
         if measurement_std_devs is None:
             measurement_std_devs = [0.0, 0.0]
-        self.physim = DCMotorSim(plant, gearbox, np.array(measurement_std_devs))
+
+        self.physim = DCMotorSim(plant, motor_model, np.array(measurement_std_devs))
         self.physim.setState(0.0, 0.0)
         self.invert_sim = invert_sim
 

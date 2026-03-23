@@ -132,21 +132,11 @@ class Shooter(FROGSubsystem):
         self._commanded_flywheel_speed = 0.0
         self._speed_multiplier = 1.07
         if wpilib.RobotBase.isSimulation():
-            flywheel_gearbox = DCMotor.falcon500(2)
-            J_flywheel = 0.001
-            gearing = 1.0
-            flywheel_plant = LinearSystemId.DCMotorSystem(
-                flywheel_gearbox, J_flywheel, gearing
-            )
-            self.motor.simulation_init(flywheel_plant, flywheel_gearbox)
+            # Flywheel simulation
+            self.motor.simulation_init(moi=0.001)
 
-            hood_gearbox = DCMotor.falcon500(1)
-            J_hood = 0.001
-            hood_gearing = 60.0
-            hood_plant = LinearSystemId.DCMotorSystem(
-                hood_gearbox, J_hood, hood_gearing
-            )
-            self.hood_motor.simulation_init(hood_plant, hood_gearbox, invert_sim=True)
+            # Hood simulation
+            self.hood_motor.simulation_init(moi=0.001)
 
         # Set up SysID routine for the shooter
         self.sys_id_routine = SysIdRoutine(
