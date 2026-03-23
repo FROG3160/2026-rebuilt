@@ -18,7 +18,8 @@ from phoenix6.configs import (
 import constants
 from phoenix6 import controls
 from FROGlib.subsystem import FROGSubsystem
-from wpilib import Timer
+from wpimath.system.plant import DCMotor, LinearSystemId
+from wpilib import Timer, SmartDashboard
 
 hopper_slot0 = (
     Slot0Configs()
@@ -98,14 +99,23 @@ class Spindexer:
         self.pulse_interval = 1.0 # seconds to wait when staged before pulsing
         self.pulse_duration = 0.2 # seconds to run forward when pulsing
         
+        self.mock_detected = False
         if wpilib.RobotBase.isSimulation():
+            SmartDashboard.putBoolean(f"Hopper/{self.name}_Mock_Detected", self.mock_detected)
+            self.motor.simulation_init(
+                LinearSystemId.DCMotorSystem(DCMotor.krakenX44(1), 0.001, 1.0),
+                DCMotor.krakenX44(1),
+            )
             inverted = bool(self.motor.config.motor_output.inverted.value)
             self._velocity_sign_multiplier = -1 if inverted else 1
 
     def execute_serialize(self):
         """Run the serialization state machine for this side."""
         # Check if fuel is detected using the configured threshold
-        detected = self.sensor.get_is_detected().value
+        if wpilib.RobotBase.isSimulation():
+            detected = self.mock_detected
+        else:
+            detected = self.sensor.get_is_detected().value
         
         if detected:
             # Reset empty running timers
@@ -118,7 +128,7 @@ class Spindexer:
                     self.is_pulsing = False
                     self.staged_idle_timer.reset()
             else:
-                self.motor.stopMotor()
+                self.motor.set_control(controls.NeutralOut())
                 if self.staged_idle_timer.hasElapsed(self.pulse_interval):
                     self.is_pulsing = True
                     self.pulse_timer.reset()
@@ -168,9 +178,13 @@ class Spindexer:
         self.motor.simulation_update(
             dt,
             battery_v,
-            max_velocity_rps=83.33,
-            velocity_sign_multiplier=self._velocity_sign_multiplier,
         )
+        # Mocking CANrange
+        self.mock_detected = SmartDashboard.getBoolean(f"Hopper/{self.name}_Mock_Detected", self.mock_detected)
+        if self.mock_detected:
+            self.sensor.sim_state.set_distance(0.01)
+        else:
+            self.sensor.sim_state.set_distance(0.1)
 
 
 class Hopper(FROGSubsystem):

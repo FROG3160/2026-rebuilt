@@ -20,9 +20,11 @@ class Tunable:
         self,
         default: float | bool | str,
         topic_name: Optional[str] = None,
+        setter: Optional[Callable[[Any, Any], None]] = None,
     ):
         self.default = default
         self.topic_name = topic_name
+        self.setter = setter
         self._attr_name = ""
 
     def __set_name__(self, owner, name):
@@ -56,7 +58,10 @@ class Tunable:
         new_val = storage["sub"].get()
         if new_val != storage["value"]:
             storage["value"] = new_val
-            # If the instance has a setter method (defined via @tunable_prop), call it
+            # Call the decorated setter method if it exists
+            if self.setter:
+                self.setter(obj, new_val)
+            # Legacy check for _set_ prefix
             setter_name = f"_set_{self._attr_name}"
             if hasattr(obj, setter_name):
                 getattr(obj, setter_name)(new_val)
@@ -66,6 +71,10 @@ class Tunable:
         storage = self._get_storage(obj)
         storage["value"] = value
         storage["pub"].set(value)
+        # Call the decorated setter method if it exists
+        if self.setter:
+            self.setter(obj, value)
+        # Legacy check for _set_ prefix
         setter_name = f"_set_{self._attr_name}"
         if hasattr(obj, setter_name):
             getattr(obj, setter_name)(value)
@@ -162,7 +171,7 @@ def tunable(default: float | bool | str, topic_name: Optional[str] = None):
     """
 
     def decorator(func: Callable[[Any, Any], None]):
-        return Tunable(default, topic_name)
+        return Tunable(default, topic_name, setter=func)
 
     return decorator
 

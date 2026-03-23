@@ -214,7 +214,7 @@ class FROGTalonFX(TalonFX):
             # Physics-based simulation
             unmanaged.feed_enable(0.100)
             self.sim_state.set_supply_voltage(battery_v)
-            applied_v = self.get_motor_voltage().value
+            applied_v = self.sim_state.motor_voltage
             self.physim.setInputVoltage(applied_v)
             self.physim.update(dt)
             pos_rot = self.physim.getAngularPositionRotations()
@@ -233,8 +233,10 @@ class FROGTalonFX(TalonFX):
                     m.sim_state.set_rotor_velocity(vel_rps)
         else:
             # Simple voltage-based simulation
+            if max_velocity_rps is None:
+                max_velocity_rps = 100.0  # Default RPS at 12V
             self.sim_state.set_supply_voltage(battery_v)
-            applied_voltage = self.get_motor_voltage().value
+            applied_voltage = self.sim_state.motor_voltage
             target_velocity = (applied_voltage / 12.0) * max_velocity_rps  # type: ignore
             if not hasattr(self, "_sim_velocity"):
                 self._sim_velocity = 0.0
