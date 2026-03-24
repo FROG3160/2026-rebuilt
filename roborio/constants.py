@@ -88,24 +88,6 @@ kHopperD = 0.0
 kHopperMM_V = 20.0  # Max velocity (RPS) for MotionMagic
 kHopperMM_A = 40.0  # Max acceleration (RPS/s) for MotionMagic
 
-# climber gains
-kDeployP = 1.0
-kDeployI = 0.0
-kDeployD = 0.0
-kDeployS = 0.61
-kDeployV = 4
-
-kDeployMM_V = 0.25
-kDeployMM_A = 0.25
-
-kDeployRatio = 36.0  # gear reduction for climber deploy motor (45:1)
-
-# climber lift gains
-kLiftP = 1.0
-kLiftI = 0.0
-kLiftD = 0.0
-kLiftS = 0.0
-kLiftV = 0.0
 kLiftG = 0.0
 
 kLiftRatio = 45 / (
@@ -183,9 +165,6 @@ kShooterLeftFlywheelID = 43
 kShooterRightFlywheelID = 44
 kHoodMotorID = 45
 
-kClimberDeployMotorID = 50
-kClimberLeftLiftMotorID = 51
-kClimberRightLiftMotorID = 52
 
 # PDH Channels
 kShooterPDHChannel = 5  # an example.
@@ -241,9 +220,6 @@ kDebouncePeriod = 0.5
 kTranslationSlew = 2
 kRotSlew = 2
 
-# Climber Deploy Positions
-kClimberStowed = 0.0
-kClimberDeployed = 0.3
 
 # Field Positions
 kFieldLength = 16.541

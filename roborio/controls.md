@@ -25,10 +25,3 @@ This document outlines the control mapping for the driver's Xbox controller duri
 | **X Button (Hold)** | Ejects all cargo. Runs the intake, feeder, and hopper in reverse. |
 | **Automatic Intake** | The intake will automatically run forward when the front-facing sensor detects a game piece is close. |
 | **Automatic Hopper** | The hopper motor runs automatically: <br> - **Forward** when the intake or feeder is running forward. <br> - **Backward** when the intake or feeder is running backward. |
-
-## 🧗 Climber
-
-| Control | Action |
-| --- | --- |
-| **Left Bumper (Press)** | Deploys the climber mechanism to its set position. |
-| **Left Trigger (Hold)** | Stows the climber mechanism. |
