@@ -31,6 +31,7 @@ from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 from FROGlib.subsystem import FROGSubsystem
 import numpy as np
+from constants import kShootersHubDistances, kShootersHubSpeeds
 
 flywheel_gearing = DriveTrain(
     gear_stages=[], wheel_diameter=inchesToMeters(4.0)
@@ -119,8 +120,8 @@ class Shooter(FROGSubsystem):
 
         # Distance (meters) to Flywheel Speed (rotations/sec) interpolation data for Hub target
         # Important: np.interp requires the x-coordinates to be in increasing order.
-        self.hub_distances = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
-        self.hub_speeds = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
+        kShootersHubDistances = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
+        kShootersHubSpeeds = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
 
         self._flywheel_tolerance = (
             constants.kFlywheelTolerance
@@ -134,11 +135,15 @@ class Shooter(FROGSubsystem):
         if wpilib.RobotBase.isSimulation():
             # Flywheel simulation - override gearing to 1.0 (actual mechanical ratio)
             # as the config uses rotations/meter (~3.13)
-            self.motor.simulation_init(moi=0.001, motor_model=DCMotor.falcon500(2), gearing=1.0)
+            self.motor.simulation_init(
+                moi=0.001, motor_model=DCMotor.falcon500(2), gearing=1.0
+            )
 
             # Hood simulation - override gearing to 60.0 (actual mechanical ratio)
             # as the config uses 1.0
-            self.hood_motor.simulation_init(moi=0.001, motor_model=DCMotor.falcon500(1), gearing=60.0)
+            self.hood_motor.simulation_init(
+                moi=0.001, motor_model=DCMotor.falcon500(1), gearing=60.0
+            )
 
         # Set up SysID routine for the shooter
         self.sys_id_routine = SysIdRoutine(
@@ -184,7 +189,7 @@ class Shooter(FROGSubsystem):
         """
         if distance := self.distance_to_target_supplier():
             # TODO: Differentiate flywheel speed between Hub and Floor targets based on field zone or aim state.
-            return float(np.interp(distance, self.hub_distances, self.hub_speeds))
+            return float(np.interp(distance, kShootersHubDistances, kShootersHubSpeeds))
         else:
             return None
 
