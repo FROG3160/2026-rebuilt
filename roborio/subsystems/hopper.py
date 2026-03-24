@@ -297,3 +297,17 @@ class Hopper(FROGSubsystem):
     def pulse_duration_tunable(self, val):
         self._pulse_duration = val
         self._update_side_configs()
+
+    @FROGSubsystem.tunable(20.0, "Test Speed")
+    def test_speed_tunable(self, val):
+        self._test_speed = val
+
+    def run_test_cmd(self) -> Command:
+        """Run both hopper motors manually at Test Speed until interrupted."""
+        return self.startEnd(
+            lambda: (
+                self.left_side.run_forward(getattr(self, "_test_speed", 20.0)), 
+                self.right_side.run_forward(getattr(self, "_test_speed", 20.0))
+            ), 
+            self.stop_all
+        ).withName("Hopper Test")

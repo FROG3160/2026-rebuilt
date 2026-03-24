@@ -305,35 +305,22 @@ class RobotContainer:
         Each press toggles the motor on/off (runs until toggled off or interrupted).
         """
 
-        # Intake toggle forward
+        # Intake toggle test speed
         self.driver_xbox.a().toggleOnTrue(
-            self.intake.run_forward_cmd().withName("Toggle Intake Forward")
+            self.intake.run_test_cmd().withName("Toggle Intake Test")
         )
 
-        # intake reverse toggles
-        self.driver_xbox.b().toggleOnTrue(
-            self.intake.run_backward_cmd().withName("Toggle Intake Reverse")
-        )
-
-        # Hopper toggles - forward
+        # Hopper toggle test speed
         self.driver_xbox.x().toggleOnTrue(
-            self.hopper.run_forward_cmd().withName("Toggle Hopper Forward")
-        )
-        # reverse
-        self.driver_xbox.y().toggleOnTrue(
-            self.hopper.run_backward_cmd().withName("Toggle Hopper Reverse")
+            self.hopper.run_test_cmd().withName("Toggle Hopper Test")
         )
 
-        # Shooter feed toggle
+        # Shooter feed toggle test speed
         self.driver_xbox.leftBumper().toggleOnTrue(
-            self.feeder.run_forward_cmd().withName("Run Feeder")
+            self.feeder.run_forward_cmd().withName("Run Feeder Test")
         )
 
-        # Flywheel: Using triggers as hold-to-run (common for speed control).
-        # If you really want toggle on flywheel, we can use a button instead or add logic.
+        # Flywheel toggle test speed
         self.driver_xbox.leftTrigger().whileTrue(
-            StartEndCommand(
-                self.shooter._apply_commanded_speed,
-                self.shooter._stop_flywheel,
-            ).withName("Run Flywheel")
+            self.shooter.run_test_cmd().withName("Run Flywheel Test")
         )

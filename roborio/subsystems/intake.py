@@ -216,3 +216,14 @@ class Intake(FROGSubsystem):
     @FROGSubsystem.tunable(constants.kIntakeSpeedMultiplier, "Speed Multiplier")
     def speed_multiplier_tunable(self, val):
         self._speed_multiplier = val
+
+    @FROGSubsystem.tunable(5.0, "Test Speed")
+    def test_speed_tunable(self, val):
+        self._test_speed = val
+
+    def run_test_cmd(self) -> Command:
+        """Run the intake at the speed specified by the Test Speed tunable."""
+        return self.startEnd(
+            lambda: self.motor.set_control(controls.VelocityVoltage(getattr(self, "_test_speed", 5.0), slot=0)),
+            self._stop_intake_motor
+        ).withName("Intake Test")
