@@ -1,4 +1,5 @@
 import math
+import numpy as np
 from wpimath.units import degreesToRadians, feetToMeters, inchesToMeters
 from FROGlib.vision import FROGCameraConfig
 from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d, Pose2d
@@ -59,13 +60,15 @@ kVoltageDriveA = 0.14705  # 0.027631
 # intake gains
 kVoltageIntakeS = 0.12
 kIntakeV = 1.41  # V/(m/s) feedforward - approx 12V / 8.48 m/s free speed
-kIntakeP = 0.0  # velocity PID proportional gain - set to 0.0 until characterized with SysId
+kIntakeP = (
+    0.0  # velocity PID proportional gain - set to 0.0 until characterized with SysId
+)
 kIntakeMinSpeed = 2.0  # m/s - minimum intake surface speed floor
 kIntakeSpeedMultiplier = 1.5  # intake speed = max(min, robot_speed * multiplier)
 kIntakeReverseSpeed = 3.0  # m/s - fixed reverse speed for ejecting
 
 # intake deploy gains
-kIntakeDeployDistancePerRotation = 0.151613 # meters
+kIntakeDeployDistancePerRotation = 0.151613  # meters
 kIntakeDeployTargetMeters = 0.26113
 kIntakeDeployP = 10.0
 kIntakeDeployI = 0.0
@@ -74,11 +77,11 @@ kIntakeDeployS = 0.0
 kIntakeDeployV = 0.0
 kIntakeDeployMM_V = 2.0  # m/s
 kIntakeDeployMM_A = 8.0  # m/s^2
-kIntakeDeployCurrentLimit = 20.0 # Amps
+kIntakeDeployCurrentLimit = 20.0  # Amps
 
 # hopper gains
 kVoltageHopperS = 0.12
-kHopperV = 0.11 # estimated V/(rad/s)
+kHopperV = 0.11  # estimated V/(rad/s)
 kHopperP = 0.5  # Position PID proportional gain
 kHopperI = 0.0
 kHopperD = 0.0
@@ -127,6 +130,11 @@ kFlywheelD = 0.0
 kFlywheelS = 0.095535  # determined with follower helping
 kFlywheelV = 0.34733  # 0.342  # 0.351
 kFlywheelA = 0.018088
+
+# Distance (meters) to Flywheel Speed (rotations/sec) interpolation data for Hub target
+# Important: np.interp requires the x-coordinates to be in increasing order.
+kShootersHubDistances = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
+kShootersHubSpeeds = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
 
 # Hood motor gains
 # It takes about 0.45 volts to move the lead screw to push the hood up,
