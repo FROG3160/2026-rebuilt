@@ -198,27 +198,27 @@ class FieldZones(FROGSubsystem):
     NO_SHOOT_ZONES = [
         # Blue side trenches
         {
-            "x_min": constants.kHubXBlueFacingAlliance,
-            "x_max": constants.kHubXBlueFacingCenter,
+            "x_min": constants.FieldPositions.HubXBlueFacingAlliance,
+            "x_max": constants.FieldPositions.HubXBlueFacingCenter,
             "y_min": 0.0,
             "y_max": 1.265,
         },  # Blue Right Trench
         {
-            "x_min": constants.kHubXBlueFacingAlliance,
-            "x_max": constants.kHubXBlueFacingCenter,
+            "x_min": constants.FieldPositions.HubXBlueFacingAlliance,
+            "x_max": constants.FieldPositions.HubXBlueFacingCenter,
             "y_min": 6.75,
             "y_max": 8.0,
         },  # Blue Left Trench
         # Red side trenches
         {
-            "x_min": constants.kHubXRedFacingCenter,
-            "x_max": constants.kHubXRedFacingAlliance,
+            "x_min": constants.FieldPositions.HubXRedFacingCenter,
+            "x_max": constants.FieldPositions.HubXRedFacingAlliance,
             "y_min": 0.0,
             "y_max": 1.265,
         },  # Red Left Trench
         {
-            "x_min": constants.kHubXRedFacingCenter,
-            "x_max": constants.kHubXRedFacingAlliance,
+            "x_min": constants.FieldPositions.HubXRedFacingCenter,
+            "x_max": constants.FieldPositions.HubXRedFacingAlliance,
             "y_min": 6.75,
             "y_max": 8.0,
         },  # Red Right Trench
@@ -349,28 +349,28 @@ class FieldZones(FROGSubsystem):
 
         if alliance == wpilib.DriverStation.Alliance.kRed:
             # Red Alliance: Alliance zone is X > kHubXRedFacingCenter, opponent zone is X < kHubXBlueFacingCenter
-            if x > constants.kHubXRedFacingCenter:
-                return constants.kRedHub
-            elif constants.kHubXBlueFacingCenter <= x <= constants.kHubXRedFacingCenter:
-                # Middle of the field -> closest Red corner (x=constants.kFieldLength)
-                if y < constants.kFieldMidlineY:
-                    return constants.kRedRightCorner
+            if x > constants.FieldPositions.HubXRedFacingCenter:
+                return constants.FieldPositions.RedHub
+            elif constants.FieldPositions.HubXBlueFacingCenter <= x <= constants.FieldPositions.HubXRedFacingCenter:
+                # Middle of the field -> closest Red corner (x=constants.FieldPositions.FieldLength)
+                if y < constants.FieldPositions.FieldMidlineY:
+                    return constants.FieldPositions.RedRightCorner
                 else:
-                    return constants.kRedLeftCorner
+                    return constants.FieldPositions.RedLeftCorner
             else:
-                return constants.kRedHub  # Default fallback
+                return constants.FieldPositions.RedHub  # Default fallback
         else:
             # Blue Alliance (or fallback): Alliance zone is X < kHubXBlueFacingCenter, opponent zone is X > kHubXRedFacingCenter
-            if x < constants.kHubXBlueFacingCenter:
-                return constants.kBlueHub
-            elif constants.kHubXBlueFacingCenter <= x <= constants.kHubXRedFacingCenter:
+            if x < constants.FieldPositions.HubXBlueFacingCenter:
+                return constants.FieldPositions.BlueHub
+            elif constants.FieldPositions.HubXBlueFacingCenter <= x <= constants.FieldPositions.HubXRedFacingCenter:
                 # Middle of the field -> closest Blue corner (x=0)
-                if y < constants.kFieldMidlineY:
-                    return constants.kBlueRightCorner
+                if y < constants.FieldPositions.FieldMidlineY:
+                    return constants.FieldPositions.BlueRightCorner
                 else:
-                    return constants.kBlueLeftCorner
+                    return constants.FieldPositions.BlueLeftCorner
             else:
-                return constants.kBlueHub  # Default fallback
+                return constants.FieldPositions.BlueHub  # Default fallback
 
     def get_path_for_middle_zone(self, pose: Optional[Pose2d] = None) -> Optional[str]:
         """
@@ -385,7 +385,7 @@ class FieldZones(FROGSubsystem):
         alliance = wpilib.DriverStation.getAlliance()
 
         # Check if we are in the middle field area
-        if not (constants.kHubXBlueFacingCenter <= x <= constants.kHubXRedFacingCenter):
+        if not (constants.FieldPositions.HubXBlueFacingCenter <= x <= constants.FieldPositions.HubXRedFacingCenter):
             return None
 
         is_red = alliance == wpilib.DriverStation.Alliance.kRed
@@ -394,14 +394,14 @@ class FieldZones(FROGSubsystem):
         # "Left" means to the left when standing at our alliance wall looking across the field
         if is_red:
             # Red wall is at X ~ kFieldLength, so X > kFieldMidlineX is "Close"
-            is_close = x > constants.kFieldMidlineX
+            is_close = x > constants.FieldPositions.FieldMidlineX
             # Red looks down -X. So +Y (Y > kFieldMidlineY) is to their Right. Left is Y <= kFieldMidlineY.
-            is_left = y <= constants.kFieldMidlineY
+            is_left = y <= constants.FieldPositions.FieldMidlineY
         else:
             # Blue wall is at X = 0, so X <= kFieldMidlineX is "Close"
-            is_close = x <= constants.kFieldMidlineX
+            is_close = x <= constants.FieldPositions.FieldMidlineX
             # Blue looks up +X. So +Y (Y > kFieldMidlineY) is to their Left.
-            is_left = y > constants.kFieldMidlineY
+            is_left = y > constants.FieldPositions.FieldMidlineY
 
         if is_close and is_left:
             return "NearSweepRight"
@@ -431,8 +431,8 @@ class FieldZones(FROGSubsystem):
         # Blue right wall: Y=0. Red right wall: Y=kFieldWidth.
         if is_red:
             if (
-                constants.kFieldLength - 3.0 <= x <= constants.kFieldLength
-                and constants.kFieldWidth - 2.0 <= y <= constants.kFieldWidth
+                constants.FieldPositions.FieldLength - 3.0 <= x <= constants.FieldPositions.FieldLength
+                and constants.FieldPositions.FieldWidth - 2.0 <= y <= constants.FieldPositions.FieldWidth
             ):
                 return "OutpostApproach"
         else:
@@ -443,7 +443,7 @@ class FieldZones(FROGSubsystem):
         # Blue tower center: Y=3.962. Red tower center: Y=4.108.
         if is_red:
             if (
-                constants.kFieldLength - 3.0 <= x <= constants.kFieldLength
+                constants.FieldPositions.FieldLength - 3.0 <= x <= constants.FieldPositions.FieldLength
                 and 4.108 - 1.0 <= y <= 4.108 + 1.0
             ):
                 return "TowerApproach"
@@ -461,7 +461,7 @@ class FieldZones(FROGSubsystem):
     def get_max_speed_scalar(self) -> float:
         """Returns a scalar (0.0 to 1.0) to limit drive speed based on zone."""
         if self.in_restricted_zone():
-            return self.SPEED_SCALAR / constants.kMaxMetersPerSecond
+            return self.SPEED_SCALAR / constants.Drive.MaxMetersPerSecond
         return 1.0
 
     def periodic(self):

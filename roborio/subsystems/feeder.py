@@ -23,11 +23,11 @@ from wpiutil import SendableBuilder
 # Slot 0: velocity control for normal run forward/backward
 feed_velocity_slot = (
     Slot0Configs()
-    .with_k_s(constants.kFeedS)
-    .with_k_v(constants.kFeedV)
-    .with_k_p(constants.kFeedVelocityP)
-    .with_k_i(constants.kFeedVelocityI)
-    .with_k_d(constants.kFeedVelocityD)
+    .with_k_s(constants.Feeder.FeedS)
+    .with_k_v(constants.Feeder.FeedV)
+    .with_k_p(constants.Feeder.FeedVelocityP)
+    .with_k_i(constants.Feeder.FeedVelocityI)
+    .with_k_d(constants.Feeder.FeedVelocityD)
 )
 
 feed_motor_config = (
@@ -45,7 +45,7 @@ class Feeder(FROGSubsystem):
     def __init__(self):
         super().__init__()
         self.motor = FROGTalonFX(
-            id=constants.kFeedMotorID,
+            id=constants.CANIDs.FeedMotor,
             motor_config=feed_motor_config,
             canbus="rio",
             motor_name="Feed Motor",

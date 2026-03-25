@@ -23,17 +23,17 @@ from wpilib import Timer, SmartDashboard
 
 hopper_slot0 = (
     Slot0Configs()
-    .with_k_s(constants.kVoltageHopperS)
-    .with_k_v(constants.kHopperV)
-    .with_k_p(constants.kHopperP)
-    .with_k_i(constants.kHopperI)
-    .with_k_d(constants.kHopperD)
+    .with_k_s(constants.Hopper.VoltageHopperS)
+    .with_k_v(constants.Hopper.HopperV)
+    .with_k_p(constants.Hopper.HopperP)
+    .with_k_i(constants.Hopper.HopperI)
+    .with_k_d(constants.Hopper.HopperD)
 )
 
 hopper_mm = (
     MotionMagicConfigs()
-    .with_motion_magic_cruise_velocity(constants.kHopperMM_V)
-    .with_motion_magic_acceleration(constants.kHopperMM_A)
+    .with_motion_magic_cruise_velocity(constants.Hopper.HopperMM_V)
+    .with_motion_magic_acceleration(constants.Hopper.HopperMM_A)
 )
 
 hopper_left_motor_config = (
@@ -193,17 +193,17 @@ class Hopper(FROGSubsystem):
         
         self.left_side = Spindexer(
             "Left", 
-            constants.kHopperLeftMotorID, 
+            constants.CANIDs.HopperLeftMotor, 
             hopper_left_motor_config, 
-            constants.kHopperLeftSensorID, 
+            constants.CANIDs.HopperLeftSensor, 
             self._default_velocity, 
             -self._default_velocity
         )
         self.right_side = Spindexer(
             "Right", 
-            constants.kHopperRightMotorID, 
+            constants.CANIDs.HopperRightMotor, 
             hopper_right_motor_config, 
-            constants.kHopperRightSensorID, 
+            constants.CANIDs.HopperRightSensor, 
             self._default_velocity, 
             -self._default_velocity
         )

@@ -1,10 +1,10 @@
 import math
 import numpy as np
 from wpimath.units import degreesToRadians, feetToMeters, inchesToMeters
-from FROGlib.vision import FROGCameraConfig
 from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d, Pose2d
+from FROGlib.vision import FROGCameraConfig
 
-# Camera Configs
+# Camera Configs remain global as before
 kCameraConfigs = (
     FROGCameraConfig(
         "OV9281-AprilTag2",
@@ -29,218 +29,180 @@ kCameraConfigs = (
         ),
     ),
 )
+
 kDetectorConfigs = (FROGCameraConfig("Object1", Transform3d()),)
 
-## CANCoder offsets
-########################################
-kFrontLeftOffset = 0.042480
-kFrontRightOffset = 0.250244
-kBackLeftOffset = -0.236572
-kBackRightOffset = -0.448486
+
+class CANIDs:
+    FrontLeftDrive = 11
+    FrontLeftSteer = 21
+    FrontLeftSensor = 31
+
+    FrontRightDrive = 12
+    FrontRightSteer = 22
+    FrontRightSensor = 32
+
+    BackLeftDrive = 13
+    BackLeftSteer = 23
+    BackLeftSensor = 33
+
+    BackRightDrive = 14
+    BackRightSteer = 24
+    BackRightSensor = 34
+
+    Gyro = 39
+
+    IntakeMotor = 40
+    IntakeDeployMotor = 41
+
+    FeedMotor = 42
+    ShooterLeftFlywheel = 43
+    ShooterRightFlywheel = 44
+    HoodMotor = 45
+
+    HopperLeftMotor = 46
+    HopperRightMotor = 47
+    HopperLeftSensor = 48
+    HopperRightSensor = 49
+
+    ShooterPDHChannel = 5
 
 
-## Swerve Drive Gains
-########################################
-# steer motor gains
-kSteerP = 39.236  # 2.402346
-kSteerI = 0  # 0.200195\
-kSteerS = 0.215
-kSteerV = 0.10583
+class Drive:
+    # CANCoder offsets
+    FrontLeftOffset = 0.042480
+    FrontRightOffset = 0.250244
+    BackLeftOffset = -0.236572
+    BackRightOffset = -0.448486
 
-# drive motor gains
-# kDriveFeedForward = 0.53
-# kDutyCycleDriveV = 0.00916
-# kDutyCycleDriveS = 0.01125
+    # Steer gains
+    SteerP = 39.236
+    SteerI = 0
+    SteerS = 0.215
+    SteerV = 0.10583
 
-kVoltageDriveV = 1.8  # 2.0164  # 1.795
-kVoltageDriveS = 0.060831  # 0.211
-kVoltageDriveP = 2.9646  # 0.5
-kVoltageDriveA = 0.14705  # 0.027631
+    # Drive motor gains
+    VoltageDriveV = 1.8
+    VoltageDriveS = 0.060831
+    VoltageDriveP = 2.9646
+    VoltageDriveA = 0.14705
 
-# intake gains
-kVoltageIntakeS = 0.12
-kIntakeV = 1.41  # V/(m/s) feedforward - approx 12V / 8.48 m/s free speed
-kIntakeP = (
-    0.0  # velocity PID proportional gain - set to 0.0 until characterized with SysId
-)
-kIntakeMinSpeed = 2.0  # m/s - minimum intake surface speed floor
-kIntakeSpeedMultiplier = 1.5  # intake speed = max(min, robot_speed * multiplier)
-kIntakeReverseSpeed = 3.0  # m/s - fixed reverse speed for ejecting
+    # Physical dimensions
+    TrackWidthMeters = inchesToMeters(24.25)
+    WheelBaseMeters = inchesToMeters(19.75)
 
-# intake deploy gains
-kIntakeDeployDistancePerRotation = 0.151613  # meters
-kIntakeDeployTargetMeters = 0.26113
-kIntakeDeployP = 10.0
-kIntakeDeployI = 0.0
-kIntakeDeployD = 0.0
-kIntakeDeployS = 0.0
-kIntakeDeployV = 0.0
-kIntakeDeployMM_V = 2.0  # m/s
-kIntakeDeployMM_A = 8.0  # m/s^2
-kIntakeDeployCurrentLimit = 20.0  # Amps
+    MaxMetersPerSecond = feetToMeters(16)
+    MaxChassisRadiansPerSec = 2 * math.tau
 
-# hopper gains
-kVoltageHopperS = 0.12
-kHopperV = 0.11  # estimated V/(rad/s)
-kHopperP = 0.5  # Position PID proportional gain
-kHopperI = 0.0
-kHopperD = 0.0
-kHopperMM_V = 20.0  # Max velocity (RPS) for MotionMagic
-kHopperMM_A = 40.0  # Max acceleration (RPS/s) for MotionMagic
+    ProfiledRotationMaxVelocity = MaxChassisRadiansPerSec * 2
+    ProfiledRotationMaxAccel = MaxChassisRadiansPerSec * 4
 
-kLiftG = 0.0
+    ProfiledRotationP = 0.6
+    ProfiledRotationI = 0.0
+    ProfiledRotationD = 0.0
 
-kLiftRatio = 45 / (
-    14 * 0.25
-)  # (gear reduction (45) / (sprocket teeth (14) * pitch (0.25 inches per tooth)))
-
-# Feed/transfer motor gains
-kFeedS = 0.24257
-kFeedV = 1.2853
-kFeedA = 0.1092
-kFeedVelocityP = 0.0  # velocity PID
-kFeedVelocityI = 0.0
-kFeedVelocityD = 0.0
-kFeedPositionP = 9.9692
-kFeedPositionI = 0.0
-kFeedPositionD = 0.62293
-
-# flywheel gains
-kFlywheelP = 0.50197
-kFlywheelI = 0.0
-kFlywheelD = 0.0
-kFlywheelS = 0.095535  # determined with follower helping
-kFlywheelV = 0.34733  # 0.342  # 0.351
-kFlywheelA = 0.018088
-
-# Distance (meters) to Flywheel Speed (rotations/sec) interpolation data for Hub target
-# Important: np.interp requires the x-coordinates to be in increasing order.
-kShootersHubDistances = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
-kShootersHubSpeeds = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
-
-# Hood motor gains
-# It takes about 0.45 volts to move the lead screw to push the hood up,
-# and about -0.4 volts to move it down, so we can calculate kS and kG from those values
-kHoodS = 0.425  # (|Upward V| + |Downward V|) / 2
-kHoodP = 3.0
-kHoodV = 0.12
-kHoodG = 0.025
-kHoodMMV = 8.0
-kHoodMMA = 16.0  # (Upward V - Downward V) / 2
-kHoodForwardLimit = 1.15  # rotations
-kHoodReverseLimit = 0.0
-
-# tolerances
-kFlywheelTolerance = 0.2  # tolerance in m/s
-
-## CAN ID assignments
-########################################
-# Swerve Drive Motor/Encoder IDs
-kFrontLeftDriveID = 11
-kFrontLeftSteerID = 21
-kFrontLeftSensorID = 31
-
-kFrontRightDriveID = 12
-kFrontRightSteerID = 22
-kFrontRightSensorID = 32
-
-kBackLeftDriveID = 13
-kBackLeftSteerID = 23
-kBackLeftSensorID = 33
-
-kBackRightDriveID = 14
-kBackRightSteerID = 24
-kBackRightSensorID = 34
-
-kGyroID = 39
-
-kIntakeMotorID = 40
-kIntakeDeployMotorID = 41
-kHopperLeftMotorID = 46
-kHopperRightMotorID = 47
-kHopperLeftSensorID = 48
-kHopperRightSensorID = 49
-kFeedMotorID = 42
-kShooterLeftFlywheelID = 43
-kShooterRightFlywheelID = 44
-kHoodMotorID = 45
+    # PathPlanner
+    PPTranslationP = 2.0
+    PPTranslationI = 0.0
+    PPTranslationD = 0.0
+    PPRotationP = 4.0
+    PPRotationI = 0.0
+    PPRotationD = 0.0
+    PPMaxVelocity = 3.0
+    PPMaxAcceleration = 3.0
+    PPMaxAngularVelocity = 4.0
+    PPMaxAngularAcceleration = 8.0
 
 
-# PDH Channels
-kShooterPDHChannel = 5  # an example.
+class Intake:
+    VoltageIntakeS = 0.12
+    IntakeV = 1.41
+    IntakeP = 0.0
+    IntakeMinSpeed = 2.0
+    IntakeSpeedMultiplier = 1.5
+    IntakeReverseSpeed = 3.0
+
+    IntakeDeployDistancePerRotation = 0.151613
+    IntakeDeployTargetMeters = 0.26113
+    IntakeDeployP = 10.0
+    IntakeDeployI = 0.0
+    IntakeDeployD = 0.0
+    IntakeDeployS = 0.0
+    IntakeDeployV = 0.0
+    IntakeDeployMM_V = 2.0
+    IntakeDeployMM_A = 8.0
+    IntakeDeployCurrentLimit = 20.0
 
 
-# ROGOT CHARACTERISTICS
-#########################################
-
-# Swerve Drive Physical Attributes
-kTrackWidthMeters = inchesToMeters(24.25)  # 0.62
-kWheelBaseMeters = inchesToMeters(19.75)  # 0.5
-
-kMaxMetersPerSecond = feetToMeters(16)  # 16 feet per second
-kMaxChassisRadiansPerSec = 2 * math.tau  # revolutions per sec * tau
-
-kProfiledRotationMaxVelocity = kMaxChassisRadiansPerSec * 2
-kProfiledRotationMaxAccel = (
-    kMaxChassisRadiansPerSec * 4
-)  # 4 rotations per second per second
-
-kProfiledRotationP = 0.6
-kProfiledRotationI = 0.0
-kProfiledRotationD = 0.0
-
-## PathPlanner Constants
-#########################################
-kPPTranslationP = 2.0
-kPPTranslationI = 0.0
-kPPTranslationD = 0.0
-
-kPPRotationP = 4.0
-kPPRotationI = 0.0
-kPPRotationD = 0.0
-
-kPPMaxVelocity = 3.0
-kPPMaxAcceleration = 3.0
-kPPMaxAngularVelocity = 4.0
-kPPMaxAngularAcceleration = 8.0
-
-## Network Tables names
-#########################################
-kComponentSubtableName = "FROGSubsystems"
-
-## Xbox Controller Constants
-#########################################
-# Xbox controller ports
-kDriverControllerPort = 0
-kOperatorControllerPort = 1
-
-# Xbox controller constants
-kDeadband = 0.15
-kDebouncePeriod = 0.5
-kTranslationSlew = 2
-kRotSlew = 2
+class Hopper:
+    VoltageHopperS = 0.12
+    HopperV = 0.11
+    HopperP = 0.5
+    HopperI = 0.0
+    HopperD = 0.0
+    HopperMM_V = 20.0
+    HopperMM_A = 40.0
 
 
-# Field Positions
-kFieldLength = 16.541
-kFieldWidth = 8.07
-kFieldMidlineX = kFieldLength / 2
-kFieldMidlineY = kFieldWidth / 2
+class Shooter:
+    FlywheelP = 0.50197
+    FlywheelI = 0.0
+    FlywheelD = 0.0
+    FlywheelS = 0.095535
+    FlywheelV = 0.34733
+    FlywheelA = 0.018088
 
-# Hub X boundaries (based on AprilTags)
-kHubXBlueFacingCenter = 5.229
-kHubXRedFacingCenter = 11.312
-kHubXBlueFacingAlliance = 4.022
-kHubXRedFacingAlliance = 12.519
+    ShootersHubDistances = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
+    ShootersHubSpeeds = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
 
-kBlueHub = Pose2d(4.626, kFieldMidlineY, Rotation2d(0))  # Facing away from blue hub
-kRedHub = Pose2d(11.915, kFieldMidlineY, Rotation2d(0))
-kBlueRightTrench = Pose2d(4.692, 0.635, Rotation2d(0))
-kBlueLeftTrench = Pose2d(4.692, 7.489, Rotation2d(0))
-kRedRightTrench = Pose2d(11.849, 0.635, Rotation2d(math.pi))
-kRedLeftTrench = Pose2d(11.849, 7.489, Rotation2d(math.pi))
+    HoodS = 0.425
+    HoodP = 3.0
+    HoodV = 0.12
+    HoodG = 0.025
+    HoodMMV = 8.0
+    HoodMMA = 16.0
+    HoodForwardLimit = 1.15
+    HoodReverseLimit = 0.0
 
-kBlueRightCorner = Pose2d(1.0, 1.0, Rotation2d(0))
-kBlueLeftCorner = Pose2d(1.0, 7.2, Rotation2d(0))
-kRedRightCorner = Pose2d(15.5, 1.0, Rotation2d(math.pi))
-kRedLeftCorner = Pose2d(15.5, 7.2, Rotation2d(math.pi))
+    FlywheelTolerance = 0.2
+
+
+class Feeder:
+    FeedS = 0.0
+    FeedV = 0.0
+    FeedVelocityP = 0.0
+    FeedVelocityI = 0.0
+    FeedVelocityD = 0.0
+
+
+class Controller:
+    DriverControllerPort = 0
+    OperatorControllerPort = 1
+    Deadband = 0.15
+    DebouncePeriod = 0.5
+    TranslationSlew = 2
+    RotSlew = 2
+
+
+class FieldPositions:
+    FieldLength = 16.541
+    FieldWidth = 8.07
+    FieldMidlineX = FieldLength / 2
+    FieldMidlineY = FieldWidth / 2
+
+    HubXBlueFacingCenter = 5.229
+    HubXRedFacingCenter = 11.312
+    HubXBlueFacingAlliance = 4.022
+    HubXRedFacingAlliance = 12.519
+
+    BlueHub = Pose2d(4.626, FieldMidlineY, Rotation2d(0))
+    RedHub = Pose2d(11.915, FieldMidlineY, Rotation2d(0))
+    BlueRightTrench = Pose2d(4.692, 0.635, Rotation2d(0))
+    BlueLeftTrench = Pose2d(4.692, 7.489, Rotation2d(0))
+    RedRightTrench = Pose2d(11.849, 0.635, Rotation2d(math.pi))
+    RedLeftTrench = Pose2d(11.849, 7.489, Rotation2d(math.pi))
+
+    BlueRightCorner = Pose2d(1.0, 1.0, Rotation2d(0))
+    BlueLeftCorner = Pose2d(1.0, 7.2, Rotation2d(0))
+    RedRightCorner = Pose2d(15.5, 1.0, Rotation2d(math.pi))
+    RedLeftCorner = Pose2d(15.5, 7.2, Rotation2d(math.pi))

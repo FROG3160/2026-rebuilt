@@ -32,9 +32,9 @@ _SENSOR_TO_MECHANISM_RATIO = 1.0 / (math.pi * _ROLLER_DIAMETER_M)  # ≈ 12.5331
 
 intake_slot0 = (
     Slot0Configs()
-    .with_k_s(constants.kVoltageIntakeS)
-    .with_k_v(constants.kIntakeV)
-    .with_k_p(constants.kIntakeP)
+    .with_k_s(constants.Intake.VoltageIntakeS)
+    .with_k_v(constants.Intake.IntakeV)
+    .with_k_p(constants.Intake.IntakeP)
 )
 
 intake_motor_config = (
@@ -46,29 +46,29 @@ intake_motor_config = (
 
 intake_deploy_slot0 = (
     Slot0Configs()
-    .with_k_s(constants.kIntakeDeployS)
-    .with_k_v(constants.kIntakeDeployV)
-    .with_k_p(constants.kIntakeDeployP)
-    .with_k_i(constants.kIntakeDeployI)
-    .with_k_d(constants.kIntakeDeployD)
+    .with_k_s(constants.Intake.IntakeDeployS)
+    .with_k_v(constants.Intake.IntakeDeployV)
+    .with_k_p(constants.Intake.IntakeDeployP)
+    .with_k_i(constants.Intake.IntakeDeployI)
+    .with_k_d(constants.Intake.IntakeDeployD)
 )
 
 intake_deploy_mm = (
     MotionMagicConfigs()
-    .with_motion_magic_cruise_velocity(constants.kIntakeDeployMM_V)
-    .with_motion_magic_acceleration(constants.kIntakeDeployMM_A)
+    .with_motion_magic_cruise_velocity(constants.Intake.IntakeDeployMM_V)
+    .with_motion_magic_acceleration(constants.Intake.IntakeDeployMM_A)
 )
 
 intake_deploy_current_limits = (
     CurrentLimitsConfigs()
-    .with_stator_current_limit(constants.kIntakeDeployCurrentLimit)
+    .with_stator_current_limit(constants.Intake.IntakeDeployCurrentLimit)
     .with_stator_current_limit_enable(True)
 )
 
 intake_deploy_motor_config = (
     get_frog_talon_config()
     .with_motor_output(MOTOR_OUTPUT_CWP_BRAKE)
-    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(1.0 / constants.kIntakeDeployDistancePerRotation))
+    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(1.0 / constants.Intake.IntakeDeployDistancePerRotation))
     .with_slot0(intake_deploy_slot0)
     .with_motion_magic(intake_deploy_mm)
     .with_current_limits(intake_deploy_current_limits)
@@ -79,21 +79,21 @@ class Intake(FROGSubsystem):
         super().__init__()
         self._robot_speed_supplier = robot_speed_supplier
         self.motor = FROGTalonFX(
-            id=constants.kIntakeMotorID,
+            id=constants.CANIDs.IntakeMotor,
             motor_config=intake_motor_config,
             canbus="rio",
             motor_name="Intake",
         )
         self.deploy_motor = FROGTalonFX(
-            id=constants.kIntakeDeployMotorID,
+            id=constants.CANIDs.IntakeDeployMotor,
             motor_config=intake_deploy_motor_config,
             canbus="rio",
             motor_name="IntakeDeploy",
             signal_profile=FROGTalonFX.SignalProfile.POSITION_MM,
         )
-        self._min_speed = constants.kIntakeMinSpeed
-        self._speed_multiplier = constants.kIntakeSpeedMultiplier
-        self._reverse_speed = constants.kIntakeReverseSpeed
+        self._min_speed = constants.Intake.IntakeMinSpeed
+        self._speed_multiplier = constants.Intake.IntakeSpeedMultiplier
+        self._reverse_speed = constants.Intake.IntakeReverseSpeed
 
         if wpilib.RobotBase.isSimulation():
             # Roller simulation
@@ -118,7 +118,7 @@ class Intake(FROGSubsystem):
         self.motor.stopMotor()
 
     def _run_deploy_to_target(self):
-        self.deploy_motor.set_control(controls.MotionMagicVoltage(constants.kIntakeDeployTargetMeters, slot=0, enable_foc=False))
+        self.deploy_motor.set_control(controls.MotionMagicVoltage(constants.Intake.IntakeDeployTargetMeters, slot=0, enable_foc=False))
 
     def _run_deploy_to_stowed(self):
         self.deploy_motor.set_control(controls.MotionMagicVoltage(0.0, slot=0, enable_foc=False))
@@ -144,7 +144,7 @@ class Intake(FROGSubsystem):
             .andThen(
                 # Wait until the deploy motor reaches close to the target position
                 commands2.cmd.waitUntil(
-                    lambda: abs(self.deploy_motor.get_position().value - constants.kIntakeDeployTargetMeters) < 0.1
+                    lambda: abs(self.deploy_motor.get_position().value - constants.Intake.IntakeDeployTargetMeters) < 0.1
                 )
             )
             .andThen(self.run(self._run_intake_motor_forward))
@@ -209,10 +209,10 @@ class Intake(FROGSubsystem):
     def deploy_position_telem(self) -> float:
         return self.deploy_motor.get_position().value
 
-    @FROGSubsystem.tunable(constants.kIntakeMinSpeed, "Min Speed")
+    @FROGSubsystem.tunable(constants.Intake.IntakeMinSpeed, "Min Speed")
     def min_speed_tunable(self, val):
         self._min_speed = val
 
-    @FROGSubsystem.tunable(constants.kIntakeSpeedMultiplier, "Speed Multiplier")
+    @FROGSubsystem.tunable(constants.Intake.IntakeSpeedMultiplier, "Speed Multiplier")
     def speed_multiplier_tunable(self, val):
         self._speed_multiplier = val
