@@ -301,26 +301,25 @@ class RobotContainer:
         self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
     def configureComponentTestBindings(self) -> None:
-        """Button bindings for manual component testing in test mode.
-        Each press toggles the motor on/off (runs until toggled off or interrupted).
-        """
+        """Button bindings for manual component testing in test mode."""
 
-        # Intake toggle test speed
-        self.driver_xbox.a().toggleOnTrue(
-            self.intake.run_test_cmd().withName("Toggle Intake Test")
-        )
-
-        # Hopper toggle test speed
-        self.driver_xbox.x().toggleOnTrue(
-            self.hopper.run_test_cmd().withName("Toggle Hopper Test")
-        )
-
-        # Shooter feed toggle test speed
-        self.driver_xbox.leftBumper().toggleOnTrue(
-            self.feeder.run_forward_cmd().withName("Run Feeder Test")
-        )
-
-        # Flywheel toggle test speed
+        # Intake via left trigger, like teleop
         self.driver_xbox.leftTrigger().whileTrue(
-            self.shooter.run_test_cmd().withName("Run Flywheel Test")
+            self.intake.run_forward_cmd().withName("Test Intake")
+        )
+
+        # Run the full sequence: hopper, feeder, flywheel, and hood
+        # using the commanded flywheel speed instead of calculating from distance.
+        # Hopper is triggered automatically when feeder runs forward.
+        self.driver_xbox.a().whileTrue(
+            cmd.sequence(
+                cmd.runOnce(self.shooter.deploy_hood),
+                cmd.waitUntil(self.shooter.is_hood_deployed),
+                self.shooter.fire_at_set_speed_cmd().alongWith(
+                    cmd.waitUntil(self.shooter.is_at_speed).andThen(
+                        self.feeder.run_forward_cmd()
+                    )
+                ),
+            ).finallyDo(lambda interrupted: self.shooter.retract_hood())
+            .withName("Test Firing Sequence")
         )

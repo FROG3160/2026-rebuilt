@@ -182,10 +182,6 @@ class Shooter(FROGSubsystem):
     def _apply_commanded_speed(self):
         self.motor.set_control(controls.VelocityVoltage(self._commanded_flywheel_speed))
 
-    def run_test_cmd(self) -> Command:
-        """Run the flywheel at the tunable Flywheel Commanded Speed."""
-        return self.startEnd(self._apply_commanded_speed, self._stop_flywheel).withName("Shooter Test")
-
     def _get_speed_from_distance(self) -> float | None:
         """
         Calculates speed based on an interpolation map for the Hub target.
