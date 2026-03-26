@@ -1,12 +1,12 @@
 from FROGlib.subsystem import FROGSubsystem
 from FROGlib.vision import FROGPoseEstimator, FROGDetector
-from constants import kCameraConfigs, kDetectorConfigs
+import constants
 from typing import Optional
 
 
 class FuelDetector(FROGDetector, FROGSubsystem):
     def __init__(self):
-        super().__init__(kDetectorConfigs[0])
+        super().__init__(constants.DETECTOR_CONFIGS[0])
         self._min_confidence = 0.8
         self._cluster_radius_deg = 12.0
         self._min_neighbors = 2

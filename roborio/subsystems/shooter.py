@@ -38,19 +38,19 @@ flywheel_gearing = DriveTrain(
 
 flywheel_slot0 = (
     Slot0Configs()
-    .with_k_s(constants.Shooter.FlywheelS)
-    .with_k_v(constants.Shooter.FlywheelV)
-    .with_k_a(constants.Shooter.FlywheelA)
-    .with_k_p(constants.Shooter.FlywheelP)
-    .with_k_i(constants.Shooter.FlywheelI)
-    .with_k_d(constants.Shooter.FlywheelD)
+    .with_k_s(constants.Shooter.FLYWHEEL_S)
+    .with_k_v(constants.Shooter.FLYWHEEL_V)
+    .with_k_a(constants.Shooter.FLYWHEEL_A)
+    .with_k_p(constants.Shooter.FLYWHEEL_P)
+    .with_k_i(constants.Shooter.FLYWHEEL_I)
+    .with_k_d(constants.Shooter.FLYWHEEL_D)
 )
 hood_slot0 = (
     Slot0Configs()
-    .with_k_s(constants.Shooter.HoodS)
-    .with_k_p(constants.Shooter.HoodP)
-    .with_k_g(constants.Shooter.HoodG)
-    .with_k_v(constants.Shooter.HoodV)
+    .with_k_s(constants.Shooter.HOOD_S)
+    .with_k_p(constants.Shooter.HOOD_P)
+    .with_k_g(constants.Shooter.HOOD_G)
+    .with_k_v(constants.Shooter.HOOD_V)
 )
 
 flywheel_motor_config = (
@@ -66,8 +66,8 @@ flywheel_motor_config = (
 
 hood_motion_magic_config = (
     MotionMagicConfigs()
-    .with_motion_magic_cruise_velocity(constants.Shooter.HoodMMV)
-    .with_motion_magic_acceleration(constants.Shooter.HoodMMA)
+    .with_motion_magic_cruise_velocity(constants.Shooter.HOOD_MMV)
+    .with_motion_magic_acceleration(constants.Shooter.HOOD_MMA)
 )
 hood_motor_config = (
     get_frog_talon_config()
@@ -85,7 +85,7 @@ class Shooter(FROGSubsystem):
     def __init__(self, distance_to_target_supplier: Callable[[], Optional[float]]):
         super().__init__()
         self.motor = FROGTalonFX(
-            id=constants.CANIDs.ShooterLeftFlywheel,
+            id=constants.CANIDs.SHOOTER_LEFT_FLYWHEEL,
             motor_config=deepcopy(flywheel_motor_config).with_motor_output(
                 MOTOR_OUTPUT_CCWP_COAST
             ),
@@ -94,7 +94,7 @@ class Shooter(FROGSubsystem):
             signal_profile=FROGTalonFX.SignalProfile.FLYWHEEL,
         )
         self._follower = FROGTalonFX(
-            id=constants.CANIDs.ShooterRightFlywheel,
+            id=constants.CANIDs.SHOOTER_RIGHT_FLYWHEEL,
             motor_config=deepcopy(flywheel_motor_config).with_slot0(Slot0Configs()),
             canbus="rio",
             motor_name="RightFlywheel",
@@ -110,20 +110,15 @@ class Shooter(FROGSubsystem):
         self.distance_to_target_supplier = distance_to_target_supplier
 
         self.hood_motor = FROGTalonFX(
-            id=constants.CANIDs.HoodMotor,
+            id=constants.CANIDs.HOOD_MOTOR,
             motor_config=hood_motor_config,
             canbus="rio",
             motor_name="Hood Motor",
             signal_profile=FROGTalonFX.SignalProfile.POSITION_MM,
         )
 
-        # Distance (meters) to Flywheel Speed (rotations/sec) interpolation data for Hub target
-        # Important: np.interp requires the x-coordinates to be in increasing order.
-        kShootersHubDistances = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
-        kShootersHubSpeeds = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
-
         self._flywheel_tolerance = (
-            constants.Shooter.FlywheelTolerance
+            constants.Shooter.FLYWHEEL_TOLERANCE
         )  # RPM tolerance for "at speed" check
 
         # used in simulationPeriodic to track simulated velocity
@@ -188,7 +183,7 @@ class Shooter(FROGSubsystem):
         """
         if distance := self.distance_to_target_supplier():
             # TODO: Differentiate flywheel speed between Hub and Floor targets based on field zone or aim state.
-            return float(np.interp(distance, constants.Shooter.ShootersHubDistances, constants.Shooter.ShootersHubSpeeds))
+            return float(np.interp(distance, constants.Shooter.SHOOTERS_HUB_DISTANCES, constants.Shooter.SHOOTERS_HUB_SPEEDS))
         else:
             return None
 
@@ -214,12 +209,12 @@ class Shooter(FROGSubsystem):
 
     def deploy_hood(self):
         self.hood_motor.set_control(
-            controls.MotionMagicVoltage(constants.Shooter.HoodForwardLimit)
+            controls.MotionMagicVoltage(constants.Shooter.HOOD_FORWARD_LIMIT)
         )
 
     def retract_hood(self):
         self.hood_motor.set_control(
-            controls.MotionMagicVoltage(constants.Shooter.HoodReverseLimit)
+            controls.MotionMagicVoltage(constants.Shooter.HOOD_REVERSE_LIMIT)
         )
 
     def _set_hood_position(self):
@@ -292,27 +287,27 @@ class Shooter(FROGSubsystem):
     def at_speed_telem(self) -> bool:
         return self.is_at_speed()
 
-    @FROGSubsystem.tunable(constants.Shooter.FlywheelS, "Flywheel K_S")
+    @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_S, "Flywheel K_S")
     def flywheel_ks(self, val):
         self._updateFlywheelSlot(k_s=val)
 
-    @FROGSubsystem.tunable(constants.Shooter.FlywheelV, "Flywheel K_V")
+    @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_V, "Flywheel K_V")
     def flywheel_kv(self, val):
         self._updateFlywheelSlot(k_v=val)
 
-    @FROGSubsystem.tunable(constants.Shooter.FlywheelA, "Flywheel K_A")
+    @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_A, "Flywheel K_A")
     def flywheel_ka(self, val):
         self._updateFlywheelSlot(k_a=val)
 
-    @FROGSubsystem.tunable(constants.Shooter.FlywheelP, "Flywheel K_P")
+    @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_P, "Flywheel K_P")
     def flywheel_kp(self, val):
         self._updateFlywheelSlot(k_p=val)
 
-    @FROGSubsystem.tunable(constants.Shooter.FlywheelI, "Flywheel K_I")
+    @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_I, "Flywheel K_I")
     def flywheel_ki(self, val):
         self._updateFlywheelSlot(k_i=val)
 
-    @FROGSubsystem.tunable(constants.Shooter.FlywheelD, "Flywheel K_D")
+    @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_D, "Flywheel K_D")
     def flywheel_kd(self, val):
         self._updateFlywheelSlot(k_d=val)
 
@@ -324,14 +319,14 @@ class Shooter(FROGSubsystem):
     def commanded_speed(self, val):
         self._commanded_flywheel_speed = val
 
-    @FROGSubsystem.tunable(constants.Shooter.FlywheelTolerance, "Flywheel Tolerance")
+    @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_TOLERANCE, "Flywheel Tolerance")
     def flywheel_tolerance(self, val):
         self._flywheel_tolerance = val
 
-    @FROGSubsystem.tunable(constants.Shooter.HoodS, "Hood K_S")
+    @FROGSubsystem.tunable(constants.Shooter.HOOD_S, "Hood K_S")
     def hood_ks(self, val):
         self._updateHoodSlot(k_s=val)
 
-    @FROGSubsystem.tunable(constants.Shooter.HoodP, "Hood K_P")
+    @FROGSubsystem.tunable(constants.Shooter.HOOD_P, "Hood K_P")
     def hood_kp(self, val):
         self._updateHoodSlot(k_p=val)

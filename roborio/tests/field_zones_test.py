@@ -79,39 +79,39 @@ def test_field_zones_get_aim_target():
     )
     wpilib.simulation.DriverStationSim.notifyNewData()
 
-    # In Blue alliance zone (X=3.0 < 5.229) -> should aim at kBlueHub
+    # In Blue alliance zone (X=3.0 < 5.229) -> should aim at BLUE_HUB
     current_pose[0] = Pose2d(3.0, 3.0, Rotation2d())
-    assert zones.get_aim_target() == constants.kBlueHub
+    assert zones.get_aim_target() == constants.FieldPositions.BLUE_HUB
 
     # In middle of field (X=8.0)
     current_pose[0] = Pose2d(
         8.0, 3.0, Rotation2d()
     )  # y < 4.1 -> closest corner (0.0, 0.0)
-    assert zones.get_aim_target() == constants.kBlueRightCorner
+    assert zones.get_aim_target() == constants.FieldPositions.BLUE_RIGHT_CORNER
 
     current_pose[0] = Pose2d(
         8.0, 5.0, Rotation2d()
     )  # y >= 4.1 -> closest corner (0.0, 8.2)
-    assert zones.get_aim_target() == constants.kBlueLeftCorner
+    assert zones.get_aim_target() == constants.FieldPositions.BLUE_LEFT_CORNER
 
     # Simulate Red Alliance
     wpilib.simulation.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kRed1)
     wpilib.simulation.DriverStationSim.notifyNewData()
 
-    # In Red alliance zone (X=13.0 > 11.312) -> should aim at kRedHub
+    # In Red alliance zone (X=13.0 > 11.312) -> should aim at RED_HUB
     current_pose[0] = Pose2d(13.0, 3.0, Rotation2d())
-    assert zones.get_aim_target() == constants.kRedHub
+    assert zones.get_aim_target() == constants.FieldPositions.RED_HUB
 
     # In middle of field (X=8.0)
     current_pose[0] = Pose2d(
         8.0, 3.0, Rotation2d()
     )  # y < 4.1 -> closest corner (16.5, 0.0)
-    assert zones.get_aim_target() == constants.kRedRightCorner
+    assert zones.get_aim_target() == constants.FieldPositions.RED_RIGHT_CORNER
 
     current_pose[0] = Pose2d(
         8.0, 5.0, Rotation2d()
     )  # y >= 4.1 -> closest corner (16.5, 8.2)
-    assert zones.get_aim_target() == constants.kRedLeftCorner
+    assert zones.get_aim_target() == constants.FieldPositions.RED_LEFT_CORNER
 
 
 def test_field_zones_repel_vector():

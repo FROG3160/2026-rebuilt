@@ -23,17 +23,17 @@ from wpilib import Timer, SmartDashboard
 
 hopper_slot0 = (
     Slot0Configs()
-    .with_k_s(constants.Hopper.VoltageHopperS)
-    .with_k_v(constants.Hopper.HopperV)
-    .with_k_p(constants.Hopper.HopperP)
-    .with_k_i(constants.Hopper.HopperI)
-    .with_k_d(constants.Hopper.HopperD)
+    .with_k_s(constants.Hopper.VOLTAGE_HOPPER_S)
+    .with_k_v(constants.Hopper.HOPPER_V)
+    .with_k_p(constants.Hopper.HOPPER_P)
+    .with_k_i(constants.Hopper.HOPPER_I)
+    .with_k_d(constants.Hopper.HOPPER_D)
 )
 
 hopper_mm = (
     MotionMagicConfigs()
-    .with_motion_magic_cruise_velocity(constants.Hopper.HopperMM_V)
-    .with_motion_magic_acceleration(constants.Hopper.HopperMM_A)
+    .with_motion_magic_cruise_velocity(constants.Hopper.HOPPER_MM_V)
+    .with_motion_magic_acceleration(constants.Hopper.HOPPER_MM_A)
 )
 
 hopper_left_motor_config = (
@@ -46,7 +46,7 @@ hopper_left_motor_config = (
 
 hopper_right_motor_config = (
     get_frog_talon_config()
-    .with_motor_output(MOTOR_OUTPUT_CWP_COAST)
+    .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
     .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(1.0))
     .with_slot0(hopper_slot0)
     .with_motion_magic(hopper_mm)
@@ -193,17 +193,17 @@ class Hopper(FROGSubsystem):
         
         self.left_side = Spindexer(
             "Left", 
-            constants.CANIDs.HopperLeftMotor, 
+            constants.CANIDs.HOPPER_LEFT_MOTOR, 
             hopper_left_motor_config, 
-            constants.CANIDs.HopperLeftSensor, 
+            constants.CANIDs.HOPPER_LEFT_SENSOR, 
             self._default_velocity, 
             -self._default_velocity
         )
         self.right_side = Spindexer(
             "Right", 
-            constants.CANIDs.HopperRightMotor, 
+            constants.CANIDs.HOPPER_RIGHT_MOTOR, 
             hopper_right_motor_config, 
-            constants.CANIDs.HopperRightSensor, 
+            constants.CANIDs.HOPPER_RIGHT_SENSOR, 
             self._default_velocity, 
             -self._default_velocity
         )
