@@ -33,7 +33,7 @@ class RobotContainer:
     def __init__(self):
         self.alliance = None
 
-        self.fuel_detector = FROGDetector(constants.kDetectorConfigs[0])
+        self.fuel_detector = FROGDetector(constants.DETECTOR_CONFIGS[0])
         self.drive = Drive()
         self.intake = Intake(self.drive.get_linear_speed)
         self.hopper = Hopper()
@@ -41,11 +41,11 @@ class RobotContainer:
         self.feeder = Feeder()
 
         self.driver_xbox = FROGXboxDriver(
-            constants.kDriverControllerPort,
-            constants.kDeadband,
-            constants.kDebouncePeriod,
-            constants.kTranslationSlew,
-            constants.kRotSlew,
+            constants.Controller.DRIVER_CONTROLLER_PORT,
+            constants.Controller.DEADBAND,
+            constants.Controller.DEBOUNCE_PERIOD,
+            constants.Controller.TRANSLATION_SLEW,
+            constants.Controller.ROT_SLEW,
         )
         self.shift_tracker = ShiftTracker()
         self.field_zones = FieldZones(
@@ -78,10 +78,10 @@ class RobotContainer:
         if path_name:
             path = PathPlannerPath.fromPathFile(path_name)
             constraints = PathConstraints(
-                constants.kPPMaxVelocity,
-                constants.kPPMaxAcceleration,
-                constants.kPPMaxAngularVelocity,
-                constants.kPPMaxAngularAcceleration,
+                constants.Drive.PP_MAX_VELOCITY,
+                constants.Drive.PP_MAX_ACCELERATION,
+                constants.Drive.PP_MAX_ANGULAR_VELOCITY,
+                constants.Drive.PP_MAX_ANGULAR_ACCELERATION,
             )
             return AutoBuilder.pathfindThenFollowPath(path, constraints)
 

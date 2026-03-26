@@ -103,4 +103,4 @@ class FROGBot(commands2.TimedCommandRobot):
         # Publish power and battery data
         SmartDashboard.putNumber("Power/TotalCurrent", self.pdh.getTotalCurrent())
         SmartDashboard.putNumber("Power/BatteryVoltage", self.pdh.getVoltage())
-        # SmartDashboard.putNumber("Power/ShooterCurrent", self.pdh.getCurrent(constants.kShooterPDHChannel))
+        # SmartDashboard.putNumber("Power/ShooterCurrent", self.pdh.getCurrent(constants.CANIDs.SHOOTER_PDH_CHANNEL))
