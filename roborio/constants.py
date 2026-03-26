@@ -1,246 +1,197 @@
 import math
 import numpy as np
+from typing import Final
 from wpimath.units import degreesToRadians, feetToMeters, inchesToMeters
-from FROGlib.vision import FROGCameraConfig
 from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d, Pose2d
+from FROGlib.vision import FROGCameraConfig
 
 # Camera Configs
-kCameraConfigs = (
+CAMERA_CONFIGS: Final = (
     FROGCameraConfig(
         "OV9281-AprilTag2",
         Transform3d(
-            Translation3d(
-                inchesToMeters(10.5 + (1 / 16)),  # Forward from center
-                inchesToMeters(-9.375),  # Left from center
-                0.435,  # Up from the floor
-            ),
-            Rotation3d(0, 0, -math.pi / 2),
+            Translation3d(inchesToMeters(10.25), inchesToMeters(0), inchesToMeters(8.0)),
+            Rotation3d(0, degreesToRadians(0), degreesToRadians(0)),
         ),
     ),
     FROGCameraConfig(
-        "OV9281-AprilTag1",
+        "OV9281-Object1",
         Transform3d(
-            Translation3d(
-                inchesToMeters((25.25 / 2) - 0.75),  # Forward from center
-                inchesToMeters(0),  # Left from center
-                inchesToMeters(19.25),  # Up from the floor
-            ),
-            Rotation3d(0, degreesToRadians(35), 0),
+            Translation3d(inchesToMeters(-11.0), inchesToMeters(0), inchesToMeters(12.0)),
+            Rotation3d(0, degreesToRadians(0), degreesToRadians(180)),
         ),
     ),
 )
-kDetectorConfigs = (FROGCameraConfig("Object1", Transform3d()),)
 
-## CANCoder offsets
-########################################
-kFrontLeftOffset = 0.042480
-kFrontRightOffset = 0.250244
-kBackLeftOffset = -0.236572
-kBackRightOffset = -0.448486
+DETECTOR_CONFIGS: Final = (FROGCameraConfig("Object1", Transform3d()),)
 
+class CANIDs:
+    FRONT_LEFT_DRIVE: Final = 11
+    FRONT_LEFT_STEER: Final = 21
+    FRONT_LEFT_SENSOR: Final = 31
 
-## Swerve Drive Gains
-########################################
-# steer motor gains
-kSteerP = 39.236  # 2.402346
-kSteerI = 0  # 0.200195\
-kSteerS = 0.215
-kSteerV = 0.10583
+    FRONT_RIGHT_DRIVE: Final = 12
+    FRONT_RIGHT_STEER: Final = 22
+    FRONT_RIGHT_SENSOR: Final = 32
 
-# drive motor gains
-# kDriveFeedForward = 0.53
-# kDutyCycleDriveV = 0.00916
-# kDutyCycleDriveS = 0.01125
+    BACK_LEFT_DRIVE: Final = 13
+    BACK_LEFT_STEER: Final = 23
+    BACK_LEFT_SENSOR: Final = 33
 
-kVoltageDriveV = 1.8  # 2.0164  # 1.795
-kVoltageDriveS = 0.060831  # 0.211
-kVoltageDriveP = 2.9646  # 0.5
-kVoltageDriveA = 0.14705  # 0.027631
+    BACK_RIGHT_DRIVE: Final = 14
+    BACK_RIGHT_STEER: Final = 24
+    BACK_RIGHT_SENSOR: Final = 34
 
-# intake gains
-kVoltageIntakeS = 0.12
-kIntakeV = 1.41  # V/(m/s) feedforward - approx 12V / 8.48 m/s free speed
-kIntakeP = (
-    0.0  # velocity PID proportional gain - set to 0.0 until characterized with SysId
-)
-kIntakeMinSpeed = 2.0  # m/s - minimum intake surface speed floor
-kIntakeSpeedMultiplier = 1.5  # intake speed = max(min, robot_speed * multiplier)
-kIntakeReverseSpeed = 3.0  # m/s - fixed reverse speed for ejecting
+    GYRO: Final = 39
 
-# intake deploy gains
-kIntakeDeployDistancePerRotation = 0.151613  # meters
-kIntakeDeployTargetMeters = 0.26113
-kIntakeDeployP = 10.0
-kIntakeDeployI = 0.0
-kIntakeDeployD = 0.0
-kIntakeDeployS = 0.0
-kIntakeDeployV = 0.0
-kIntakeDeployMM_V = 2.0  # m/s
-kIntakeDeployMM_A = 8.0  # m/s^2
-kIntakeDeployCurrentLimit = 20.0  # Amps
+    INTAKE_MOTOR: Final = 40
+    INTAKE_DEPLOY_MOTOR: Final = 41
 
-# hopper gains
-kVoltageHopperS = 0.12
-kHopperV = 0.11  # estimated V/(rad/s)
-kHopperP = 0.5  # Position PID proportional gain
-kHopperI = 0.0
-kHopperD = 0.0
-kHopperMM_V = 20.0  # Max velocity (RPS) for MotionMagic
-kHopperMM_A = 40.0  # Max acceleration (RPS/s) for MotionMagic
+    FEED_MOTOR: Final = 42
+    SHOOTER_LEFT_FLYWHEEL: Final = 43
+    SHOOTER_RIGHT_FLYWHEEL: Final = 44
+    HOOD_MOTOR: Final = 45
 
-kLiftG = 0.0
+    HOPPER_LEFT_MOTOR: Final = 46
+    HOPPER_RIGHT_MOTOR: Final = 47
+    HOPPER_LEFT_SENSOR: Final = 48
+    HOPPER_RIGHT_SENSOR: Final = 49
 
-kLiftRatio = 45 / (
-    14 * 0.25
-)  # (gear reduction (45) / (sprocket teeth (14) * pitch (0.25 inches per tooth)))
+    SHOOTER_PDH_CHANNEL: Final = 5
 
-# Feed/transfer motor gains
-kFeedS = 0.24257
-kFeedV = 1.2853
-kFeedA = 0.1092
-kFeedVelocityP = 0.0  # velocity PID
-kFeedVelocityI = 0.0
-kFeedVelocityD = 0.0
-kFeedPositionP = 9.9692
-kFeedPositionI = 0.0
-kFeedPositionD = 0.62293
+class Drive:
+    # CANCoder offsets
+    FRONT_LEFT_OFFSET: Final = 0.042480
+    FRONT_RIGHT_OFFSET: Final = 0.250244
+    BACK_LEFT_OFFSET: Final = -0.236572
+    BACK_RIGHT_OFFSET: Final = -0.448486
 
-# flywheel gains
-kFlywheelP = 0.50197
-kFlywheelI = 0.0
-kFlywheelD = 0.0
-kFlywheelS = 0.095535  # determined with follower helping
-kFlywheelV = 0.34733  # 0.342  # 0.351
-kFlywheelA = 0.018088
+    # Steer gains
+    STEER_P: Final = 39.236
+    STEER_I: Final = 0
+    STEER_S: Final = 0.215
+    STEER_V: Final = 0.10583
 
-# Distance (meters) to Flywheel Speed (rotations/sec) interpolation data for Hub target
-# Important: np.interp requires the x-coordinates to be in increasing order.
-kShootersHubDistances = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
-kShootersHubSpeeds = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
+    # Drive motor gains
+    VOLTAGE_DRIVE_V: Final = 1.8
+    VOLTAGE_DRIVE_S: Final = 0.060831
+    VOLTAGE_DRIVE_P: Final = 2.9646
+    VOLTAGE_DRIVE_A: Final = 0.14705
 
-# Hood motor gains
-# It takes about 0.45 volts to move the lead screw to push the hood up,
-# and about -0.4 volts to move it down, so we can calculate kS and kG from those values
-kHoodS = 0.425  # (|Upward V| + |Downward V|) / 2
-kHoodP = 3.0
-kHoodV = 0.12
-kHoodG = 0.025
-kHoodMMV = 8.0
-kHoodMMA = 16.0  # (Upward V - Downward V) / 2
-kHoodForwardLimit = 1.15  # rotations
-kHoodReverseLimit = 0.0
+    # Physical dimensions
+    TRACK_WIDTH_METERS: Final = inchesToMeters(24.25)
+    WHEEL_BASE_METERS: Final = inchesToMeters(19.75)
 
-# tolerances
-kFlywheelTolerance = 0.2  # tolerance in m/s
+    MAX_METERS_PER_SECOND: Final = feetToMeters(16)
+    MAX_CHASSIS_RADIANS_PER_SEC: Final = 2 * math.tau
 
-## CAN ID assignments
-########################################
-# Swerve Drive Motor/Encoder IDs
-kFrontLeftDriveID = 11
-kFrontLeftSteerID = 21
-kFrontLeftSensorID = 31
+    PROFILED_ROTATION_MAX_VELOCITY: Final = MAX_CHASSIS_RADIANS_PER_SEC * 2
+    PROFILED_ROTATION_MAX_ACCEL: Final = MAX_CHASSIS_RADIANS_PER_SEC * 4
 
-kFrontRightDriveID = 12
-kFrontRightSteerID = 22
-kFrontRightSensorID = 32
+    PROFILED_ROTATION_P: Final = 0.6
+    PROFILED_ROTATION_I: Final = 0.0
+    PROFILED_ROTATION_D: Final = 0.0
 
-kBackLeftDriveID = 13
-kBackLeftSteerID = 23
-kBackLeftSensorID = 33
+    # PathPlanner
+    PP_TRANSLATION_P: Final = 2.0
+    PP_TRANSLATION_I: Final = 0.0
+    PP_TRANSLATION_D: Final = 0.0
+    PP_ROTATION_P: Final = 4.0
+    PP_ROTATION_I: Final = 0.0
+    PP_ROTATION_D: Final = 0.0
+    PP_MAX_VELOCITY: Final = 3.0
+    PP_MAX_ACCELERATION: Final = 3.0
+    PP_MAX_ANGULAR_VELOCITY: Final = 4.0
+    PP_MAX_ANGULAR_ACCELERATION: Final = 8.0
 
-kBackRightDriveID = 14
-kBackRightSteerID = 24
-kBackRightSensorID = 34
+class Intake:
+    VOLTAGE_INTAKE_S: Final = 0.12
+    INTAKE_V: Final = 1.41
+    INTAKE_P: Final = 0.0
+    INTAKE_MIN_SPEED: Final = 2.0
+    INTAKE_SPEED_MULTIPLIER: Final = 1.5
+    INTAKE_REVERSE_SPEED: Final = 3.0
 
-kGyroID = 39
+    INTAKE_DEPLOY_DISTANCE_PER_ROTATION: Final = 0.151613
+    INTAKE_DEPLOY_TARGET_METERS: Final = 0.26113
+    INTAKE_DEPLOY_P: Final = 10.0
+    INTAKE_DEPLOY_I: Final = 0.0
+    INTAKE_DEPLOY_D: Final = 0.0
+    INTAKE_DEPLOY_S: Final = 0.0
+    INTAKE_DEPLOY_V: Final = 0.0
+    INTAKE_DEPLOY_MM_V: Final = 2.0
+    INTAKE_DEPLOY_MM_A: Final = 8.0
+    INTAKE_DEPLOY_CURRENT_LIMIT: Final = 20.0
 
-kIntakeMotorID = 40
-kIntakeDeployMotorID = 41
-kHopperLeftMotorID = 46
-kHopperRightMotorID = 47
-kHopperLeftSensorID = 48
-kHopperRightSensorID = 49
-kFeedMotorID = 42
-kShooterLeftFlywheelID = 43
-kShooterRightFlywheelID = 44
-kHoodMotorID = 45
+class Hopper:
+    VOLTAGE_HOPPER_S: Final = 0.12
+    HOPPER_V: Final = 0.11
+    HOPPER_P: Final = 0.5
+    HOPPER_I: Final = 0.0
+    HOPPER_D: Final = 0.0
+    HOPPER_MM_V: Final = 20.0
+    HOPPER_MM_A: Final = 40.0
 
+class Shooter:
+    FLYWHEEL_P: Final = 0.50197
+    FLYWHEEL_I: Final = 0.0
+    FLYWHEEL_D: Final = 0.0
+    FLYWHEEL_S: Final = 0.095535
+    FLYWHEEL_V: Final = 0.34733
+    FLYWHEEL_A: Final = 0.018088
 
-# PDH Channels
-kShooterPDHChannel = 5  # an example.
+    SHOOTERS_HUB_DISTANCES: Final = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
+    SHOOTERS_HUB_SPEEDS: Final = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
 
+    HOOD_S: Final = 0.425
+    HOOD_P: Final = 3.0
+    HOOD_V: Final = 0.12
+    HOOD_G: Final = 0.025
+    HOOD_MMV: Final = 8.0
+    HOOD_MMA: Final = 16.0
+    HOOD_FORWARD_LIMIT: Final = 1.15
+    HOOD_REVERSE_LIMIT: Final = 0.0
 
-# ROGOT CHARACTERISTICS
-#########################################
+    FLYWHEEL_TOLERANCE: Final = 0.2
 
-# Swerve Drive Physical Attributes
-kTrackWidthMeters = inchesToMeters(24.25)  # 0.62
-kWheelBaseMeters = inchesToMeters(19.75)  # 0.5
+class Feeder:
+    FEED_S: Final = 0.24257
+    FEED_V: Final = 1.2853
+    FEED_A: Final = 0.1092
+    FEED_VELOCITY_P: Final = 0.0
+    FEED_VELOCITY_I: Final = 0.0
+    FEED_VELOCITY_D: Final = 0.0
+    FEED_POSITION_P: Final = 9.9692
+    FEED_POSITION_I: Final = 0.0
+    FEED_POSITION_D: Final = 0.62293
 
-kMaxMetersPerSecond = feetToMeters(16)  # 16 feet per second
-kMaxChassisRadiansPerSec = 2 * math.tau  # revolutions per sec * tau
+class Controller:
+    DRIVER_CONTROLLER_PORT: Final = 0
+    OPERATOR_CONTROLLER_PORT: Final = 1
+    DEADBAND: Final = 0.15
+    DEBOUNCE_PERIOD: Final = 0.5
+    TRANSLATION_SLEW: Final = 2
+    ROT_SLEW: Final = 2
 
-kProfiledRotationMaxVelocity = kMaxChassisRadiansPerSec * 2
-kProfiledRotationMaxAccel = (
-    kMaxChassisRadiansPerSec * 4
-)  # 4 rotations per second per second
+class FieldPositions:
+    FIELD_LENGTH: Final = 16.541
+    FIELD_WIDTH: Final = 8.07
+    FIELD_MIDLINE_X: Final = FIELD_LENGTH / 2
+    FIELD_MIDLINE_Y: Final = FIELD_WIDTH / 2
 
-kProfiledRotationP = 0.6
-kProfiledRotationI = 0.0
-kProfiledRotationD = 0.0
+    HUB_X_BLUE_FACING_CENTER: Final = 5.229
+    HUB_X_RED_FACING_CENTER: Final = 11.312
+    HUB_X_BLUE_FACING_ALLIANCE: Final = 4.022
+    HUB_X_RED_FACING_ALLIANCE: Final = 12.519
 
-## PathPlanner Constants
-#########################################
-kPPTranslationP = 2.0
-kPPTranslationI = 0.0
-kPPTranslationD = 0.0
+    BLUE_HUB: Final = Pose2d(4.626, FIELD_MIDLINE_Y, Rotation2d(0))
+    RED_HUB: Final = Pose2d(11.915, FIELD_MIDLINE_Y, Rotation2d(0))
+    BLUE_RIGHT_TRENCH: Final = Pose2d(4.692, 0.635, Rotation2d(0))
+    BLUE_LEFT_TRENCH: Final = Pose2d(4.692, 7.489, Rotation2d(0))
+    RED_RIGHT_TRENCH: Final = Pose2d(11.849, 0.635, Rotation2d(math.pi))
+    RED_LEFT_TRENCH: Final = Pose2d(11.849, 7.489, Rotation2d(math.pi))
 
-kPPRotationP = 4.0
-kPPRotationI = 0.0
-kPPRotationD = 0.0
-
-kPPMaxVelocity = 3.0
-kPPMaxAcceleration = 3.0
-kPPMaxAngularVelocity = 4.0
-kPPMaxAngularAcceleration = 8.0
-
-## Network Tables names
-#########################################
-kComponentSubtableName = "FROGSubsystems"
-
-## Xbox Controller Constants
-#########################################
-# Xbox controller ports
-kDriverControllerPort = 0
-kOperatorControllerPort = 1
-
-# Xbox controller constants
-kDeadband = 0.15
-kDebouncePeriod = 0.5
-kTranslationSlew = 2
-kRotSlew = 2
-
-
-# Field Positions
-kFieldLength = 16.541
-kFieldWidth = 8.07
-kFieldMidlineX = kFieldLength / 2
-kFieldMidlineY = kFieldWidth / 2
-
-# Hub X boundaries (based on AprilTags)
-kHubXBlueFacingCenter = 5.229
-kHubXRedFacingCenter = 11.312
-kHubXBlueFacingAlliance = 4.022
-kHubXRedFacingAlliance = 12.519
-
-kBlueHub = Pose2d(4.626, kFieldMidlineY, Rotation2d(0))  # Facing away from blue hub
-kRedHub = Pose2d(11.915, kFieldMidlineY, Rotation2d(0))
-kBlueRightTrench = Pose2d(4.692, 0.635, Rotation2d(0))
-kBlueLeftTrench = Pose2d(4.692, 7.489, Rotation2d(0))
-kRedRightTrench = Pose2d(11.849, 0.635, Rotation2d(math.pi))
-kRedLeftTrench = Pose2d(11.849, 7.489, Rotation2d(math.pi))
-
-kBlueRightCorner = Pose2d(1.0, 1.0, Rotation2d(0))
-kBlueLeftCorner = Pose2d(1.0, 7.2, Rotation2d(0))
-kRedRightCorner = Pose2d(15.5, 1.0, Rotation2d(math.pi))
-kRedLeftCorner = Pose2d(15.5, 7.2, Rotation2d(math.pi))
+    BLUE_RIGHT_CORNER: Final = Pose2d(1.0, 1.0, Rotation2d(0))
+    BLUE_LEFT_CORNER: Final = Pose2d(1.0, 7.2, Rotation2d(0))
+    RED_RIGHT_CORNER: Final = Pose2d(15.5, 1.0, Rotation2d(math.pi))
+    RED_LEFT_CORNER: Final = Pose2d(15.5, 7.2, Rotation2d(math.pi))

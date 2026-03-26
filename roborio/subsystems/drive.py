@@ -64,17 +64,17 @@ drivetrain = DriveTrain(gear_stages=MK5I_R2_GEARING, wheel_diameter=WHEEL_DIAMET
 
 drive_slot0 = (
     Slot0Configs()
-    .with_k_s(constants.kVoltageDriveS)
-    .with_k_v(constants.kVoltageDriveV)
-    .with_k_a(constants.kVoltageDriveA)
-    .with_k_p(constants.kVoltageDriveP)
+    .with_k_s(constants.Drive.VOLTAGE_DRIVE_S)
+    .with_k_v(constants.Drive.VOLTAGE_DRIVE_V)
+    .with_k_a(constants.Drive.VOLTAGE_DRIVE_A)
+    .with_k_p(constants.Drive.VOLTAGE_DRIVE_P)
 )
 steer_slot0 = (
     Slot0Configs()
-    .with_k_p(constants.kSteerP)
-    .with_k_i(constants.kSteerI)
-    .with_k_s(constants.kSteerS)
-    .with_k_v(constants.kSteerV)
+    .with_k_p(constants.Drive.STEER_P)
+    .with_k_i(constants.Drive.STEER_I)
+    .with_k_s(constants.Drive.STEER_S)
+    .with_k_v(constants.Drive.STEER_V)
 )
 
 # configure drive motor used for all swerve modules
@@ -99,16 +99,16 @@ steer_config = (
 front_left_module_config = {
     "name": "FrontLeft",
     "location": Translation2d(
-        constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters / 2
+        constants.Drive.WHEEL_BASE_METERS / 2, constants.Drive.TRACK_WIDTH_METERS / 2
     ),
-    "drive_motor_id": constants.kFrontLeftDriveID,
+    "drive_motor_id": constants.CANIDs.FRONT_LEFT_DRIVE,
     "drive_motor_config": drive_config,
-    "steer_motor_id": constants.kFrontLeftSteerID,
+    "steer_motor_id": constants.CANIDs.FRONT_LEFT_STEER,
     "steer_motor_config": steer_config,
-    "cancoder_id": constants.kFrontLeftSensorID,
+    "cancoder_id": constants.CANIDs.FRONT_LEFT_SENSOR,
     "cancoder_config": get_frog_cancoder_config().with_magnet_sensor(
         MagnetSensorConfigs()
-        .with_magnet_offset(constants.kFrontLeftOffset)
+        .with_magnet_offset(constants.Drive.FRONT_LEFT_OFFSET)
         .with_absolute_sensor_discontinuity_point(0.5)
         .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
     ),
@@ -117,16 +117,16 @@ front_left_module_config = {
 front_right_module_config = {
     "name": "FrontRight",
     "location": Translation2d(
-        constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters / 2
+        constants.Drive.WHEEL_BASE_METERS / 2, -constants.Drive.TRACK_WIDTH_METERS / 2
     ),
-    "drive_motor_id": constants.kFrontRightDriveID,
+    "drive_motor_id": constants.CANIDs.FRONT_RIGHT_DRIVE,
     "drive_motor_config": drive_config,
-    "steer_motor_id": constants.kFrontRightSteerID,
+    "steer_motor_id": constants.CANIDs.FRONT_RIGHT_STEER,
     "steer_motor_config": steer_config,
-    "cancoder_id": constants.kFrontRightSensorID,
+    "cancoder_id": constants.CANIDs.FRONT_RIGHT_SENSOR,
     "cancoder_config": get_frog_cancoder_config().with_magnet_sensor(
         MagnetSensorConfigs()
-        .with_magnet_offset(constants.kFrontRightOffset)
+        .with_magnet_offset(constants.Drive.FRONT_RIGHT_OFFSET)
         .with_absolute_sensor_discontinuity_point(0.5)
         .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
     ),
@@ -135,16 +135,16 @@ front_right_module_config = {
 back_left_module_config = {
     "name": "BackLeft",
     "location": Translation2d(
-        -constants.kWheelBaseMeters / 2, constants.kTrackWidthMeters / 2
+        -constants.Drive.WHEEL_BASE_METERS / 2, constants.Drive.TRACK_WIDTH_METERS / 2
     ),
-    "drive_motor_id": constants.kBackLeftDriveID,
+    "drive_motor_id": constants.CANIDs.BACK_LEFT_DRIVE,
     "drive_motor_config": drive_config,
-    "steer_motor_id": constants.kBackLeftSteerID,
+    "steer_motor_id": constants.CANIDs.BACK_LEFT_STEER,
     "steer_motor_config": steer_config,
-    "cancoder_id": constants.kBackLeftSensorID,
+    "cancoder_id": constants.CANIDs.BACK_LEFT_SENSOR,
     "cancoder_config": get_frog_cancoder_config().with_magnet_sensor(
         MagnetSensorConfigs()
-        .with_magnet_offset(constants.kBackLeftOffset)
+        .with_magnet_offset(constants.Drive.BACK_LEFT_OFFSET)
         .with_absolute_sensor_discontinuity_point(0.5)
         .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
     ),
@@ -153,16 +153,16 @@ back_left_module_config = {
 back_right_module_config = {
     "name": "BackRight",
     "location": Translation2d(
-        -constants.kWheelBaseMeters / 2, -constants.kTrackWidthMeters / 2
+        -constants.Drive.WHEEL_BASE_METERS / 2, -constants.Drive.TRACK_WIDTH_METERS / 2
     ),
-    "drive_motor_id": constants.kBackRightDriveID,
+    "drive_motor_id": constants.CANIDs.BACK_RIGHT_DRIVE,
     "drive_motor_config": drive_config,
-    "steer_motor_id": constants.kBackRightSteerID,
+    "steer_motor_id": constants.CANIDs.BACK_RIGHT_STEER,
     "steer_motor_config": steer_config,
-    "cancoder_id": constants.kBackRightSensorID,
+    "cancoder_id": constants.CANIDs.BACK_RIGHT_SENSOR,
     "cancoder_config": get_frog_cancoder_config().with_magnet_sensor(
         MagnetSensorConfigs()
-        .with_magnet_offset(constants.kBackRightOffset)
+        .with_magnet_offset(constants.Drive.BACK_RIGHT_OFFSET)
         .with_absolute_sensor_discontinuity_point(0.5)
         .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
     ),
@@ -185,17 +185,17 @@ class Drive(FROGSubsystem, SwerveChassis):
                 SwerveModuleConfig(**back_left_module_config),
                 SwerveModuleConfig(**back_right_module_config),
             ),
-            gyro=FROGPigeonGyro(constants.kGyroID),
+            gyro=FROGPigeonGyro(constants.CANIDs.GYRO),
             rotation_contoller_config=RotationControllerConfig(
-                constants.kProfiledRotationP,
-                constants.kProfiledRotationI,
-                constants.kProfiledRotationD,
-                constants.kProfiledRotationMaxVelocity,
-                constants.kProfiledRotationMaxAccel,
+                constants.Drive.PROFILED_ROTATION_P,
+                constants.Drive.PROFILED_ROTATION_I,
+                constants.Drive.PROFILED_ROTATION_D,
+                constants.Drive.PROFILED_ROTATION_MAX_VELOCITY,
+                constants.Drive.PROFILED_ROTATION_MAX_ACCEL,
             ),
-            max_speed=constants.kMaxMetersPerSecond,
-            max_rotation_speed=constants.kMaxChassisRadiansPerSec,
-            parent_nt=constants.kComponentSubtableName,
+            max_speed=constants.Drive.MAX_METERS_PER_SECOND,
+            max_rotation_speed=constants.Drive.MAX_CHASSIS_RADIANS_PER_SEC,
+            parent_nt="Drive",
         )
         FROGSubsystem.__init__(self)
         self.resetController = True
@@ -212,7 +212,7 @@ class Drive(FROGSubsystem, SwerveChassis):
                 r"/home/lvuser/py/2026_combined_field.json"
             )
         # field_layout = AprilTagFieldLayout().loadField(AprilTagField.kDefaultField)
-        for config in constants.kCameraConfigs:
+        for config in constants.CAMERA_CONFIGS:
             self.photon_estimators.append(
                 FROGPoseEstimator(
                     self.field_layout,  # field layout
@@ -235,14 +235,14 @@ class Drive(FROGSubsystem, SwerveChassis):
 
         self.holonomic_drive_ctrl = PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
             PIDConstants(
-                constants.kPPTranslationP,
-                constants.kPPTranslationI,
-                constants.kPPTranslationD,
+                constants.Drive.PP_TRANSLATION_P,
+                constants.Drive.PP_TRANSLATION_I,
+                constants.Drive.PP_TRANSLATION_D,
             ),  # Translation PID constants
             PIDConstants(
-                constants.kPPRotationP,
-                constants.kPPRotationI,
-                constants.kPPRotationD,
+                constants.Drive.PP_ROTATION_P,
+                constants.Drive.PP_ROTATION_I,
+                constants.Drive.PP_ROTATION_D,
             ),  # Rotation PID constants
         )
 
