@@ -301,39 +301,25 @@ class RobotContainer:
         self.driver_xbox.rightBumper().onTrue(cmd.runOnce(SignalLogger.stop))
 
     def configureComponentTestBindings(self) -> None:
-        """Button bindings for manual component testing in test mode.
-        Each press toggles the motor on/off (runs until toggled off or interrupted).
-        """
+        """Button bindings for manual component testing in test mode."""
 
-        # Intake toggle forward
-        self.driver_xbox.a().toggleOnTrue(
-            self.intake.run_forward_cmd().withName("Toggle Intake Forward")
-        )
-
-        # intake reverse toggles
-        self.driver_xbox.b().toggleOnTrue(
-            self.intake.run_backward_cmd().withName("Toggle Intake Reverse")
-        )
-
-        # Hopper toggles - forward
-        self.driver_xbox.x().toggleOnTrue(
-            self.hopper.run_forward_cmd().withName("Toggle Hopper Forward")
-        )
-        # reverse
-        self.driver_xbox.y().toggleOnTrue(
-            self.hopper.run_backward_cmd().withName("Toggle Hopper Reverse")
-        )
-
-        # Shooter feed toggle
-        self.driver_xbox.leftBumper().toggleOnTrue(
-            self.feeder.run_forward_cmd().withName("Run Feeder")
-        )
-
-        # Flywheel: Using triggers as hold-to-run (common for speed control).
-        # If you really want toggle on flywheel, we can use a button instead or add logic.
+        # Intake via left trigger, like teleop
         self.driver_xbox.leftTrigger().whileTrue(
-            StartEndCommand(
-                self.shooter._apply_commanded_speed,
-                self.shooter._stop_flywheel,
-            ).withName("Run Flywheel")
+            self.intake.run_forward_cmd().withName("Test Intake")
+        )
+
+        # Run the full sequence: hopper, feeder, flywheel, and hood
+        # using the commanded flywheel speed instead of calculating from distance.
+        # Hopper is triggered automatically when feeder runs forward.
+        self.driver_xbox.a().whileTrue(
+            cmd.sequence(
+                cmd.runOnce(self.shooter.deploy_hood),
+                cmd.waitUntil(self.shooter.is_hood_deployed),
+                self.shooter.fire_at_set_speed_cmd().alongWith(
+                    cmd.waitUntil(self.shooter.is_at_speed).andThen(
+                        self.feeder.run_forward_cmd()
+                    )
+                ),
+            ).finallyDo(lambda interrupted: self.shooter.retract_hood())
+            .withName("Test Firing Sequence")
         )
