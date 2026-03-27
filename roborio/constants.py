@@ -10,20 +10,25 @@ CAMERA_CONFIGS: Final = (
     FROGCameraConfig(
         "OV9281-AprilTag2",
         Transform3d(
-            Translation3d(inchesToMeters(10.25), inchesToMeters(0), inchesToMeters(8.0)),
+            Translation3d(
+                inchesToMeters(10.25), inchesToMeters(0), inchesToMeters(8.0)
+            ),
             Rotation3d(0, degreesToRadians(0), degreesToRadians(0)),
         ),
     ),
     FROGCameraConfig(
         "OV9281-Object1",
         Transform3d(
-            Translation3d(inchesToMeters(-11.0), inchesToMeters(0), inchesToMeters(12.0)),
+            Translation3d(
+                inchesToMeters(-11.0), inchesToMeters(0), inchesToMeters(12.0)
+            ),
             Rotation3d(0, degreesToRadians(0), degreesToRadians(180)),
         ),
     ),
 )
 
 DETECTOR_CONFIGS: Final = (FROGCameraConfig("Object1", Transform3d()),)
+
 
 class CANIDs:
     FRONT_LEFT_DRIVE: Final = 11
@@ -58,6 +63,7 @@ class CANIDs:
     HOPPER_RIGHT_SENSOR: Final = 49
 
     SHOOTER_PDH_CHANNEL: Final = 5
+
 
 class Drive:
     # CANCoder offsets
@@ -104,6 +110,7 @@ class Drive:
     PP_MAX_ANGULAR_VELOCITY: Final = 4.0
     PP_MAX_ANGULAR_ACCELERATION: Final = 8.0
 
+
 class Intake:
     VOLTAGE_INTAKE_S: Final = 0.12
     INTAKE_V: Final = 1.41
@@ -117,11 +124,12 @@ class Intake:
     INTAKE_DEPLOY_P: Final = 10.0
     INTAKE_DEPLOY_I: Final = 0.0
     INTAKE_DEPLOY_D: Final = 0.0
-    INTAKE_DEPLOY_S: Final = 0.0
+    INTAKE_DEPLOY_S: Final = 0.2
     INTAKE_DEPLOY_V: Final = 0.0
     INTAKE_DEPLOY_MM_V: Final = 2.0
     INTAKE_DEPLOY_MM_A: Final = 8.0
     INTAKE_DEPLOY_CURRENT_LIMIT: Final = 20.0
+
 
 class Hopper:
     VOLTAGE_HOPPER_S: Final = 0.12
@@ -131,6 +139,7 @@ class Hopper:
     HOPPER_D: Final = 0.0
     HOPPER_MM_V: Final = 20.0
     HOPPER_MM_A: Final = 40.0
+
 
 class Shooter:
     FLYWHEEL_P: Final = 0.50197
@@ -154,6 +163,7 @@ class Shooter:
 
     FLYWHEEL_TOLERANCE: Final = 0.2
 
+
 class Feeder:
     FEED_S: Final = 0.24257
     FEED_V: Final = 1.2853
@@ -165,6 +175,7 @@ class Feeder:
     FEED_POSITION_I: Final = 0.0
     FEED_POSITION_D: Final = 0.62293
 
+
 class Controller:
     DRIVER_CONTROLLER_PORT: Final = 0
     OPERATOR_CONTROLLER_PORT: Final = 1
@@ -172,6 +183,7 @@ class Controller:
     DEBOUNCE_PERIOD: Final = 0.5
     TRANSLATION_SLEW: Final = 2
     ROT_SLEW: Final = 2
+
 
 class FieldPositions:
     FIELD_LENGTH: Final = 16.541

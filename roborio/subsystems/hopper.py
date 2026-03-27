@@ -46,26 +46,32 @@ hopper_left_motor_config = (
 
 hopper_right_motor_config = (
     get_frog_talon_config()
-    .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
+    .with_motor_output(MOTOR_OUTPUT_CWP_COAST)
     .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(1.0))
     .with_slot0(hopper_slot0)
     .with_motion_magic(hopper_mm)
 )
 
 # CANrange detection threshold: 0.75 inches = 0.01905 meters
-CANRANGE_THRESHOLD_METERS = 0.01905
+CANRANGE_THRESHOLD_METERS = 0.12
 
-canrange_config = (
-    CANrangeConfiguration()
-    .with_proximity_params(
-        ProximityParamsConfigs()
-        .with_proximity_threshold(CANRANGE_THRESHOLD_METERS)
-        .with_proximity_hysteresis(0.005) # Add a small hysteresis
-    )
+canrange_config = CANrangeConfiguration().with_proximity_params(
+    ProximityParamsConfigs()
+    .with_proximity_threshold(CANRANGE_THRESHOLD_METERS)
+    .with_proximity_hysteresis(0.005)  # Add a small hysteresis
 )
 
+
 class Spindexer:
-    def __init__(self, name: str, motor_id: int, motor_config: TalonFXConfiguration, sensor_id: int, forward_velocity: float, reverse_velocity: float):
+    def __init__(
+        self,
+        name: str,
+        motor_id: int,
+        motor_config: TalonFXConfiguration,
+        sensor_id: int,
+        forward_velocity: float,
+        reverse_velocity: float,
+    ):
         self.name = name
         self.motor = FROGTalonFX(
             id=motor_id,
@@ -78,30 +84,32 @@ class Spindexer:
 
         self.forward_velocity = forward_velocity
         self.reverse_velocity = reverse_velocity
-        
+
         self.running_timer = Timer()
         self.running_timer.start()
-        
+
         self.burst_timer = Timer()
         self.burst_timer.start()
         self.is_bursting = False
-        
+
         self.staged_idle_timer = Timer()
         self.staged_idle_timer.start()
-        
+
         self.pulse_timer = Timer()
         self.pulse_timer.start()
         self.is_pulsing = False
-        
+
         # Configuration
         self.burst_timeout = 1.0  # seconds running without fuel before bursting
-        self.burst_duration = 0.5 # seconds to run in reverse
-        self.pulse_interval = 1.0 # seconds to wait when staged before pulsing
-        self.pulse_duration = 0.2 # seconds to run forward when pulsing
-        
+        self.burst_duration = 0.5  # seconds to run in reverse
+        self.pulse_interval = 1.0  # seconds to wait when staged before pulsing
+        self.pulse_duration = 0.2  # seconds to run forward when pulsing
+
         self.mock_detected = False
         if wpilib.RobotBase.isSimulation():
-            SmartDashboard.putBoolean(f"Hopper/{self.name}_Mock_Detected", self.mock_detected)
+            SmartDashboard.putBoolean(
+                f"Hopper/{self.name}_Mock_Detected", self.mock_detected
+            )
             self.motor.simulation_init(moi=0.001, motor_model=DCMotor.krakenX44(1))
 
     def execute_serialize(self):
@@ -111,14 +119,18 @@ class Spindexer:
             detected = self.mock_detected
         else:
             detected = self.sensor.get_is_detected().value
-        
+
         if detected:
             # Reset empty running timers
             self.running_timer.reset()
             self.is_bursting = False
-            
+
             if self.is_pulsing:
-                self.motor.set_control(controls.MotionMagicVelocityVoltage(self.forward_velocity, slot=0, enable_foc=False))
+                self.motor.set_control(
+                    controls.MotionMagicVelocityVoltage(
+                        self.forward_velocity, slot=0, enable_foc=False
+                    )
+                )
                 if self.pulse_timer.hasElapsed(self.pulse_duration):
                     self.is_pulsing = False
                     self.staged_idle_timer.reset()
@@ -131,32 +143,48 @@ class Spindexer:
             # Reset staged timers
             self.staged_idle_timer.reset()
             self.is_pulsing = False
-            
+
             if self.is_bursting:
-                self.motor.set_control(controls.MotionMagicVelocityVoltage(self.reverse_velocity, slot=0, enable_foc=False))
+                self.motor.set_control(
+                    controls.MotionMagicVelocityVoltage(
+                        self.reverse_velocity, slot=0, enable_foc=False
+                    )
+                )
                 if self.burst_timer.hasElapsed(self.burst_duration):
                     self.is_bursting = False
                     self.running_timer.reset()
             else:
-                self.motor.set_control(controls.MotionMagicVelocityVoltage(self.forward_velocity, slot=0, enable_foc=False))
+                self.motor.set_control(
+                    controls.MotionMagicVelocityVoltage(
+                        self.forward_velocity, slot=0, enable_foc=False
+                    )
+                )
                 if self.running_timer.hasElapsed(self.burst_timeout):
                     self.is_bursting = True
                     self.burst_timer.reset()
 
     def run_forward(self, velocity=None):
-        self.motor.set_control(controls.MotionMagicVelocityVoltage(velocity or self.forward_velocity, slot=0, enable_foc=False))
+        self.motor.set_control(
+            controls.MotionMagicVelocityVoltage(
+                velocity or self.forward_velocity, slot=0, enable_foc=False
+            )
+        )
         self.running_timer.reset()
         self.staged_idle_timer.reset()
-        
+
     def run_backward(self, velocity=None):
-        self.motor.set_control(controls.MotionMagicVelocityVoltage(velocity or self.reverse_velocity, slot=0, enable_foc=False))
+        self.motor.set_control(
+            controls.MotionMagicVelocityVoltage(
+                velocity or self.reverse_velocity, slot=0, enable_foc=False
+            )
+        )
         self.running_timer.reset()
         self.staged_idle_timer.reset()
 
     def stop_motor(self):
         """Stop the motor but maintain state variables."""
         self.motor.stopMotor()
-        
+
     def stop_all_and_reset(self):
         """Stop the motor and reset all state machine variables."""
         self.motor.stopMotor()
@@ -175,7 +203,9 @@ class Spindexer:
             battery_v,
         )
         # Mocking CANrange
-        self.mock_detected = SmartDashboard.getBoolean(f"Hopper/{self.name}_Mock_Detected", self.mock_detected)
+        self.mock_detected = SmartDashboard.getBoolean(
+            f"Hopper/{self.name}_Mock_Detected", self.mock_detected
+        )
         if self.mock_detected:
             self.sensor.sim_state.set_distance(0.01)
         else:
@@ -190,22 +220,22 @@ class Hopper(FROGSubsystem):
         self._burst_duration = 0.5
         self._pulse_interval = 1.0
         self._pulse_duration = 0.2
-        
+
         self.left_side = Spindexer(
-            "Left", 
-            constants.CANIDs.HOPPER_LEFT_MOTOR, 
-            hopper_left_motor_config, 
-            constants.CANIDs.HOPPER_LEFT_SENSOR, 
-            self._default_velocity, 
-            -self._default_velocity
+            "Left",
+            constants.CANIDs.HOPPER_LEFT_MOTOR,
+            hopper_left_motor_config,
+            constants.CANIDs.HOPPER_LEFT_SENSOR,
+            self._default_velocity,
+            -self._default_velocity,
         )
         self.right_side = Spindexer(
-            "Right", 
-            constants.CANIDs.HOPPER_RIGHT_MOTOR, 
-            hopper_right_motor_config, 
-            constants.CANIDs.HOPPER_RIGHT_SENSOR, 
-            self._default_velocity, 
-            -self._default_velocity
+            "Right",
+            constants.CANIDs.HOPPER_RIGHT_MOTOR,
+            hopper_right_motor_config,
+            constants.CANIDs.HOPPER_RIGHT_SENSOR,
+            self._default_velocity,
+            -self._default_velocity,
         )
 
     def _update_side_configs(self):
@@ -225,7 +255,10 @@ class Hopper(FROGSubsystem):
         """Run the dual spindexer to serialize fuel independently on both sides until interrupted."""
         return (
             self.run(
-                lambda: (self.left_side.execute_serialize(), self.right_side.execute_serialize())
+                lambda: (
+                    self.left_side.execute_serialize(),
+                    self.right_side.execute_serialize(),
+                )
             )
             .finallyDo(lambda interrupted: self.stop_all())
             .withName("Hopper Serialize")
@@ -234,15 +267,15 @@ class Hopper(FROGSubsystem):
     def run_forward_cmd(self) -> Command:
         """Run both hopper motors forward manually until interrupted."""
         return self.startEnd(
-            lambda: (self.left_side.run_forward(), self.right_side.run_forward()), 
-            self.stop_all
+            lambda: (self.left_side.run_forward(), self.right_side.run_forward()),
+            self.stop_all,
         ).withName("Hopper Forward")
 
     def run_backward_cmd(self) -> Command:
         """Run both hopper motors backward manually until interrupted."""
         return self.startEnd(
-            lambda: (self.left_side.run_backward(), self.right_side.run_backward()), 
-            self.stop_all
+            lambda: (self.left_side.run_backward(), self.right_side.run_backward()),
+            self.stop_all,
         ).withName("Hopper Backward")
 
     def stop_cmd(self) -> Command:
@@ -260,15 +293,15 @@ class Hopper(FROGSubsystem):
     @FROGSubsystem.telemetry("Left Voltage")
     def left_voltage_telem(self) -> float:
         return self.left_side.motor.get_motor_voltage().value
-        
+
     @FROGSubsystem.telemetry("Right Voltage")
     def right_voltage_telem(self) -> float:
         return self.right_side.motor.get_motor_voltage().value
-        
+
     @FROGSubsystem.telemetry("Left Distance (m)")
     def left_distance_telem(self) -> float:
         return self.left_side.sensor.get_distance().value
-        
+
     @FROGSubsystem.telemetry("Right Distance (m)")
     def right_distance_telem(self) -> float:
         return self.right_side.sensor.get_distance().value
@@ -277,7 +310,7 @@ class Hopper(FROGSubsystem):
     def default_velocity_tunable(self, val):
         self._default_velocity = val
         self._update_side_configs()
-        
+
     @FROGSubsystem.tunable(1.0, "Burst Timeout (s)")
     def burst_timeout_tunable(self, val):
         self._burst_timeout = val
