@@ -149,8 +149,8 @@ class RobotContainer:
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
         # The hopper should run forward whenever either the intake OR the feed motors are running forward.
-        Trigger(lambda: self.feeder.get_command_name() == "Feeder Forward").whileTrue(
-            self.hopper.run_forward_cmd()
+        Trigger(lambda: "Fire" in self.feeder.get_command_name()).whileTrue(
+            self.hopper.run_forward_cmd().withName("Fire Trigger")
         )
 
         # The hopper should run backward whenever the feed motor is running backward.
@@ -322,5 +322,5 @@ class RobotContainer:
                 ),
             )
             .finallyDo(lambda interrupted: self.shooter.retract_hood())
-            .withName("Test Firing Sequence")
+            .withName("Fire Test Sequence")
         )
