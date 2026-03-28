@@ -22,6 +22,6 @@ This document outlines the control mapping for the driver's Xbox controller duri
 | Control | Action |
 | --- | --- |
 | **Y Button (Toggle)** | Toggles the intake on/off (runs forward to collect game pieces). |
-| **X Button (Hold)** | Ejects all cargo. Runs the intake, feeder, and hopper in reverse. |
+| **X Button (Hold)** | Ejects all cargo. Runs the feeder and hopper in reverse. |
 | **Automatic Intake** | The intake will automatically run forward when the front-facing sensor detects a game piece is close. |
-| **Automatic Hopper** | The hopper motor runs automatically: <br> - **Forward** when the intake or feeder is running forward. <br> - **Backward** when the intake or feeder is running backward. |
+| **Automatic Hopper** | The hopper motor runs automatically: <br> - **Forward** when the intake or feeder is running forward. <br> - **Backward** when the feeder is running backward. |
