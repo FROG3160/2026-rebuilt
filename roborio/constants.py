@@ -112,28 +112,28 @@ class Drive:
 
 
 class Intake:
-    VOLTAGE_INTAKE_S: Final = 0.12
+    VOLTAGE_INTAKE_S: Final = 0.14
     INTAKE_V: Final = 1.41
     INTAKE_P: Final = 0.0
-    INTAKE_MIN_SPEED: Final = 2.0
+    INTAKE_MIN_SPEED: Final = 4.0
     INTAKE_SPEED_MULTIPLIER: Final = 1.5
 
     INTAKE_DEPLOY_DISTANCE_PER_ROTATION: Final = 0.151613 / 9
-    INTAKE_DEPLOY_TARGET_METERS: Final = 0.26113
-    INTAKE_DEPLOY_P: Final = 10.0
+    INTAKE_DEPLOY_TARGET_METERS: Final = 0.262
+    INTAKE_DEPLOY_P: Final = 16.0
     INTAKE_DEPLOY_I: Final = 0.0
     INTAKE_DEPLOY_D: Final = 0.0
-    INTAKE_DEPLOY_S: Final = 0.2
-    INTAKE_DEPLOY_V: Final = 0.0
-    INTAKE_DEPLOY_MM_V: Final = 2.0
-    INTAKE_DEPLOY_MM_A: Final = 8.0
+    INTAKE_DEPLOY_S: Final = 0.25
+    INTAKE_DEPLOY_V: Final = 8.0  #
+    INTAKE_DEPLOY_MM_V: Final = 1.0
+    INTAKE_DEPLOY_MM_A: Final = 2.0
     INTAKE_DEPLOY_CURRENT_LIMIT: Final = 20.0
 
 
 class Hopper:
-    VOLTAGE_HOPPER_S: Final = 0.12
-    HOPPER_V: Final = 0.11
-    HOPPER_P: Final = 0.5
+    VOLTAGE_HOPPER_S: Final = 0.25
+    HOPPER_V: Final = 0.48
+    HOPPER_P: Final = 0.0
     HOPPER_I: Final = 0.0
     HOPPER_D: Final = 0.0
     HOPPER_MM_V: Final = 20.0
@@ -157,7 +157,7 @@ class Shooter:
     HOOD_G: Final = 0.025
     HOOD_MMV: Final = 8.0
     HOOD_MMA: Final = 16.0
-    HOOD_FORWARD_LIMIT: Final = 1.15
+    HOOD_FORWARD_LIMIT: Final = 1.3
     HOOD_REVERSE_LIMIT: Final = 0.0
 
     FLYWHEEL_TOLERANCE: Final = 0.2

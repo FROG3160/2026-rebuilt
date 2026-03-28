@@ -40,7 +40,9 @@ intake_slot0 = (
 intake_motor_config = (
     get_frog_talon_config()
     .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
-    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(_SENSOR_TO_MECHANISM_RATIO))
+    .with_feedback(
+        FeedbackConfigs().with_sensor_to_mechanism_ratio(_SENSOR_TO_MECHANISM_RATIO)
+    )
     .with_slot0(intake_slot0)
 )
 
@@ -52,6 +54,7 @@ intake_deploy_slot0 = (
     .with_k_i(constants.Intake.INTAKE_DEPLOY_I)
     .with_k_d(constants.Intake.INTAKE_DEPLOY_D)
 )
+
 
 intake_deploy_mm = (
     MotionMagicConfigs()
@@ -68,11 +71,16 @@ intake_deploy_current_limits = (
 intake_deploy_motor_config = (
     get_frog_talon_config()
     .with_motor_output(MOTOR_OUTPUT_CWP_BRAKE)
-    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(1.0 / constants.Intake.INTAKE_DEPLOY_DISTANCE_PER_ROTATION))
+    .with_feedback(
+        FeedbackConfigs().with_sensor_to_mechanism_ratio(
+            1.0 / constants.Intake.INTAKE_DEPLOY_DISTANCE_PER_ROTATION
+        )
+    )
     .with_slot0(intake_deploy_slot0)
     .with_motion_magic(intake_deploy_mm)
     .with_current_limits(intake_deploy_current_limits)
 )
+
 
 class Intake(FROGSubsystem):
     def __init__(self, robot_speed_supplier: Callable[[], float] = lambda: 0.0):
@@ -114,10 +122,16 @@ class Intake(FROGSubsystem):
         self.motor.stopMotor()
 
     def _run_deploy_to_target(self):
-        self.deploy_motor.set_control(controls.MotionMagicVoltage(constants.Intake.INTAKE_DEPLOY_TARGET_METERS, slot=0, enable_foc=False))
+        self.deploy_motor.set_control(
+            controls.MotionMagicVoltage(
+                constants.Intake.INTAKE_DEPLOY_TARGET_METERS, slot=0, enable_foc=False
+            )
+        )
 
     def _run_deploy_to_stowed(self):
-        self.deploy_motor.set_control(controls.MotionMagicVoltage(0.0, slot=0, enable_foc=False))
+        self.deploy_motor.set_control(
+            controls.MotionMagicVoltage(0.0, slot=0, enable_foc=False)
+        )
 
     # ────────────────────────────────────────────────
     #          Command Factory Methods
@@ -130,11 +144,20 @@ class Intake(FROGSubsystem):
             .andThen(
                 # Wait until the deploy motor reaches close to the target position
                 commands2.cmd.waitUntil(
-                    lambda: abs(self.deploy_motor.get_position().value - constants.Intake.INTAKE_DEPLOY_TARGET_METERS) < 0.1
+                    lambda: abs(
+                        self.deploy_motor.get_position().value
+                        - constants.Intake.INTAKE_DEPLOY_TARGET_METERS
+                    )
+                    < 0.1
                 )
             )
             .andThen(self.run(self._run_intake_motor_forward))
-            .finallyDo(lambda interrupted: (self._stop_intake_motor(), self._run_deploy_to_stowed()))
+            .finallyDo(
+                lambda interrupted: (
+                    self._stop_intake_motor(),
+                    self._run_deploy_to_stowed(),
+                )
+            )
             .withName("Intake Forward")
         )
 
