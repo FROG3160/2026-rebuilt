@@ -135,3 +135,40 @@ def test_sysid_dynamic_reverse_schedules(feeder):
     CommandScheduler.getInstance().schedule(cmd)
     assert CommandScheduler.getInstance().isScheduled(cmd)
     cmd.cancel()
+
+
+# ── Direction Logic ──────────────────────────────────────────────────────────
+
+
+def test_commanded_direction_idle_by_default(feeder):
+    assert feeder.get_command_name() == ""
+
+
+def test_commanded_direction_forward(feeder):
+    cmd = feeder.run_forward_cmd()
+    CommandScheduler.getInstance().schedule(cmd)
+    CommandScheduler.getInstance().run()
+    assert feeder.get_command_name() == "Feeder Forward"
+    cmd.cancel()
+    CommandScheduler.getInstance().run()
+    assert feeder.get_command_name() == ""
+
+
+def test_commanded_direction_reverse(feeder):
+    cmd = feeder.run_backward_cmd()
+    CommandScheduler.getInstance().schedule(cmd)
+    CommandScheduler.getInstance().run()
+    assert feeder.get_command_name() == "Feeder Backward"
+    cmd.cancel()
+    CommandScheduler.getInstance().run()
+    assert feeder.get_command_name() == ""
+
+
+def test_commanded_direction_back_off(feeder):
+    cmd = feeder.back_off_cmd()
+    CommandScheduler.getInstance().schedule(cmd)
+    CommandScheduler.getInstance().run()
+    assert feeder.get_command_name() == "Feeder BackOff"
+    cmd.cancel()
+    CommandScheduler.getInstance().run()
+    assert feeder.get_command_name() == ""

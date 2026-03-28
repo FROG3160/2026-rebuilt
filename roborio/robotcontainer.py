@@ -11,7 +11,6 @@ from subsystems.intake import Intake
 from subsystems.feeder import Feeder
 from subsystems.drive import Drive
 from FROGlib.xbox import FROGXboxDriver
-from FROGlib.subsystem import Direction
 from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger
 from commands2.button import Trigger
@@ -57,7 +56,7 @@ class RobotContainer:
         self.register_named_commands()
         self.configure_automation_bindings()
 
-        self.hopper.setDefaultCommand(self.hopper.serialize_cmd())
+        # self.hopper.setDefaultCommand(self.hopper.serialize_cmd())
 
         self.drive.setDefaultCommand(
             ManualDrive(
@@ -150,13 +149,14 @@ class RobotContainer:
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
         # The hopper should run forward whenever either the intake OR the feed motors are running forward.
-        Trigger(lambda: self.feeder.get_direction() == Direction.FORWARD).whileTrue(
-            self.hopper.run_forward_cmd()
+        Trigger(lambda: "Fire" in self.feeder.get_command_name()).whileTrue(
+            self.hopper.run_forward_cmd().withName("Fire Trigger")
         )
-        # The hopper should run backward whenever either the intake OR the feed motors are running backward.
+
+        # The hopper should run backward whenever the feed motor is running backward.
         Trigger(
-            lambda: self.intake.get_direction() == Direction.REVERSE
-            or self.feeder.get_direction() == Direction.REVERSE
+            lambda: self.feeder.get_command_name()
+            in ["Feeder Backward", "Feeder BackOff", "Unjam"]
         ).whileTrue(self.hopper.run_backward_cmd())
 
         self.fuel_detector.get_trigger_targets_close().whileTrue(
@@ -205,7 +205,7 @@ class RobotContainer:
             self.drive.runOnce(self.drive.reset_initial_pose)
         )
 
-        # Reverse intake and feed motors to empty the hopper (hopper will follow automatically via triggers)
+        # Reverse feed motor to empty the hopper (hopper will follow automatically via triggers)
         self.driver_xbox.x().whileTrue(self.feeder.run_backward_cmd().withName("Unjam"))
 
         self.driver_xbox.leftTrigger().whileTrue(self.intake.run_forward_cmd())
@@ -320,6 +320,7 @@ class RobotContainer:
                         self.feeder.run_forward_cmd()
                     )
                 ),
-            ).finallyDo(lambda interrupted: self.shooter.retract_hood())
-            .withName("Test Firing Sequence")
+            )
+            .finallyDo(lambda interrupted: self.shooter.retract_hood())
+            .withName("Fire Test Sequence")
         )

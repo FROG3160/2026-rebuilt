@@ -20,7 +20,7 @@ from phoenix6.configs import (
 )
 import constants
 from phoenix6 import controls
-from FROGlib.subsystem import FROGSubsystem, Direction
+from FROGlib.subsystem import FROGSubsystem
 import wpilib
 from wpimath.system.plant import DCMotor, LinearSystemId
 
@@ -93,7 +93,6 @@ class Intake(FROGSubsystem):
         )
         self._min_speed = constants.Intake.INTAKE_MIN_SPEED
         self._speed_multiplier = constants.Intake.INTAKE_SPEED_MULTIPLIER
-        self._reverse_speed = constants.Intake.INTAKE_REVERSE_SPEED
 
         if wpilib.RobotBase.isSimulation():
             # Roller simulation
@@ -111,9 +110,6 @@ class Intake(FROGSubsystem):
         target = self._compute_target_speed()
         self.motor.set_control(controls.VelocityVoltage(target, slot=0))
 
-    def _run_intake_motor_backward(self):
-        self.motor.set_control(controls.VelocityVoltage(-self._reverse_speed, slot=0))
-
     def _stop_intake_motor(self):
         self.motor.stopMotor()
 
@@ -122,16 +118,6 @@ class Intake(FROGSubsystem):
 
     def _run_deploy_to_stowed(self):
         self.deploy_motor.set_control(controls.MotionMagicVoltage(0.0, slot=0, enable_foc=False))
-
-    # Optional: helper to check if motor is actively driven
-    def get_direction(self) -> Direction:
-        velocity = self.motor.get_velocity().value
-        if velocity > 0.1:
-            return Direction.FORWARD
-        elif velocity < -0.1:
-            return Direction.REVERSE
-        else:
-            return Direction.IDLE
 
     # ────────────────────────────────────────────────
     #          Command Factory Methods
@@ -152,15 +138,9 @@ class Intake(FROGSubsystem):
             .withName("Intake Forward")
         )
 
-    def run_backward_cmd(self) -> Command:
-        """Run the intake roller backward at a fixed reverse speed until interrupted."""
-        return self.startEnd(
-            self._run_intake_motor_backward, self._stop_intake_motor
-        ).withName("Intake Backward")
-
     def stop_cmd(self) -> Command:
         """Stop the intake motor immediately (one-shot runOnce command)."""
-        return self.runOnce(self._stop_intake_motor)
+        return self.runOnce(self._stop_intake_motor).withName("Intake Stop")
 
     def deploy_cmd(self) -> Command:
         """Deploy the intake to the target position using MotionMagic."""
