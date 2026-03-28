@@ -264,6 +264,11 @@ class FROGSubsystem(Subsystem):
     def has_default_telem(self) -> bool:
         return self.getDefaultCommand() is not None
 
+    def get_command_name(self) -> str:
+        """Returns the name of the currently running command, or an empty string if none."""
+        cmd = self.getCurrentCommand()
+        return cmd.getName() if cmd else ""
+
     def periodic(self) -> None:
         """Automatically updates all telemetry and checks for tunable updates."""
         for attr_name in self._telemetry_attrs:

@@ -2,7 +2,7 @@ from commands2 import Command
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.system.plant import DCMotor, LinearSystemId
-from FROGlib.subsystem import FROGSubsystem, Direction
+from FROGlib.subsystem import FROGSubsystem
 from phoenix6.controls import VoltageOut
 from phoenix6 import controls, SignalLogger
 from FROGlib.ctre import (
@@ -99,29 +99,23 @@ class Feeder(FROGSubsystem):
 
     def run_forward_cmd(self) -> Command:
         """Run the feeder motor forward at the configured feed velocity, stopping when interrupted."""
-        return self.runEnd(self._runForward, self.stop)
+        return self.runEnd(self._runForward, self.stop).withName("Feeder Forward")
 
     def run_backward_cmd(self) -> Command:
         """Run the feeder motor backward at the configured feed velocity, stopping when interrupted."""
-        return self.runEnd(self._runBackward, self.stop)
+        return self.runEnd(self._runBackward, self.stop).withName("Feeder Backward")
 
     def back_off_cmd(self) -> Command:
         """Back the feeder off 0.15 rotations away from the flywheel using position control."""
-        return self.runOnce(self._startBackOff).andThen(
-            self.run(self._applyBackOff).until(self._atBackOffTarget)
+        return (
+            self.runOnce(self._startBackOff)
+            .andThen(self.run(self._applyBackOff).until(self._atBackOffTarget))
+            .finallyDo(lambda interrupted: self.stop())
+            .withName("Feeder BackOff")
         )
 
     def stop(self):
         self.motor.stopMotor()
-
-    def get_direction(self) -> Direction:
-        voltage = self.motor.get_motor_voltage().value
-        if voltage > 0.1:
-            return Direction.FORWARD
-        elif voltage < -0.1:
-            return Direction.REVERSE
-        else:
-            return Direction.IDLE
 
     def simulationPeriodic(self):
         dt = 0.020
