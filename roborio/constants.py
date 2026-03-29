@@ -8,21 +8,21 @@ from FROGlib.vision import FROGCameraConfig
 # Camera Configs
 CAMERA_CONFIGS: Final = (
     FROGCameraConfig(
-        "OV9281-AprilTag2",
+        "OV9281-AprilTag1",
         Transform3d(
             Translation3d(
-                inchesToMeters(10.25), inchesToMeters(0), inchesToMeters(8.0)
+                inchesToMeters(-7.875), inchesToMeters(11.9375), inchesToMeters(17.1875)
             ),
-            Rotation3d(0, degreesToRadians(0), degreesToRadians(0)),
+            Rotation3d(0.0, degreesToRadians(-20.0), degreesToRadians(92.0)),
         ),
     ),
     FROGCameraConfig(
-        "OV9281-Object1",
+        "OV9281-AprilTag2",
         Transform3d(
             Translation3d(
-                inchesToMeters(-11.0), inchesToMeters(0), inchesToMeters(12.0)
+                inchesToMeters(-6.5), inchesToMeters(-13.9375), inchesToMeters(19.5)
             ),
-            Rotation3d(0, degreesToRadians(0), degreesToRadians(180)),
+            Rotation3d(0.0, degreesToRadians(-20.0), degreesToRadians(-89.86)),
         ),
     ),
 )
