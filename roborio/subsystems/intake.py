@@ -117,7 +117,9 @@ class Intake(FROGSubsystem):
 
     def _run_roller_motor_forward(self):
         target = self._compute_target_speed()
-        self.roller_motor.set_control(controls.VelocityVoltage(target, slot=0, enable_foc=False))
+        self.roller_motor.set_control(
+            controls.VelocityVoltage(target, slot=0, enable_foc=False)
+        )
 
     def _stop_roller_motor(self):
         self.roller_motor.stopMotor()
@@ -157,7 +159,6 @@ class Intake(FROGSubsystem):
         return (
             self.run(self._run_cycle)
             .beforeStarting(lambda: setattr(self, "_cycle_deploying", True))
-            .finallyDo(lambda interrupted: self.retract_and_stop_cmd().schedule())
             .withName("Intake Cycle")
         )
 
