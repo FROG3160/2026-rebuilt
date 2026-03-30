@@ -108,11 +108,13 @@ class RobotContainer:
         firing_sequence = cmd.sequence(
             cmd.runOnce(self.shooter.deploy_hood),
             cmd.waitUntil(self.shooter.is_hood_deployed),
-            self.shooter.fire_with_distance_cmd().alongWith(
+            self.shooter.fire_with_distance_cmd()
+            .alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
                     self.feeder.run_forward_cmd()
                 )
-            ).alongWith(self.intake.cycle_cmd()),
+            )
+            .alongWith(self.intake.cycle_cmd()),
         )
 
         # For the rotation override (used during autonomous paths)
@@ -160,7 +162,7 @@ class RobotContainer:
         ).whileTrue(self.hopper.run_backward_cmd())
 
         self.fuel_detector.get_trigger_targets_close().onTrue(
-            self.intake.run_forward_cmd()
+            self.intake.run_and_deploy_cmd()
         ).onFalse(self.intake.retract_and_stop_cmd())
 
         # Rumble driver controller when shift is ending soon (5s left)
@@ -227,7 +229,7 @@ class RobotContainer:
         NamedCommands.registerCommand(
             "Fire", self.get_firing_command_group(self.field_zones.get_aim_target)
         )
-        NamedCommands.registerCommand("Intake", self.intake.run_forward_cmd())
+        NamedCommands.registerCommand("Intake", self.intake.run_and_deploy_cmd())
         NamedCommands.registerCommand("Stop Intake", self.intake.stop_cmd())
         NamedCommands.registerCommand("Cycle Intake", self.intake.cycle_cmd())
 
@@ -308,7 +310,7 @@ class RobotContainer:
 
         # Intake via left trigger, like teleop
         self.driver_xbox.leftTrigger().onTrue(
-            self.intake.run_forward_cmd().withName("Test Intake")
+            self.intake.run_and_deploy_cmd().withName("Test Intake")
         ).onFalse(self.intake.retract_and_stop_cmd())
 
         # Run the full sequence: hopper, feeder, flywheel, and hood
