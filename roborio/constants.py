@@ -50,7 +50,7 @@ class CANIDs:
     GYRO: Final = 39
 
     ROLLER_MOTOR: Final = 40
-    INTAKE_DEPLOY_MOTOR: Final = 41
+    DEPLOY_MOTOR: Final = 41
 
     FEED_MOTOR: Final = 42
     SHOOTER_LEFT_FLYWHEEL: Final = 43

@@ -160,7 +160,7 @@ class RobotContainer:
         ).whileTrue(self.hopper.run_backward_cmd())
 
         self.fuel_detector.get_trigger_targets_close().onTrue(
-            self.intake.run_forward_cmd()
+            self.intake.run_and_deploy_cmd()
         ).onFalse(self.intake.retract_and_stop_cmd())
 
         # Rumble driver controller when shift is ending soon (5s left)
@@ -208,7 +208,9 @@ class RobotContainer:
         # Reverse feed motor to empty the hopper (hopper will follow automatically via triggers)
         self.driver_xbox.x().whileTrue(self.feeder.run_backward_cmd().withName("Unjam"))
 
-        self.driver_xbox.leftTrigger().onTrue(self.intake.run_forward_cmd()).onFalse(self.intake.retract_and_stop_cmd())
+        self.driver_xbox.leftTrigger().onTrue(self.intake.run_and_deploy_cmd()).onFalse(
+            self.intake.retract_and_stop_cmd()
+        )
 
         self.driver_xbox.rightBumper().whileTrue(
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
@@ -225,7 +227,7 @@ class RobotContainer:
         NamedCommands.registerCommand(
             "Fire", self.get_firing_command_group(self.field_zones.get_aim_target)
         )
-        NamedCommands.registerCommand("Intake", self.intake.run_forward_cmd())
+        NamedCommands.registerCommand("Intake", self.intake.run_and_deploy_cmd())
         NamedCommands.registerCommand("Stop Intake", self.intake.stop_cmd())
 
     def configureSysIDFeederButtonBindings(self) -> None:
@@ -305,7 +307,7 @@ class RobotContainer:
 
         # Intake via left trigger, like teleop
         self.driver_xbox.leftTrigger().onTrue(
-            self.intake.run_forward_cmd().withName("Test Intake")
+            self.intake.run_and_deploy_cmd().withName("Test Intake")
         ).onFalse(self.intake.retract_and_stop_cmd())
 
         # Run the full sequence: hopper, feeder, flywheel, and hood

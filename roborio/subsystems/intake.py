@@ -93,7 +93,7 @@ class Intake(FROGSubsystem):
             motor_name="Roller",
         )
         self.deploy_motor = FROGTalonFX(
-            id=constants.CANIDs.INTAKE_DEPLOY_MOTOR,
+            id=constants.CANIDs.DEPLOY_MOTOR,
             motor_config=intake_deploy_motor_config,
             canbus="rio",
             motor_name="IntakeDeploy",
@@ -137,7 +137,7 @@ class Intake(FROGSubsystem):
     #          Command Factory Methods
     # ────────────────────────────────────────────────
 
-    def run_forward_cmd(self) -> Command:
+    def run_and_deploy_cmd(self) -> Command:
         """Deploy the intake and immediately run the roller motor forward."""
         return (
             self.runOnce(self._run_deploy_to_target)
@@ -150,8 +150,9 @@ class Intake(FROGSubsystem):
         return (
             self.runOnce(self._run_deploy_to_stowed)
             .andThen(
-                self.run(self._run_roller_motor_forward)
-                .until(lambda: abs(self.deploy_motor.get_position().value) < 0.1)
+                self.run(self._run_roller_motor_forward).until(
+                    lambda: abs(self.deploy_motor.get_position().value) < 0.1
+                )
             )
             .andThen(self.runOnce(self._stop_roller_motor))
             .withName("Intake Retract And Stop")
