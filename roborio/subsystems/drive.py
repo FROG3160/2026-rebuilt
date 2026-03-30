@@ -267,7 +267,7 @@ class Drive(FROGSubsystem, SwerveChassis):
                     "state-drive", SysIdRoutineLog.stateEnumToString(state)
                 )
             ),
-            SysIdRoutine.Mechanism(self._sysid_drive, lambda log: None, self),
+            SysIdRoutine.Mechanism(self._sysid_drive, self._sysid_log_drive, self),
         )
 
         self.sys_id_routine_steer = SysIdRoutine(
@@ -276,7 +276,7 @@ class Drive(FROGSubsystem, SwerveChassis):
                     "state-steer", SysIdRoutineLog.stateEnumToString(state)
                 )
             ),
-            SysIdRoutine.Mechanism(self._sysid_steer, lambda log: None, self),
+            SysIdRoutine.Mechanism(self._sysid_steer, self._sysid_log_steer, self),
         )
         self._vt_max_delta = 1.0
         self._vt_max_translationDistance = 6.0
@@ -301,6 +301,26 @@ class Drive(FROGSubsystem, SwerveChassis):
         for module in self.modules:
             module.steer_motor.set_control(VoltageOut(output=voltage, enable_foc=False))
             module.drive_motor.stopMotor()
+
+    def _sysid_log_drive(self, sys_id_routine: SysIdRoutineLog) -> None:
+        # Record a frame for each module.  Since these share an encoder, we consider
+        # the entire group to be one motor.
+        for module in self.modules:
+            with module.drive_motor as m:
+                sys_id_routine.motor(module.name).voltage(
+                    m.get_motor_voltage().value
+                ).position(m.get_position().value).velocity(m.get_velocity().value)
+
+    def _sysid_log_steer(self, sys_id_routine: SysIdRoutineLog) -> None:
+        # Record a frame for each module.  Since these share an encoder, we consider
+        # the entire group to be one motor.
+        for module in self.modules:
+            with module.steer_motor as m:
+                sys_id_routine.motor(module.name).voltage(
+                    m.get_motor_voltage().value
+                ).angularPosition(m.get_position().value).angularVelocity(
+                    m.get_velocity().value
+                )
 
     def shouldFlipPath(self):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
