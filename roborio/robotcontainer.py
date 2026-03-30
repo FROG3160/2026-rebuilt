@@ -159,9 +159,9 @@ class RobotContainer:
             in ["Feeder Backward", "Feeder BackOff", "Unjam"]
         ).whileTrue(self.hopper.run_backward_cmd())
 
-        self.fuel_detector.get_trigger_targets_close().whileTrue(
+        self.fuel_detector.get_trigger_targets_close().onTrue(
             self.intake.run_forward_cmd()
-        )
+        ).onFalse(self.intake.retract_and_stop_cmd())
 
         # Rumble driver controller when shift is ending soon (5s left)
         Trigger(self.shift_tracker.is_shift_ending_soon).onTrue(
@@ -208,7 +208,7 @@ class RobotContainer:
         # Reverse feed motor to empty the hopper (hopper will follow automatically via triggers)
         self.driver_xbox.x().whileTrue(self.feeder.run_backward_cmd().withName("Unjam"))
 
-        self.driver_xbox.leftTrigger().whileTrue(self.intake.run_forward_cmd())
+        self.driver_xbox.leftTrigger().onTrue(self.intake.run_forward_cmd()).onFalse(self.intake.retract_and_stop_cmd())
 
         self.driver_xbox.rightBumper().whileTrue(
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
@@ -304,9 +304,9 @@ class RobotContainer:
         """Button bindings for manual component testing in test mode."""
 
         # Intake via left trigger, like teleop
-        self.driver_xbox.leftTrigger().whileTrue(
+        self.driver_xbox.leftTrigger().onTrue(
             self.intake.run_forward_cmd().withName("Test Intake")
-        )
+        ).onFalse(self.intake.retract_and_stop_cmd())
 
         # Run the full sequence: hopper, feeder, flywheel, and hood
         # using the commanded flywheel speed instead of calculating from distance.
