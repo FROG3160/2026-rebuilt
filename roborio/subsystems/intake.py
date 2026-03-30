@@ -101,6 +101,7 @@ class Intake(FROGSubsystem):
         )
         self._min_speed = constants.Intake.ROLLER_MIN_SPEED
         self._speed_multiplier = constants.Intake.ROLLER_SPEED_MULTIPLIER
+        self._cycle_deploying = True
 
         if wpilib.RobotBase.isSimulation():
             # Roller simulation
@@ -116,7 +117,9 @@ class Intake(FROGSubsystem):
 
     def _run_roller_motor_forward(self):
         target = self._compute_target_speed()
-        self.roller_motor.set_control(controls.VelocityVoltage(target, slot=0))
+        self.roller_motor.set_control(
+            controls.VelocityVoltage(target, slot=0, enable_foc=False)
+        )
 
     def _stop_roller_motor(self):
         self.roller_motor.stopMotor()
@@ -133,16 +136,38 @@ class Intake(FROGSubsystem):
             controls.MotionMagicVoltage(0.0, slot=0, enable_foc=False)
         )
 
+    def _run_cycle(self):
+        self._run_roller_motor_forward()
+
+        pos = self.deploy_motor.get_position().value
+        # Check if we need to flip direction
+        if self._cycle_deploying:
+            self._run_deploy_to_target()
+            if abs(pos - constants.Intake.INTAKE_DEPLOY_TARGET_METERS) < 0.05:
+                self._cycle_deploying = False
+        else:
+            self._run_deploy_to_stowed()
+            if abs(pos) < 0.05:
+                self._cycle_deploying = True
+
     # ────────────────────────────────────────────────
     #          Command Factory Methods
     # ────────────────────────────────────────────────
+
+    def cycle_cmd(self) -> Command:
+        """Cycle the intake deploy in and out continuously while running the roller motor."""
+        return (
+            self.run(self._run_cycle)
+            .beforeStarting(lambda: setattr(self, "_cycle_deploying", True))
+            .withName("Intake Cycle")
+        )
 
     def run_and_deploy_cmd(self) -> Command:
         """Deploy the intake and immediately run the roller motor forward."""
         return (
             self.runOnce(self._run_deploy_to_target)
             .andThen(self.run(self._run_roller_motor_forward))
-            .withName("Intake Forward")
+            .withName("Intake Run and Deploy")
         )
 
     def retract_and_stop_cmd(self) -> Command:
