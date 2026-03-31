@@ -3,7 +3,6 @@ from pathplannerlib.path import PathConstraints, PathPlannerPath
 from wpilib import SmartDashboard
 
 from commands.drive import ManualDrive, ManualDriveAndAim, ManualDriveAndClusterAim
-from FROGlib.vision import FROGDetector
 from subsystems.feedback import ShiftTracker, FieldZones
 from subsystems.shooter import Shooter
 from subsystems.hopper import Hopper
@@ -32,7 +31,6 @@ class RobotContainer:
     def __init__(self):
         self.alliance = None
 
-        self.fuel_detector = FROGDetector(constants.DETECTOR_CONFIGS[0])
         self.drive = Drive()
         self.intake = Intake(self.drive.get_linear_speed)
         self.hopper = Hopper()
@@ -150,22 +148,27 @@ class RobotContainer:
 
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
-        # The hopper should run forward and the intake should cycle whenever the feed motors are running forward.
-        Trigger(lambda: "Fire" in self.feeder.get_command_name()).whileTrue(
-            self.hopper.run_forward_cmd()
-            .alongWith(self.intake.cycle_cmd())
-            .withName("Fire Trigger")
-        ).onFalse(self.intake.retract_and_stop_cmd())
+        is_firing = Trigger(lambda: "Fire" in self.feeder.get_command_name())
+        is_intaking = self.driver_xbox.leftTrigger()
+
+        # The hopper should run forward whenever the feed motors are running forward.
+        is_firing.whileTrue(self.hopper.run_forward_cmd().withName("Fire Hopper"))
+
+        # Intake behavior when firing: Cycle if NOT intaking, otherwise manual takes precedence
+        is_firing.and_(is_intaking.negate()).whileTrue(
+            self.intake.cycle_cmd().withName("Firing Cycle")
+        )
+
+        # Centralized retract logic: Retract only when neither firing nor intaking
+        is_firing.or_(is_intaking).onFalse(
+            self.intake.retract_and_stop_cmd().withName("Smart Retract")
+        )
 
         # The hopper should run backward whenever the feed motor is running backward.
         Trigger(
             lambda: self.feeder.get_command_name()
             in ["Feeder Backward", "Feeder BackOff", "Unjam"]
         ).whileTrue(self.hopper.run_backward_cmd())
-
-        self.fuel_detector.get_trigger_targets_close().onTrue(
-            self.intake.run_and_deploy_cmd()
-        ).onFalse(self.intake.retract_and_stop_cmd())
 
         # Rumble driver controller when shift is ending soon (5s left)
         Trigger(self.shift_tracker.is_shift_ending_soon).onTrue(
@@ -212,9 +215,7 @@ class RobotContainer:
         # Reverse feed motor to empty the hopper (hopper will follow automatically via triggers)
         self.driver_xbox.x().whileTrue(self.feeder.run_backward_cmd().withName("Unjam"))
 
-        self.driver_xbox.leftTrigger().onTrue(self.intake.run_and_deploy_cmd()).onFalse(
-            self.intake.retract_and_stop_cmd()
-        )
+        self.driver_xbox.leftTrigger().onTrue(self.intake.run_and_deploy_cmd())
 
         self.driver_xbox.rightBumper().whileTrue(
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)

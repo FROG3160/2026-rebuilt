@@ -314,7 +314,7 @@ class Hopper(FROGSubsystem):
     def right_distance_telem(self) -> float:
         return self.right_side.sensor.get_distance().value
 
-    @FROGSubsystem.tunable(20.0, "Default Velocity (RPS)")
+    @FROGSubsystem.tunable(3.0, "Default Velocity (m/s)")
     def default_velocity_tunable(self, val):
         self._default_velocity = val
         self._update_side_configs()

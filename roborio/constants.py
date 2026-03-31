@@ -27,7 +27,7 @@ CAMERA_CONFIGS: Final = (
     ),
 )
 
-DETECTOR_CONFIGS: Final = (FROGCameraConfig("Object1", Transform3d()),)
+DETECTOR_CONFIGS: Final = ()
 
 
 class CANIDs:
