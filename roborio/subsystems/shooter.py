@@ -125,7 +125,7 @@ class Shooter(FROGSubsystem):
         # these attributes won't show as being referenced in the code,
         # but they're referenced by name as a string in simulationPeriodic.
         self._commanded_flywheel_speed = 0.0
-        self._speed_multiplier = 1.07
+        self._speed_multiplier = 1.00
         if wpilib.RobotBase.isSimulation():
             # Flywheel simulation - override gearing to 1.0 (actual mechanical ratio)
             # as the config uses rotations/meter (~3.13)
@@ -183,7 +183,13 @@ class Shooter(FROGSubsystem):
         """
         if distance := self.distance_to_target_supplier():
             # TODO: Differentiate flywheel speed between Hub and Floor targets based on field zone or aim state.
-            return float(np.interp(distance, constants.Shooter.SHOOTERS_HUB_DISTANCES, constants.Shooter.SHOOTERS_HUB_SPEEDS))
+            return float(
+                np.interp(
+                    distance,
+                    constants.Shooter.SHOOTERS_HUB_DISTANCES,
+                    constants.Shooter.SHOOTERS_HUB_SPEEDS,
+                )
+            )
         else:
             return None
 
@@ -235,7 +241,7 @@ class Shooter(FROGSubsystem):
 
     def is_hood_deployed(self) -> bool:
         """Returns True if the hood is currently deployed (position > 0.01)"""
-        return self.hood_motor.get_position().value > 0.01
+        return self.hood_motor.get_position().value > 0.05
 
     def simulationPeriodic(self):
         dt = 0.020
@@ -287,6 +293,10 @@ class Shooter(FROGSubsystem):
     def at_speed_telem(self) -> bool:
         return self.is_at_speed()
 
+    @FROGSubsystem.telemetry("Hood Deployed")
+    def hood_deployed_telem(self) -> bool:
+        return self.is_hood_deployed()
+
     @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_S, "Flywheel K_S")
     def flywheel_ks(self, val):
         self._updateFlywheelSlot(k_s=val)
@@ -311,7 +321,7 @@ class Shooter(FROGSubsystem):
     def flywheel_kd(self, val):
         self._updateFlywheelSlot(k_d=val)
 
-    @FROGSubsystem.tunable(1.07, "Flywheel Speed Multiplier")
+    @FROGSubsystem.tunable(1.00, "Flywheel Speed Multiplier")
     def speed_multiplier(self, val):
         self._speed_multiplier = val
 

@@ -160,7 +160,7 @@ class Shooter:
     HOOD_FORWARD_LIMIT: Final = 1.3
     HOOD_REVERSE_LIMIT: Final = 0.0
 
-    FLYWHEEL_TOLERANCE: Final = 0.2
+    FLYWHEEL_TOLERANCE: Final = 0.1
 
 
 class Feeder:
