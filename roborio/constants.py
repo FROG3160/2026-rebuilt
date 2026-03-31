@@ -132,12 +132,13 @@ class Intake:
 
 class Hopper:
     VOLTAGE_HOPPER_S: Final = 0.25
-    HOPPER_V: Final = 0.48
+    HOPPER_V: Final = 1.45
     HOPPER_P: Final = 0.0
     HOPPER_I: Final = 0.0
     HOPPER_D: Final = 0.0
-    HOPPER_MM_V: Final = 20.0
-    HOPPER_MM_A: Final = 40.0
+    HOPPER_MM_V: Final = 6.38
+    HOPPER_MM_A: Final = 12.77
+    SENSOR_TO_MECHANISM_RATIO: Final = 15.665
 
 
 class Shooter:

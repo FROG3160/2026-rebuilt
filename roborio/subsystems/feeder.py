@@ -51,7 +51,7 @@ class Feeder(FROGSubsystem):
             motor_name="Feed Motor",
             signal_profile=FROGTalonFX.SignalProfile.BASIC,
         )
-        self._feed_velocity = 4.81  # m/s
+        self._feed_velocity = 7.0  # Max 9.21 m/s
         self._back_off_target = 0.0
 
         # Set up SysID routine for the feeder

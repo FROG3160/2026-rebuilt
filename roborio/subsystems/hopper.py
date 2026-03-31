@@ -39,7 +39,11 @@ hopper_mm = (
 hopper_left_motor_config = (
     get_frog_talon_config()
     .with_motor_output(MOTOR_OUTPUT_CCWP_COAST)
-    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(5.0))
+    .with_feedback(
+        FeedbackConfigs().with_sensor_to_mechanism_ratio(
+            constants.Hopper.SENSOR_TO_MECHANISM_RATIO
+        )
+    )
     .with_slot0(hopper_slot0)
     .with_motion_magic(hopper_mm)
 )
@@ -47,7 +51,11 @@ hopper_left_motor_config = (
 hopper_right_motor_config = (
     get_frog_talon_config()
     .with_motor_output(MOTOR_OUTPUT_CWP_COAST)
-    .with_feedback(FeedbackConfigs().with_sensor_to_mechanism_ratio(5.0))
+    .with_feedback(
+        FeedbackConfigs().with_sensor_to_mechanism_ratio(
+            constants.Hopper.SENSOR_TO_MECHANISM_RATIO
+        )
+    )
     .with_slot0(hopper_slot0)
     .with_motion_magic(hopper_mm)
 )
@@ -215,7 +223,7 @@ class Spindexer:
 class Hopper(FROGSubsystem):
     def __init__(self):
         super().__init__()
-        self._default_velocity = 4.0
+        self._default_velocity = 3.0  # max 7.98 m/s
         self._burst_timeout = 1.0
         self._burst_duration = 0.5
         self._pulse_interval = 1.0
