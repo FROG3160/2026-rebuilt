@@ -104,19 +104,16 @@ class RobotContainer:
             )
 
         firing_sequence = cmd.sequence(
-            # Reverse while opening
+            # Reverse while opening (Hopper will follow Feeder via Trigger)
             cmd.parallel(
                 cmd.runOnce(self.shooter.deploy_hood),
                 self.feeder.run_backward_cmd(),
-                self.hopper.run_backward_cmd(),
             ).until(self.shooter.is_hood_deployed),
             # Transition to firing logic once open
             self.shooter.fire_with_distance_cmd()
             .alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                    self.feeder.run_forward_cmd().alongWith(
-                        self.hopper.fire_forward_cmd()
-                    )
+                    self.feeder.run_forward_cmd()
                 )
             )
             .alongWith(self.intake.cycle_cmd()),
@@ -157,12 +154,21 @@ class RobotContainer:
         """Configure automation bindings for the robot."""
         is_firing = Trigger(lambda: "Fire" in self.feeder.get_command_name())
         is_intaking = self.driver_xbox.leftTrigger()
+        feeder_forward = Trigger(lambda: self.feeder.get_command_name() == "Feeder Forward")
+        feeder_reverse = Trigger(
+            lambda: self.feeder.get_command_name()
+            in ["Feeder Backward", "Feeder BackOff", "Unjam"]
+        )
 
-        # The hopper should follow the feeder automatically when NOT in a firing sequence
-        # (The firing group handles its own specific hopper logic)
-        is_firing.negate().and_(
-            Trigger(lambda: self.feeder.get_command_name() == "Feeder Forward")
-        ).whileTrue(self.hopper.run_forward_cmd())
+        # The hopper should follow the feeder automatically.
+        # 1. When feeding forward for a shot, use shooting-specific unjamming logic.
+        feeder_forward.and_(is_firing).whileTrue(self.hopper.fire_forward_cmd())
+
+        # 2. When feeding forward manually (not firing), just run forward.
+        feeder_forward.and_(is_firing.negate()).whileTrue(self.hopper.run_forward_cmd())
+
+        # 3. When the feeder is reversing, the hopper should also reverse.
+        feeder_reverse.whileTrue(self.hopper.run_backward_cmd())
 
         # Intake behavior when firing: Cycle if NOT intaking, otherwise manual takes precedence
         is_firing.and_(is_intaking.negate()).whileTrue(
@@ -173,13 +179,6 @@ class RobotContainer:
         is_firing.or_(is_intaking).onFalse(
             self.intake.retract_and_stop_cmd().withName("Smart Retract")
         )
-
-        # The hopper should run backward whenever the feed motor is running backward.
-        # This covers manual unjam and the "reverse while opening" part of the firing group.
-        Trigger(
-            lambda: self.feeder.get_command_name()
-            in ["Feeder Backward", "Feeder BackOff", "Unjam"]
-        ).whileTrue(self.hopper.run_backward_cmd())
 
         # Rumble driver controller when shift is ending soon (5s left)
         Trigger(self.shift_tracker.is_shift_ending_soon).onTrue(
