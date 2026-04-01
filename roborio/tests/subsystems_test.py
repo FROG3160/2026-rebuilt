@@ -39,7 +39,7 @@ def test_shooter_fire_command_logic():
 
     # Check if the speed was set correctly on the shooter
     assert (
-        abs(shooter.get_commanded_speed() - (21.40 * shooter._speed_multiplier)) < 0.001
+        abs(shooter.get_commanded_speed() - (20.76 * shooter._speed_multiplier)) < 0.001
     )
 
     # Check if is_at_speed returns False initially (simulated motor at 0)

@@ -113,6 +113,10 @@ class Spindexer:
         self.pulse_interval = 1.0  # seconds to wait when staged before pulsing
         self.pulse_duration = 0.2  # seconds to run forward when pulsing
 
+        # Shooting Configuration
+        self.shooting_burst_timeout = 0.5  # tighten for shooting
+        self.shooting_burst_duration = 0.1  # 100ms reverse
+
         self.mock_detected = False
         if wpilib.RobotBase.isSimulation():
             SmartDashboard.putBoolean(
@@ -122,6 +126,15 @@ class Spindexer:
 
     def execute_serialize(self):
         """Run the serialization state machine for this side."""
+        self._execute_logic(self.burst_timeout, self.burst_duration, shooting_mode=False)
+
+    def execute_shooting_serialize(self):
+        """Run the serialization state machine with tighter tolerances for shooting."""
+        self._execute_logic(
+            self.shooting_burst_timeout, self.shooting_burst_duration, shooting_mode=True
+        )
+
+    def _execute_logic(self, burst_timeout, burst_duration, shooting_mode=False):
         # Check if fuel is detected using the configured threshold
         if wpilib.RobotBase.isSimulation():
             detected = self.mock_detected
@@ -133,7 +146,14 @@ class Spindexer:
             self.running_timer.reset()
             self.is_bursting = False
 
-            if self.is_pulsing:
+            if shooting_mode:
+                # When shooting, we WANT to push fuel forward into the feeder!
+                self.motor.set_control(
+                    controls.MotionMagicVelocityVoltage(
+                        self.forward_velocity, slot=0, enable_foc=False
+                    )
+                )
+            elif self.is_pulsing:
                 self.motor.set_control(
                     controls.MotionMagicVelocityVoltage(
                         self.forward_velocity, slot=0, enable_foc=False
@@ -158,7 +178,7 @@ class Spindexer:
                         self.reverse_velocity, slot=0, enable_foc=False
                     )
                 )
-                if self.burst_timer.hasElapsed(self.burst_duration):
+                if self.burst_timer.hasElapsed(burst_duration):
                     self.is_bursting = False
                     self.running_timer.reset()
             else:
@@ -167,7 +187,7 @@ class Spindexer:
                         self.forward_velocity, slot=0, enable_foc=False
                     )
                 )
-                if self.running_timer.hasElapsed(self.burst_timeout):
+                if self.running_timer.hasElapsed(burst_timeout):
                     self.is_bursting = True
                     self.burst_timer.reset()
 
@@ -285,6 +305,19 @@ class Hopper(FROGSubsystem):
             lambda: (self.left_side.run_backward(), self.right_side.run_backward()),
             self.stop_all,
         ).withName("Hopper Backward")
+
+    def fire_forward_cmd(self) -> Command:
+        """Run the hopper with shooting-specific unjamming logic (reverses for 100ms if empty for 0.5s)."""
+        return (
+            self.run(
+                lambda: (
+                    self.left_side.execute_shooting_serialize(),
+                    self.right_side.execute_shooting_serialize(),
+                )
+            )
+            .finallyDo(lambda interrupted: self.stop_all())
+            .withName("Hopper Fire Forward")
+        )
 
     def stop_cmd(self) -> Command:
         """Stop the hopper motors immediately (one-shot runOnce command)."""
