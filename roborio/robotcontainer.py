@@ -47,7 +47,7 @@ class RobotContainer:
         self.shift_tracker = ShiftTracker()
         self.field_zones = FieldZones(
             self.drive.getPose,
-            self.shooter.is_hood_deployed,
+            lambda: not self.shooter.is_hood_closed(),
             self.drive.estimator_field,
         )
 
@@ -108,15 +108,14 @@ class RobotContainer:
             cmd.parallel(
                 cmd.runOnce(self.shooter.deploy_hood),
                 self.feeder.run_backward_cmd(),
-            ).until(self.shooter.is_hood_deployed),
+            ).until(self.shooter.is_hood_open),
             # Transition to firing logic once open
             self.shooter.fire_with_distance_cmd()
             .alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
                     self.feeder.run_forward_cmd()
                 )
-            )
-            .alongWith(self.intake.cycle_cmd()),
+            ),
         )
 
         # For the rotation override (used during autonomous paths)
@@ -154,21 +153,15 @@ class RobotContainer:
         """Configure automation bindings for the robot."""
         is_firing = Trigger(lambda: "Fire" in self.feeder.get_command_name())
         is_intaking = self.driver_xbox.leftTrigger()
-        feeder_forward = Trigger(lambda: self.feeder.get_command_name() == "Feeder Forward")
-        feeder_reverse = Trigger(
-            lambda: self.feeder.get_command_name()
-            in ["Feeder Backward", "Feeder BackOff", "Unjam"]
-        )
 
         # The hopper should follow the feeder automatically.
-        # 1. When feeding forward for a shot, use shooting-specific unjamming logic.
-        feeder_forward.and_(is_firing).whileTrue(self.hopper.fire_forward_cmd())
+        is_firing.whileTrue(self.hopper.fire_forward_cmd().withName("Fire Hopper"))
 
-        # 2. When feeding forward manually (not firing), just run forward.
-        feeder_forward.and_(is_firing.negate()).whileTrue(self.hopper.run_forward_cmd())
-
-        # 3. When the feeder is reversing, the hopper should also reverse.
-        feeder_reverse.whileTrue(self.hopper.run_backward_cmd())
+        # The hopper should run backward whenever the feed motor is running backward.
+        Trigger(
+            lambda: self.feeder.get_command_name()
+            in ["Feeder Backward", "Feeder BackOff", "Unjam"]
+        ).whileTrue(self.hopper.run_backward_cmd())
 
         # Intake behavior when firing: Cycle if NOT intaking, otherwise manual takes precedence
         is_firing.and_(is_intaking.negate()).whileTrue(
@@ -331,7 +324,7 @@ class RobotContainer:
                     cmd.runOnce(self.shooter.deploy_hood),
                     self.feeder.run_backward_cmd(),
                     self.hopper.run_backward_cmd(),
-                ).until(self.shooter.is_hood_deployed),
+                ).until(self.shooter.is_hood_open),
                 # Transition to firing logic once open
                 self.shooter.fire_at_set_speed_cmd().alongWith(
                     cmd.waitUntil(self.shooter.is_at_speed).andThen(
