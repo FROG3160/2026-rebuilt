@@ -241,9 +241,20 @@ class Shooter(FROGSubsystem):
     #         .andThen(self.runOnce(self._set_hood_position))
     #     )
 
-    def is_hood_deployed(self) -> bool:
-        """Returns True if the hood is currently deployed (position > 0.05)"""
-        return self.hood_motor.get_position().value > 0.05
+    def is_hood_open(self) -> bool:
+        """Returns True if the hood is currently open (position within 0.05 of forward limit)"""
+
+        return self.hood_motor.get_position().value > (
+            constants.Shooter.HOOD_FORWARD_LIMIT
+            - constants.Shooter.HOOD_POSITION_TOLERANCE
+        )
+
+    def is_hood_closed(self) -> bool:
+        """Returns True if the hood is currently closed (position within 0.05 of reverse limit)"""
+        return self.hood_motor.get_position().value < (
+            constants.Shooter.HOOD_REVERSE_LIMIT
+            + constants.Shooter.HOOD_POSITION_TOLERANCE
+        )
 
     def simulationPeriodic(self):
         dt = 0.020
@@ -295,9 +306,13 @@ class Shooter(FROGSubsystem):
     def at_speed_telem(self) -> bool:
         return self.is_at_speed()
 
-    @FROGSubsystem.telemetry("Hood Deployed")
-    def hood_deployed_telem(self) -> bool:
-        return self.is_hood_deployed()
+    @FROGSubsystem.telemetry("Hood Open")
+    def hood_open_telem(self) -> bool:
+        return self.is_hood_open()
+
+    @FROGSubsystem.telemetry("Hood Closed")
+    def hood_closed_telem(self) -> bool:
+        return self.is_hood_closed()
 
     @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_S, "Flywheel K_S")
     def flywheel_ks(self, val):
