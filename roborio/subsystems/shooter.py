@@ -143,9 +143,6 @@ class Shooter(FROGSubsystem):
         self.sys_id_routine = SysIdRoutine(
             SysIdRoutine.Config(
                 stepVoltage=4.0,
-                recordState=lambda state: SignalLogger.write_string(
-                    "state", SysIdRoutineLog.stateEnumToString(state)
-                ),
             ),
             SysIdRoutine.Mechanism(
                 lambda voltage: self.motor.set_control(

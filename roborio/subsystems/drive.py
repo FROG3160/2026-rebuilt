@@ -262,20 +262,12 @@ class Drive(FROGSubsystem, SwerveChassis):
         # Tell SysId to make generated commands require this subsystem, suffix test state in
         # WPILog with this subsystem's name ("drive")
         self.sys_id_routine_drive = SysIdRoutine(
-            SysIdRoutine.Config(
-                recordState=lambda state: SignalLogger.write_string(
-                    "state-drive", SysIdRoutineLog.stateEnumToString(state)
-                )
-            ),
+            SysIdRoutine.Config(),
             SysIdRoutine.Mechanism(self._sysid_drive, self._sysid_log_drive, self),
         )
 
         self.sys_id_routine_steer = SysIdRoutine(
-            SysIdRoutine.Config(
-                recordState=lambda state: SignalLogger.write_string(
-                    "state-steer", SysIdRoutineLog.stateEnumToString(state)
-                )
-            ),
+            SysIdRoutine.Config(),
             SysIdRoutine.Mechanism(self._sysid_steer, self._sysid_log_steer, self),
         )
         self._vt_max_delta = 1.0

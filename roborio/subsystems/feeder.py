@@ -56,11 +56,7 @@ class Feeder(FROGSubsystem):
 
         # Set up SysID routine for the feeder
         self.sys_id_routine = SysIdRoutine(
-            SysIdRoutine.Config(
-                recordState=lambda state: SignalLogger.write_string(
-                    "state-feeder", SysIdRoutineLog.stateEnumToString(state)
-                )
-            ),
+            SysIdRoutine.Config(),
             SysIdRoutine.Mechanism(
                 lambda voltage: self.motor.set_control(
                     controls.VoltageOut(voltage, enable_foc=False)
