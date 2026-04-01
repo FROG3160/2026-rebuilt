@@ -104,12 +104,19 @@ class RobotContainer:
             )
 
         firing_sequence = cmd.sequence(
-            cmd.runOnce(self.shooter.deploy_hood),
-            cmd.waitUntil(self.shooter.is_hood_deployed),
+            # Reverse while opening
+            cmd.parallel(
+                cmd.runOnce(self.shooter.deploy_hood),
+                self.feeder.run_backward_cmd(),
+                self.hopper.run_backward_cmd(),
+            ).until(self.shooter.is_hood_deployed),
+            # Transition to firing logic once open
             self.shooter.fire_with_distance_cmd()
             .alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                    self.feeder.run_forward_cmd()
+                    self.feeder.run_forward_cmd().alongWith(
+                        self.hopper.fire_forward_cmd()
+                    )
                 )
             )
             .alongWith(self.intake.cycle_cmd()),
@@ -151,8 +158,11 @@ class RobotContainer:
         is_firing = Trigger(lambda: "Fire" in self.feeder.get_command_name())
         is_intaking = self.driver_xbox.leftTrigger()
 
-        # The hopper should run forward whenever the feed motors are running forward.
-        is_firing.whileTrue(self.hopper.run_forward_cmd().withName("Fire Hopper"))
+        # The hopper should follow the feeder automatically when NOT in a firing sequence
+        # (The firing group handles its own specific hopper logic)
+        is_firing.negate().and_(
+            Trigger(lambda: self.feeder.get_command_name() == "Feeder Forward")
+        ).whileTrue(self.hopper.run_forward_cmd())
 
         # Intake behavior when firing: Cycle if NOT intaking, otherwise manual takes precedence
         is_firing.and_(is_intaking.negate()).whileTrue(
@@ -165,6 +175,7 @@ class RobotContainer:
         )
 
         # The hopper should run backward whenever the feed motor is running backward.
+        # This covers manual unjam and the "reverse while opening" part of the firing group.
         Trigger(
             lambda: self.feeder.get_command_name()
             in ["Feeder Backward", "Feeder BackOff", "Unjam"]
@@ -196,15 +207,8 @@ class RobotContainer:
                 "DriveAndAim",
             )
             .alongWith(
-                cmd.sequence(
-                    cmd.runOnce(self.shooter.deploy_hood),
-                    cmd.waitUntil(self.shooter.is_hood_deployed),
-                    self.shooter.fire_with_distance_cmd().alongWith(
-                        cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                            self.feeder.run_forward_cmd()
-                        )
-                    ),
-                ).finallyDo(lambda interrupted: self.shooter.retract_hood())
+                # Use the unified firing group logic for teleop as well
+                self.get_firing_command_group()
             )
             .withName("Aim and Fire")
         )  # name the command for better dashboard visibility
@@ -323,11 +327,18 @@ class RobotContainer:
         # Hopper is triggered automatically when feeder runs forward.
         self.driver_xbox.a().whileTrue(
             cmd.sequence(
-                cmd.runOnce(self.shooter.deploy_hood),
-                cmd.waitUntil(self.shooter.is_hood_deployed),
+                # Reverse while opening
+                cmd.parallel(
+                    cmd.runOnce(self.shooter.deploy_hood),
+                    self.feeder.run_backward_cmd(),
+                    self.hopper.run_backward_cmd(),
+                ).until(self.shooter.is_hood_deployed),
+                # Transition to firing logic once open
                 self.shooter.fire_at_set_speed_cmd().alongWith(
                     cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                        self.feeder.run_forward_cmd()
+                        self.feeder.run_forward_cmd().alongWith(
+                            self.hopper.fire_forward_cmd()
+                        )
                     )
                 ),
             )
