@@ -179,7 +179,7 @@ class Shooter(FROGSubsystem):
     def _get_speed_from_distance(self) -> float | None:
         """
         Calculates speed based on an interpolation map for the Hub target.
-        (Distance, Speed) points: (2.06, 17.65), (2.2, 18.15), (2.89, 19.85), (3.57, 21.4), (5.05, 23.76)
+        (Distance, Speed) points: (2.06, 17.12), (2.2, 17.61), (2.89, 19.25), (3.57, 20.76), (5.05, 23.05)
         """
         if distance := self.distance_to_target_supplier():
             # TODO: Differentiate flywheel speed between Hub and Floor targets based on field zone or aim state.
