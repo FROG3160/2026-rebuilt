@@ -224,23 +224,25 @@ class Shooter(FROGSubsystem):
         )
 
     def _set_hood_position(self):
-        self.hood_motor.set_position(0)
+        self.hood_motor.set_position(0.0)
 
     def zero_hood_cmd(self) -> Command:
         """Drive the hood slowly into its reverse hard stop, zero the position sensor, then stop."""
-        return (
-            self.runOnce(
-                lambda: self.hood_motor.set_control(controls.VoltageOut(-0.18))
-            )
-            .andThen(
-                cmd.waitUntil(lambda: self.hood_motor.get_torque_current().value < -4)  # type: ignore
-            )
-            .andThen(self.runOnce(self.hood_motor.stopMotor))
-            .andThen(self.runOnce(self._set_hood_position))
-        )
+        return self.runOnce(self._set_hood_position())
+
+    # (
+    #         self.runOnce(
+    #             lambda: self.hood_motor.set_control(controls.VoltageOut(-0.18))
+    #         )
+    #         .andThen(
+    #             cmd.waitUntil(lambda: self.hood_motor.get_torque_current().value < -4)  # type: ignore
+    #         )
+    #         .andThen(self.runOnce(self.hood_motor.stopMotor))
+    #         .andThen(self.runOnce(self._set_hood_position))
+    #     )
 
     def is_hood_deployed(self) -> bool:
-        """Returns True if the hood is currently deployed (position > 0.01)"""
+        """Returns True if the hood is currently deployed (position > 0.05)"""
         return self.hood_motor.get_position().value > 0.05
 
     def simulationPeriodic(self):

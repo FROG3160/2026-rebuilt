@@ -221,6 +221,8 @@ class RobotContainer:
             DeferredCommand(lambda: self.get_pathfinding_command(), self.drive)
         )
 
+        self.driver_xbox.back().onTrue(self.shooter.zero_hood_cmd())
+
     def configure_tactical_controls(self) -> None:
         """Configure button bindings for the tactical controller."""
         # Configure operator controls
