@@ -110,8 +110,7 @@ class RobotContainer:
                 self.feeder.run_backward_cmd(),
             ).until(self.shooter.is_hood_open),
             # Transition to firing logic once open
-            self.shooter.fire_with_distance_cmd()
-            .alongWith(
+            self.shooter.fire_with_distance_cmd().alongWith(
                 cmd.waitUntil(self.shooter.is_at_speed).andThen(
                     self.feeder.run_forward_cmd()
                 )
@@ -129,15 +128,21 @@ class RobotContainer:
             firing_sequence.alongWith(update_dist_cmd)
             .beforeStarting(
                 lambda: (
-                    self.drive.holonomic_drive_ctrl.overrideRotationFeedback(
-                        get_vT_supplier
-                    )
-                    if target_supplier
-                    else None
-                )
+                    setattr(self, "_is_firing_active", True),
+                    (
+                        self.drive.holonomic_drive_ctrl.overrideRotationFeedback(
+                            get_vT_supplier
+                        )
+                        if target_supplier
+                        else None
+                    ),
+                )[
+                    1
+                ]  # Return the override result if any
             )
             .finallyDo(
                 lambda interrupted: (
+                    setattr(self, "_is_firing_active", False),
                     self.shooter.retract_hood(),
                     (
                         self.drive.holonomic_drive_ctrl.clearRotationFeedbackOverride()
@@ -151,7 +156,11 @@ class RobotContainer:
 
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
-        is_firing = Trigger(lambda: "Fire" in self.feeder.get_command_name())
+        # Initialize the flag if not present
+        if not hasattr(self, "_is_firing_active"):
+            self._is_firing_active = False
+
+        is_firing = Trigger(lambda: self._is_firing_active)
         is_intaking = self.driver_xbox.leftTrigger()
 
         # The hopper should follow the feeder automatically.
@@ -230,9 +239,9 @@ class RobotContainer:
         NamedCommands.registerCommand(
             "Fire", self.get_firing_command_group(self.field_zones.get_aim_target)
         )
-        NamedCommands.registerCommand("Intake", self.intake.run_and_deploy_cmd())
-        NamedCommands.registerCommand("Stop Intake", self.intake.stop_cmd())
-        NamedCommands.registerCommand("Cycle Intake", self.intake.cycle_cmd())
+        NamedCommands.registerCommand("Intake Start", self.intake.run_and_deploy_cmd())
+        NamedCommands.registerCommand("Intake Stop", self.intake.retract_and_stop_cmd())
+        NamedCommands.registerCommand("Intake Cycle", self.intake.cycle_cmd())
 
     def configureSysIDFeederButtonBindings(self) -> None:
         """Configure button bindings for Feeder SysId routine tests."""
