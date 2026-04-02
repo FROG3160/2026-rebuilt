@@ -164,7 +164,7 @@ class Shooter:
     HOOD_FORWARD_LIMIT: Final = 1.3
     HOOD_REVERSE_LIMIT: Final = 0.0
 
-    FLYWHEEL_TOLERANCE: Final = 0.1
+    FLYWHEEL_TOLERANCE: Final = 0.2
     HOOD_POSITION_TOLERANCE = Final = 0.05
     HOOD_HOMING_VOLTAGE = Final = -0.75
     HOOD_HOMING_CURRENT = Final = 15.0
