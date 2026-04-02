@@ -225,7 +225,14 @@ class Shooter(FROGSubsystem):
 
     def zero_hood_cmd(self) -> Command:
         """Drive the hood slowly into its reverse hard stop, zero the position sensor, then stop."""
-        return self.runOnce(self._set_hood_position())
+        return self.runOnce(self._set_hood_position)
+
+    def reset_hood_cmd(self) -> Command:
+        """Sets the hood position to 1.3 and retracts it."""
+        return cmd.sequence(
+            self.runOnce(lambda: self.hood_motor.set_position(1.3)),
+            self.runOnce(self.retract_hood)
+        )
 
         # return (
         #     self.runOnce(
