@@ -225,20 +225,20 @@ class Shooter(FROGSubsystem):
 
     def zero_hood_cmd(self) -> Command:
         """Drive the hood slowly into its reverse hard stop, zero the position sensor, then stop."""
-        # return self.runOnce(self._set_hood_position())
+        return self.runOnce(self._set_hood_position())
 
-        return (
-            self.runOnce(
-                lambda: self.hood_motor.set_control(
-                    controls.VoltageOut(constants.Shooter.HOOD_HOMING_VOLTAGE)
-                )
-            )
-            .andThen(
-                cmd.waitUntil(lambda: self.hood_motor.get_stator_current().value > constants.Shooter.HOOD_HOMING_CURRENT)  # type: ignore
-            )
-            .andThen(self.runOnce(self.hood_motor.stopMotor))
-            .andThen(self.runOnce(self._set_hood_position))
-        )
+        # return (
+        #     self.runOnce(
+        #         lambda: self.hood_motor.set_control(
+        #             controls.VoltageOut(constants.Shooter.HOOD_HOMING_VOLTAGE)
+        #         )
+        #     )
+        #     .andThen(
+        #         cmd.waitUntil(lambda: self.hood_motor.get_stator_current().value > constants.Shooter.HOOD_HOMING_CURRENT)  # type: ignore
+        #     )
+        #     .andThen(self.runOnce(self.hood_motor.stopMotor))
+        #     .andThen(self.runOnce(self._set_hood_position))
+        # )
 
     def is_hood_open(self) -> bool:
         """Returns True if the hood is currently open (position within 0.05 of forward limit)"""
