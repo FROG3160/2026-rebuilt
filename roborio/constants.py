@@ -128,7 +128,7 @@ class Intake:
     INTAKE_DEPLOY_V: Final = 6.0  #
     INTAKE_DEPLOY_MM_V: Final = 1.0
     INTAKE_DEPLOY_MM_A: Final = 2.0
-    INTAKE_DEPLOY_CURRENT_LIMIT: Final = 20.0
+    INTAKE_DEPLOY_CURRENT_LIMIT: Final = 10.0
     HOMING_VOLTAGE: Final = -1.0
     HOMING_CURRENT: Final = 10.0
 
@@ -164,7 +164,7 @@ class Shooter:
     HOOD_FORWARD_LIMIT: Final = 1.3
     HOOD_REVERSE_LIMIT: Final = 0.0
 
-    FLYWHEEL_TOLERANCE: Final = 0.2
+    FLYWHEEL_TOLERANCE: Final = 1.0
     HOOD_POSITION_TOLERANCE = Final = 0.05
     HOOD_HOMING_VOLTAGE = Final = -0.75
     HOOD_HOMING_CURRENT = Final = 15.0
