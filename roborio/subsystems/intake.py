@@ -131,6 +131,13 @@ class Intake(FROGSubsystem):
             )
         )
 
+    def _run_deploy_to_cycle(self):
+        self.deploy_motor.set_control(
+            controls.MotionMagicVoltage(
+                constants.Intake.INTAKE_CYCLE_TARGET_METERS, slot=0, enable_foc=False
+            )
+        )
+
     def _run_deploy_to_stowed(self):
         self.deploy_motor.set_control(
             controls.MotionMagicVoltage(0.0, slot=0, enable_foc=False)
@@ -142,7 +149,7 @@ class Intake(FROGSubsystem):
         pos = self.deploy_motor.get_position().value
         # Check if we need to flip direction
         if self._cycle_deploying:
-            self._run_deploy_to_target()
+            self._run_deploy_to_cycle()
             if abs(pos - constants.Intake.INTAKE_CYCLE_TARGET_METERS) < 0.02:
                 self._cycle_deploying = False
         else:
