@@ -57,7 +57,12 @@ if __name__ == "__main__":
     # Find all paths in the directory that contain "Left", but not the words "Tower", "Outpost", or "Corral
     # " in their name
     def check_name(name):
-        return "Tower" not in name and "Outpost" not in name and "Corral" not in name
+        return (
+            "Tower" not in name
+            and "Outpost" not in name
+            and "Corral" not in name
+            and "Left" in name
+        )
 
     left_paths_to_mirror = [
         f for f in os.listdir(base_path) if check_name(f) and f.endswith(".path")
