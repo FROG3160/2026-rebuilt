@@ -1,7 +1,7 @@
 import math
 from typing import Callable
 import commands2
-from commands2 import Command
+from commands2 import Command, cmd
 from phoenix6.hardware import TalonFX
 from FROGlib.ctre import (
     FROGTalonFX,
@@ -143,12 +143,15 @@ class Intake(FROGSubsystem):
         # Check if we need to flip direction
         if self._cycle_deploying:
             self._run_deploy_to_target()
-            if abs(pos - constants.Intake.INTAKE_DEPLOY_TARGET_METERS) < 0.05:
+            if abs(pos - constants.Intake.INTAKE_CYCLE_TARGET_METERS) < 0.02:
                 self._cycle_deploying = False
         else:
             self._run_deploy_to_stowed()
-            if abs(pos) < 0.05:
+            if abs(pos) < 0.02:
                 self._cycle_deploying = True
+
+    def _set_deploy_position(self):
+        self.deploy_motor.set_position(0.0)
 
     # ────────────────────────────────────────────────
     #          Command Factory Methods
@@ -194,6 +197,23 @@ class Intake(FROGSubsystem):
     def retract_cmd(self) -> Command:
         """Retract the intake to the stowed position using MotionMagic."""
         return self.runOnce(self._run_deploy_to_stowed).withName("Intake Retract")
+
+    def zero_intake_deploy_cmd(self) -> Command:
+        """Drive the hood slowly into its reverse hard stop, zero the position sensor, then stop."""
+        # return self.runOnce(self._set_hood_position())
+
+        return (
+            self.runOnce(
+                lambda: self.deploy_motor.set_control(
+                    controls.VoltageOut(constants.Intake.HOMING_VOLTAGE)
+                )
+            )
+            .andThen(
+                cmd.waitUntil(lambda: self.hood_motor.get_stator_current().value > constants.Shooter.HOOD_HOMING_CURRENT)  # type: ignore
+            )
+            .andThen(self.runOnce(self.deploy_motor.stopMotor))
+            .andThen(self.runOnce(self._set_deploy_position))
+        )
 
     # Alternative style using run() + explicit stop condition (if you prefer)
     # This version keeps running the execute lambda every loop until interrupted
