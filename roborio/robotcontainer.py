@@ -105,15 +105,12 @@ class RobotContainer:
 
         firing_sequence = cmd.sequence(
             # Reverse while opening (Hopper will follow Feeder via Trigger)
-            cmd.parallel(
-                cmd.runOnce(self.shooter.deploy_hood),
-                self.feeder.run_backward_cmd(),
-            ).until(self.shooter.is_hood_open),
+            cmd.runOnce(self.shooter.deploy_hood),
             # Transition to firing logic once open
             self.shooter.fire_with_distance_cmd().alongWith(
-                cmd.waitUntil(self.shooter.is_at_speed).andThen(
-                    self.feeder.run_forward_cmd()
-                )
+                cmd.waitUntil(
+                    self.shooter.is_at_speed and self.shooter.is_hood_open
+                ).andThen(self.feeder.run_forward_cmd())
             ),
         )
 
@@ -218,7 +215,8 @@ class RobotContainer:
         )
 
         self.driver_xbox.back().onTrue(
-            self.shooter.zero_hood_cmd().alongWith(self.intake.zero_intake_deploy_cmd())
+            self.shooter.zero_hood_cmd()
+            # .alongWith(self.intake.zero_intake_deploy_cmd())
         )
 
     def configure_tactical_controls(self) -> None:
