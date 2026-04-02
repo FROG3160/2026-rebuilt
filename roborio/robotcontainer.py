@@ -109,7 +109,7 @@ class RobotContainer:
             # Transition to firing logic once open
             self.shooter.fire_with_distance_cmd().alongWith(
                 cmd.waitUntil(
-                    self.shooter.is_at_speed and self.shooter.is_hood_open
+                    lambda: self.shooter.is_at_speed() and self.shooter.is_hood_open()
                 ).andThen(self.feeder.run_forward_cmd())
             ),
         )
