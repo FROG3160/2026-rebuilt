@@ -79,10 +79,10 @@ class Drive:
     STEER_V: Final = 0.10583
 
     # Drive motor gains
-    VOLTAGE_DRIVE_V: Final = 1.8
-    VOLTAGE_DRIVE_S: Final = 0.060831
-    VOLTAGE_DRIVE_P: Final = 2.9646
-    VOLTAGE_DRIVE_A: Final = 0.14705
+    VOLTAGE_DRIVE_V: Final = 2.2
+    VOLTAGE_DRIVE_S: Final = 0.14
+    VOLTAGE_DRIVE_P: Final = 2.5
+    VOLTAGE_DRIVE_A: Final = 0.23
 
     # Physical dimensions
     TRACK_WIDTH_METERS: Final = inchesToMeters(24.25)
