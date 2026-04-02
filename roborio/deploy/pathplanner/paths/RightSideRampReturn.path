@@ -3,29 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.2699898477157365,
-        "y": 0.7246802030456854
+        "x": 5.967969543147208,
+        "y": 3.3397868020304564
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.807746192893401,
-        "y": 0.7338883248730967
-      },
-      "isLocked": false,
-      "linkedName": "LeftSideLoopStop"
-    },
-    {
-      "anchor": {
         "x": 5.967969543147208,
-        "y": 1.0009238578680204
-      },
-      "prevControl": {
-        "x": 5.929296123451907,
-        "y": 0.6025876350064223
-      },
-      "nextControl": {
-        "x": 6.06005076142132,
-        "y": 1.9493604060913707
+        "y": 4.297786802030457
       },
       "isLocked": false,
       "linkedName": null
@@ -33,28 +17,37 @@
     {
       "anchor": {
         "x": 5.967969543147208,
-        "y": 3.3397868020304564
+        "y": 1.0009238578680204
       },
       "prevControl": {
-        "x": 5.967969543147208,
-        "y": 3.0607868020304565
+        "x": 6.363918781725888,
+        "y": 1.3047918781725896
+      },
+      "nextControl": {
+        "x": 5.340046458269445,
+        "y": 0.5190293973804341
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.417319796954315,
+        "y": 0.7891370558375641
+      },
+      "prevControl": {
+        "x": 3.417319796954315,
+        "y": 0.5101370558375642
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftSidOuterRampIntakeEnd"
+      "linkedName": null
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.2003040668947211,
-      "rotationDegrees": 89.42455108401238
-<<<<<<< HEAD
-=======
-    },
-    {
-      "waypointRelativePos": 2.0,
+      "waypointRelativePos": 0.9813759026985992,
       "rotationDegrees": 90.0
->>>>>>> origin/Thursday_OKTU2026_changes
     }
   ],
   "constraintZones": [],
@@ -62,7 +55,7 @@
   "eventMarkers": [
     {
       "name": "Intake Start",
-      "waypointRelativePos": 0.45909528392685817,
+      "waypointRelativePos": 0.5996150144369542,
       "endWaypointRelativePos": null,
       "command": null
     },
@@ -83,13 +76,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 67.45950774145635
   },
   "reversed": false,
   "folder": "AutoPaths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 67.45950774145635
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }
