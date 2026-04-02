@@ -176,7 +176,7 @@ class Shooter(FROGSubsystem):
     def _get_speed_from_distance(self) -> float | None:
         """
         Calculates speed based on an interpolation map for the Hub target.
-        (Distance, Speed) points: (2.06, 17.65), (2.2, 18.15), (2.89, 19.85), (3.57, 21.4), (5.05, 23.76)
+        (Distance, Speed) points: (2.06, 17.12), (2.2, 17.61), (2.89, 19.25), (3.57, 20.76), (5.05, 23.05)
         """
         if distance := self.distance_to_target_supplier():
             # TODO: Differentiate flywheel speed between Hub and Floor targets based on field zone or aim state.
@@ -238,9 +238,20 @@ class Shooter(FROGSubsystem):
     #         .andThen(self.runOnce(self._set_hood_position))
     #     )
 
-    def is_hood_deployed(self) -> bool:
-        """Returns True if the hood is currently deployed (position > 0.05)"""
-        return self.hood_motor.get_position().value > 0.05
+    def is_hood_open(self) -> bool:
+        """Returns True if the hood is currently open (position within 0.05 of forward limit)"""
+
+        return self.hood_motor.get_position().value > (
+            constants.Shooter.HOOD_FORWARD_LIMIT
+            - constants.Shooter.HOOD_POSITION_TOLERANCE
+        )
+
+    def is_hood_closed(self) -> bool:
+        """Returns True if the hood is currently closed (position within 0.05 of reverse limit)"""
+        return self.hood_motor.get_position().value < (
+            constants.Shooter.HOOD_REVERSE_LIMIT
+            + constants.Shooter.HOOD_POSITION_TOLERANCE
+        )
 
     def simulationPeriodic(self):
         dt = 0.020
@@ -292,9 +303,13 @@ class Shooter(FROGSubsystem):
     def at_speed_telem(self) -> bool:
         return self.is_at_speed()
 
-    @FROGSubsystem.telemetry("Hood Deployed")
-    def hood_deployed_telem(self) -> bool:
-        return self.is_hood_deployed()
+    @FROGSubsystem.telemetry("Hood Open")
+    def hood_open_telem(self) -> bool:
+        return self.is_hood_open()
+
+    @FROGSubsystem.telemetry("Hood Closed")
+    def hood_closed_telem(self) -> bool:
+        return self.is_hood_closed()
 
     @FROGSubsystem.tunable(constants.Shooter.FLYWHEEL_S, "Flywheel K_S")
     def flywheel_ks(self, val):

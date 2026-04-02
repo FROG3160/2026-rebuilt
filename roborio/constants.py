@@ -150,7 +150,7 @@ class Shooter:
     FLYWHEEL_A: Final = 0.018088
 
     SHOOTERS_HUB_DISTANCES: Final = np.array([2.06, 2.20, 2.89, 3.57, 5.05])
-    SHOOTERS_HUB_SPEEDS: Final = np.array([17.65, 18.15, 19.85, 21.40, 23.76])
+    SHOOTERS_HUB_SPEEDS: Final = np.array([17.12, 17.61, 19.25, 20.76, 23.05])
 
     HOOD_S: Final = 0.425
     HOOD_P: Final = 3.0
@@ -162,6 +162,7 @@ class Shooter:
     HOOD_REVERSE_LIMIT: Final = 0.0
 
     FLYWHEEL_TOLERANCE: Final = 0.1
+    HOOD_POSITION_TOLERANCE = Final = 0.05
 
 
 class Feeder:
