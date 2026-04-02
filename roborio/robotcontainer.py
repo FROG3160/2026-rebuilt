@@ -150,25 +150,26 @@ class RobotContainer:
 
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
-        is_firing = self.feeder.is_feeding_forward()
+        feeder_running_forward_tgr = self.feeder.is_feeding_forward()
+        feeder_running_backward_tgr = self.feeder.is_reversing()
+
         is_intaking = self.driver_xbox.leftTrigger()
 
         # The hopper should follow the feeder automatically.
-        is_firing.whileTrue(self.hopper.fire_forward_cmd().withName("Fire Hopper"))
+        feeder_running_forward_tgr.whileTrue(
+            self.hopper.fire_forward_cmd().withName("Fire Hopper")
+        )
 
         # The hopper should run backward whenever the feed motor is running backward.
-        Trigger(
-            lambda: self.feeder.get_command_name()
-            in ["Feeder Backward", "Feeder BackOff", "Unjam"]
-        ).whileTrue(self.hopper.run_backward_cmd())
+        feeder_running_backward_tgr.whileTrue(self.hopper.run_backward_cmd())
 
         # Intake behavior when firing: Cycle if NOT intaking, otherwise manual takes precedence
-        is_firing.and_(is_intaking.negate()).whileTrue(
+        feeder_running_forward_tgr.and_(is_intaking.negate()).whileTrue(
             self.intake.cycle_cmd().withName("Firing Cycle")
         )
 
         # Centralized retract logic: Retract only when neither firing nor intaking
-        is_firing.or_(is_intaking).onFalse(
+        feeder_running_forward_tgr.or_(is_intaking).onFalse(
             self.intake.retract_and_stop_cmd().withName("Smart Retract")
         )
 
