@@ -1,4 +1,6 @@
 from commands2 import Command
+from commands2.button import Trigger
+from enum import Enum, auto
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.system.plant import DCMotor, LinearSystemId
@@ -42,8 +44,15 @@ kBackOffTolerance = 0.02  # rotations
 
 
 class Feeder(FROGSubsystem):
+    class State(Enum):
+        IDLE = auto()
+        FEEDING_FORWARD = auto()
+        REVERSING = auto()
+        BACKING_OFF = auto()
+
     def __init__(self):
         super().__init__()
+        self._state = self.State.IDLE
         self.motor = FROGTalonFX(
             id=constants.CANIDs.FEED_MOTOR,
             motor_config=feed_motor_config,
@@ -93,24 +102,39 @@ class Feeder(FROGSubsystem):
             < kBackOffTolerance
         )
 
+    def is_feeding_forward(self) -> Trigger:
+        """Returns a Trigger that is true when the feeder is actively feeding fuel forward."""
+        return Trigger(lambda: self._state == self.State.FEEDING_FORWARD)
+
+    def is_reversing(self) -> Trigger:
+        """Returns a Trigger that is true when the feeder is reversing or backing off."""
+        return Trigger(lambda: self._state in (self.State.REVERSING, self.State.BACKING_OFF))
+
     def run_forward_cmd(self) -> Command:
         """Run the feeder motor forward at the configured feed velocity, stopping when interrupted."""
-        return self.runEnd(self._runForward, self.stop).withName("Feeder Forward")
+        return self.runEnd(
+            lambda: (setattr(self, '_state', self.State.FEEDING_FORWARD), self._runForward()),
+            self.stop
+        ).withName("Feeder Forward")
 
     def run_backward_cmd(self) -> Command:
         """Run the feeder motor backward at the configured feed velocity, stopping when interrupted."""
-        return self.runEnd(self._runBackward, self.stop).withName("Feeder Backward")
+        return self.runEnd(
+            lambda: (setattr(self, '_state', self.State.REVERSING), self._runBackward()),
+            self.stop
+        ).withName("Feeder Backward")
 
     def back_off_cmd(self) -> Command:
         """Back the feeder off 0.15 rotations away from the flywheel using position control."""
         return (
-            self.runOnce(self._startBackOff)
+            self.runOnce(lambda: (setattr(self, '_state', self.State.BACKING_OFF), self._startBackOff()))
             .andThen(self.run(self._applyBackOff).until(self._atBackOffTarget))
             .finallyDo(lambda interrupted: self.stop())
             .withName("Feeder BackOff")
         )
 
     def stop(self):
+        self._state = self.State.IDLE
         self.motor.stopMotor()
 
     def simulationPeriodic(self):
@@ -129,3 +153,7 @@ class Feeder(FROGSubsystem):
     @FROGSubsystem.telemetry("Actual Velocity")
     def get_feed_velocity(self) -> float:
         return self.motor.get_velocity().value
+
+    @FROGSubsystem.telemetry("Current State")
+    def state_telem(self) -> str:
+        return self._state.name

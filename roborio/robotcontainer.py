@@ -128,21 +128,15 @@ class RobotContainer:
             firing_sequence.alongWith(update_dist_cmd)
             .beforeStarting(
                 lambda: (
-                    setattr(self, "_is_firing_active", True),
-                    (
-                        self.drive.holonomic_drive_ctrl.overrideRotationFeedback(
-                            get_vT_supplier
-                        )
-                        if target_supplier
-                        else None
-                    ),
-                )[
-                    1
-                ]  # Return the override result if any
+                    self.drive.holonomic_drive_ctrl.overrideRotationFeedback(
+                        get_vT_supplier
+                    )
+                    if target_supplier
+                    else None
+                )
             )
             .finallyDo(
                 lambda interrupted: (
-                    setattr(self, "_is_firing_active", False),
                     self.shooter.retract_hood(),
                     (
                         self.drive.holonomic_drive_ctrl.clearRotationFeedbackOverride()
@@ -156,11 +150,7 @@ class RobotContainer:
 
     def configure_automation_bindings(self) -> None:
         """Configure automation bindings for the robot."""
-        # Initialize the flag if not present
-        if not hasattr(self, "_is_firing_active"):
-            self._is_firing_active = False
-
-        is_firing = Trigger(lambda: self._is_firing_active)
+        is_firing = self.feeder.is_feeding_forward()
         is_intaking = self.driver_xbox.leftTrigger()
 
         # The hopper should follow the feeder automatically.
