@@ -20,7 +20,7 @@ CAMERA_CONFIGS: Final = (
         "OV9281-AprilTag2",
         Transform3d(
             Translation3d(
-                inchesToMeters(8.125), inchesToMeters(-3), inchesToMeters(19.5)
+                inchesToMeters(-3.0), inchesToMeters(8.125), inchesToMeters(19.5)
             ),
             Rotation3d(0.0, degreesToRadians(-20.0), degreesToRadians(1.15)),
         ),
