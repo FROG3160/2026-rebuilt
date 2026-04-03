@@ -102,7 +102,7 @@ class Drive:
     PP_TRANSLATION_P: Final = 2.0
     PP_TRANSLATION_I: Final = 0.0
     PP_TRANSLATION_D: Final = 0.0
-    PP_ROTATION_P: Final = 4.0
+    PP_ROTATION_P: Final = 6.0
     PP_ROTATION_I: Final = 0.0
     PP_ROTATION_D: Final = 0.0
     PP_MAX_VELOCITY: Final = 3.0
