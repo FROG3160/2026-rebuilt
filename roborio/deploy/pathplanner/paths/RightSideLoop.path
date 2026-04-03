@@ -97,11 +97,11 @@
     {
       "anchor": {
         "x": 3.2699898477157365,
-        "y": 0.7246802030456854
+        "y": 7.345319796954315
       },
       "prevControl": {
         "x": 4.094889354663216,
-        "y": 0.7029991491306635
+        "y": 7.323638743039293
       },
       "nextControl": null,
       "isLocked": true,
@@ -125,13 +125,23 @@
       "name": "Intake Start",
       "waypointRelativePos": 0.45909528392685817,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Start"
+        }
+      }
     },
     {
       "name": "Intake Stop",
       "waypointRelativePos": 2.399422521655395,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Stop"
+        }
+      }
     }
   ],
   "globalConstraints": {
@@ -144,7 +154,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 67.45950774145635
+    "rotation": -67.45950774145635
   },
   "reversed": false,
   "folder": "AutoPaths",

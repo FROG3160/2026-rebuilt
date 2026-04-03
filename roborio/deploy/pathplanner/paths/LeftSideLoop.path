@@ -52,28 +52,28 @@
         "y": 5.015664974619289
       },
       "prevControl": {
-        "x": 6.300295109980931,
-        "y": 4.5422942386681875
+        "x": 6.6401624365482235,
+        "y": 4.472385786802031
       },
       "nextControl": {
-        "x": 5.753734587825593,
-        "y": 5.759140147833434
+        "x": 5.476685332999,
+        "y": 5.6164716052921
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.087675126903553,
-        "y": 6.958578680203045
+        "x": 6.30867005076142,
+        "y": 7.179573604060915
       },
       "prevControl": {
-        "x": 6.633384614913125,
-        "y": 6.257894327654663
+        "x": 6.854379538770992,
+        "y": 6.478889251512532
       },
       "nextControl": {
-        "x": 5.9340614841422985,
-        "y": 7.15581673119123
+        "x": 6.155056408000165,
+        "y": 7.376811655049099
       },
       "isLocked": false,
       "linkedName": null
@@ -123,15 +123,25 @@
   "eventMarkers": [
     {
       "name": "Intake Start",
-      "waypointRelativePos": 0.45909528392685817,
+      "waypointRelativePos": 0.5283926852742965,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Start"
+        }
+      }
     },
     {
       "name": "Intake Stop",
-      "waypointRelativePos": 2.399422521655395,
+      "waypointRelativePos": 2.399422521655418,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Stop"
+        }
+      }
     }
   ],
   "globalConstraints": {

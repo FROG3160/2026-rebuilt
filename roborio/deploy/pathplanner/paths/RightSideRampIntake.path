@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 3.2699898477157365,
-        "y": 0.7246802030456854
+        "y": 7.345319796954315
       },
       "prevControl": null,
       "nextControl": {
         "x": 4.807746192893401,
-        "y": 0.7338883248730967
+        "y": 7.354527918781726
       },
       "isLocked": false,
       "linkedName": "LeftSideLoopStop"
@@ -48,13 +48,10 @@
     {
       "waypointRelativePos": 1.2003040668947211,
       "rotationDegrees": 89.42455108401238
-<<<<<<< HEAD
-=======
     },
     {
       "waypointRelativePos": 2.0,
       "rotationDegrees": 90.0
->>>>>>> origin/Thursday_OKTU2026_changes
     }
   ],
   "constraintZones": [],
@@ -64,13 +61,23 @@
       "name": "Intake Start",
       "waypointRelativePos": 0.45909528392685817,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Start"
+        }
+      }
     },
     {
       "name": "Intake Stop",
       "waypointRelativePos": 2,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Stop"
+        }
+      }
     }
   ],
   "globalConstraints": {
@@ -89,7 +96,7 @@
   "folder": "AutoPaths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 67.45950774145635
+    "rotation": -67.45950774145635
   },
   "useDefaultConstraints": true
 }
