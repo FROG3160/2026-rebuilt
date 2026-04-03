@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.2699898477157365,
-        "y": 7.345319796954315
+        "x": 3.408111675126904,
+        "y": 7.446609137055837
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.784780812146916,
-        "y": 7.311166865195192
+        "x": 5.544395939086295,
+        "y": 7.483441624365481
       },
       "isLocked": false,
       "linkedName": "LeftSideLoopStop"
@@ -80,15 +80,15 @@
     },
     {
       "anchor": {
-        "x": 3.2699898477157365,
-        "y": 7.345319796954315
+        "x": 3.408111675126904,
+        "y": 7.446609137055837
       },
       "prevControl": {
-        "x": 4.094889354663216,
-        "y": 7.367000850869337
+        "x": 4.233011182074385,
+        "y": 7.468290190970859
       },
       "nextControl": null,
-      "isLocked": true,
+      "isLocked": false,
       "linkedName": "LeftSideLoopStop"
     }
   ],
@@ -106,7 +106,7 @@
       "rotationDegrees": 0.0
     },
     {
-      "waypointRelativePos": 4.8,
+      "waypointRelativePos": 4.56670467502856,
       "rotationDegrees": 0.0
     }
   ],
@@ -115,7 +115,7 @@
   "eventMarkers": [
     {
       "name": "Intake Start",
-      "waypointRelativePos": 0.5283926852742965,
+      "waypointRelativePos": 0.2382098171318589,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
