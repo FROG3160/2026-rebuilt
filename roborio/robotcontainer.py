@@ -68,6 +68,9 @@ class RobotContainer:
         # Set up PathPlanner autos and publish to dashboard
         self.auto_chooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Auto Chooser", self.auto_chooser)
+        SmartDashboard.putData(
+            "Hood/Zero Position", self.shooter.zero_hood_cmd().withName("Zero Hood")
+        )
 
     def get_pathfinding_command(self):
         """Returns a command to pathfind to a scoring position based on the robot's location."""
