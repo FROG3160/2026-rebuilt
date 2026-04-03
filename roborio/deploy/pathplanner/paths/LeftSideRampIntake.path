@@ -1,0 +1,98 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.2699898477157365,
+        "y": 7.345319796954315
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.807746192893401,
+        "y": 7.3361116751269035
+      },
+      "isLocked": false,
+      "linkedName": "LeftSideLoopStop"
+    },
+    {
+      "anchor": {
+        "x": 5.967969543147208,
+        "y": 7.06907614213198
+      },
+      "prevControl": {
+        "x": 5.929296123451907,
+        "y": 7.467412364993578
+      },
+      "nextControl": {
+        "x": 6.06005076142132,
+        "y": 6.1206395939086295
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.967969543147208,
+        "y": 3.3397868020304564
+      },
+      "prevControl": {
+        "x": 5.967969543147208,
+        "y": 3.6187868020304563
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LeftSidOuterRampIntakeEnd"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.2003040668947211,
+      "rotationDegrees": -89.42455108401238
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "Intake Start",
+      "waypointRelativePos": 0.45909528392685817,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Start"
+        }
+      }
+    },
+    {
+      "name": "Intake Stop",
+      "waypointRelativePos": 2,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Stop"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 720.0,
+    "maxAngularAcceleration": 1440.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "reversed": false,
+  "folder": "AutoPaths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -67.45950774145635
+  },
+  "useDefaultConstraints": true
+}
