@@ -115,7 +115,7 @@ class Intake:
     VOLTAGE_ROLLER_S: Final = 0.14
     ROLLER_V: Final = 1.41
     ROLLER_P: Final = 0.0
-    ROLLER_MIN_SPEED: Final = 4.0
+    ROLLER_MIN_SPEED: Final = 5.0
     ROLLER_SPEED_MULTIPLIER: Final = 1.5
 
     INTAKE_DEPLOY_DISTANCE_PER_ROTATION: Final = 0.151613 / 9
