@@ -20,9 +20,9 @@ CAMERA_CONFIGS: Final = (
         "OV9281-AprilTag2",
         Transform3d(
             Translation3d(
-                inchesToMeters(-6.5), inchesToMeters(-13.9375), inchesToMeters(19.5)
+                inchesToMeters(-3.0), inchesToMeters(8.125), inchesToMeters(19.5)
             ),
-            Rotation3d(0.0, degreesToRadians(-20.0), degreesToRadians(-89.86)),
+            Rotation3d(0.0, degreesToRadians(-20.0), degreesToRadians(1.15)),
         ),
     ),
 )
@@ -102,7 +102,7 @@ class Drive:
     PP_TRANSLATION_P: Final = 2.0
     PP_TRANSLATION_I: Final = 0.0
     PP_TRANSLATION_D: Final = 0.0
-    PP_ROTATION_P: Final = 4.0
+    PP_ROTATION_P: Final = 6.0
     PP_ROTATION_I: Final = 0.0
     PP_ROTATION_D: Final = 0.0
     PP_MAX_VELOCITY: Final = 3.0
@@ -167,7 +167,7 @@ class Shooter:
     FLYWHEEL_TOLERANCE: Final = 1.0
     HOOD_POSITION_TOLERANCE = Final = 0.05
     HOOD_HOMING_VOLTAGE = Final = -0.75
-    HOOD_HOMING_CURRENT = Final = 15.0
+    HOOD_HOMING_CURRENT = Final = 20.0
 
 
 class Feeder:

@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.9790152284263964,
+        "x": 3.408111675126904,
         "y": 0.6233908629441629
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.1152994923857875,
+        "x": 5.544395939086295,
         "y": 0.5865583756345192
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LeftSideLoopStop"
     },
     {
       "anchor": {
@@ -115,7 +115,7 @@
   "eventMarkers": [
     {
       "name": "Intake Start",
-      "waypointRelativePos": 0.15158806544754352,
+      "waypointRelativePos": 0.2382098171318589,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -152,7 +152,7 @@
   "folder": "AutoPaths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 67.45950774145635
   },
   "useDefaultConstraints": true
 }

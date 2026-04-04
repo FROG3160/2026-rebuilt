@@ -68,6 +68,9 @@ class RobotContainer:
         # Set up PathPlanner autos and publish to dashboard
         self.auto_chooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Auto Chooser", self.auto_chooser)
+        SmartDashboard.putData(
+            "Hood/Zero Position", self.shooter.zero_hood_cmd().withName("Zero Hood")
+        )
 
     def get_pathfinding_command(self):
         """Returns a command to pathfind to a scoring position based on the robot's location."""
@@ -228,11 +231,11 @@ class RobotContainer:
         """Register named commands for use in autonomous routines."""
         # Register named commands
         NamedCommands.registerCommand(
-            "Fire", self.get_firing_command_group(self.field_zones.get_aim_target)
+            "Fire", self.get_firing_command_group(self.field_zones.get_aim_target).asProxy()
         )
-        NamedCommands.registerCommand("Intake Start", self.intake.run_and_deploy_cmd())
-        NamedCommands.registerCommand("Intake Stop", self.intake.retract_and_stop_cmd())
-        NamedCommands.registerCommand("Intake Cycle", self.intake.cycle_cmd())
+        NamedCommands.registerCommand("Intake Start", self.intake.run_and_deploy_cmd().asProxy())
+        NamedCommands.registerCommand("Intake Stop", self.intake.retract_and_stop_cmd().asProxy())
+        NamedCommands.registerCommand("Intake Cycle", self.intake.cycle_cmd().asProxy())
 
     def configureSysIDFeederButtonBindings(self) -> None:
         """Configure button bindings for Feeder SysId routine tests."""
