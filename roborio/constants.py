@@ -167,7 +167,7 @@ class Shooter:
     FLYWHEEL_TOLERANCE: Final = 1.0
     HOOD_POSITION_TOLERANCE = Final = 0.05
     HOOD_HOMING_VOLTAGE = Final = -0.75
-    HOOD_HOMING_CURRENT = Final = 15.0
+    HOOD_HOMING_CURRENT = Final = 20.0
 
 
 class Feeder:
