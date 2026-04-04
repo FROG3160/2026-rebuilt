@@ -180,6 +180,17 @@ class RobotContainer:
             .ignoringDisable(True)
         )
 
+        # Automated trigger to reset position if out of bounds
+        out_of_bounds_trigger = Trigger(
+            lambda: (
+                self.drive.getPose().x < 0.0
+                or self.drive.getPose().x > constants.FieldPositions.FIELD_LENGTH
+                or self.drive.getPose().y < 0.0
+                or self.drive.getPose().y > constants.FieldPositions.FIELD_WIDTH
+            )
+        )
+        out_of_bounds_trigger.onTrue(self.drive.runOnce(self.drive.reset_initial_pose))
+
     def configure_xbox_bindings(self) -> None:
         """Configure button bindings for the xboxcontrollers."""
         self.configure_driver_controls()
@@ -190,19 +201,21 @@ class RobotContainer:
         """Configure button bindings for the driver controller."""
         safe_to_shoot = self.field_zones.get_no_shoot_trigger().negate()
         self.driver_xbox.a().and_(safe_to_shoot).whileTrue(
-            ManualDriveAndAim(
-                self.field_zones.get_aim_target,
-                self.driver_xbox,
-                self.drive,
-                None,  # self.field_zones.get_max_speed_scalar,
-                self.field_zones.get_trench_velocity_limit,
-                "DriveAndAim",
+            self.drive.runOnce(self.drive.reset_initial_pose).andThen(
+                ManualDriveAndAim(
+                    self.field_zones.get_aim_target,
+                    self.driver_xbox,
+                    self.drive,
+                    None,  # self.field_zones.get_max_speed_scalar,
+                    self.field_zones.get_trench_velocity_limit,
+                    "DriveAndAim",
+                )
+                .alongWith(
+                    # Use the unified firing group logic for teleop as well
+                    self.get_firing_command_group()
+                )
+                .withName("Aim and Fire")
             )
-            .alongWith(
-                # Use the unified firing group logic for teleop as well
-                self.get_firing_command_group()
-            )
-            .withName("Aim and Fire")
         )  # name the command for better dashboard visibility
         self.driver_xbox.start().onTrue(
             self.drive.runOnce(self.drive.reset_initial_pose)
@@ -231,10 +244,15 @@ class RobotContainer:
         """Register named commands for use in autonomous routines."""
         # Register named commands
         NamedCommands.registerCommand(
-            "Fire", self.get_firing_command_group(self.field_zones.get_aim_target).asProxy()
+            "Fire",
+            self.get_firing_command_group(self.field_zones.get_aim_target).asProxy(),
         )
-        NamedCommands.registerCommand("Intake Start", self.intake.run_and_deploy_cmd().asProxy())
-        NamedCommands.registerCommand("Intake Stop", self.intake.retract_and_stop_cmd().asProxy())
+        NamedCommands.registerCommand(
+            "Intake Start", self.intake.run_and_deploy_cmd().asProxy()
+        )
+        NamedCommands.registerCommand(
+            "Intake Stop", self.intake.retract_and_stop_cmd().asProxy()
+        )
         NamedCommands.registerCommand("Intake Cycle", self.intake.cycle_cmd().asProxy())
 
     def configureSysIDFeederButtonBindings(self) -> None:
