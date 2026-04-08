@@ -3,7 +3,7 @@ import numpy as np
 from typing import Final
 from wpimath.units import degreesToRadians, feetToMeters, inchesToMeters
 from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Rotation2d, Pose2d
-from FROGlib.vision import FROGCameraConfig
+from froglib.vision import FROGCameraConfig
 
 # Camera Configs
 CAMERA_CONFIGS: Final = (

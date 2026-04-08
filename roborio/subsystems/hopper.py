@@ -1,7 +1,7 @@
 import wpilib
 from phoenix6.hardware import TalonFX, CANrange
 from commands2 import Command
-from FROGlib.ctre import (
+from froglib.ctre import (
     FROGTalonFX,
     get_frog_talon_config,
     MOTOR_OUTPUT_CWP_COAST,
@@ -17,7 +17,7 @@ from phoenix6.configs import (
 )
 import constants
 from phoenix6 import controls
-from FROGlib.subsystem import FROGSubsystem
+from froglib.subsystem import FROGSubsystem
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpilib import Timer, SmartDashboard
 

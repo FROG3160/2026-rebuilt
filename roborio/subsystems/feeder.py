@@ -4,10 +4,10 @@ from enum import Enum, auto
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.system.plant import DCMotor, LinearSystemId
-from FROGlib.subsystem import FROGSubsystem
+from froglib.subsystem import FROGSubsystem
 from phoenix6.controls import VoltageOut
 from phoenix6 import controls, SignalLogger
-from FROGlib.ctre import (
+from froglib.ctre import (
     FROGTalonFX,
     get_frog_talon_config,
     MOTOR_OUTPUT_CWP_COAST,

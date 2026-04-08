@@ -1,5 +1,5 @@
-from FROGlib.subsystem import FROGSubsystem
-from FROGlib.vision import FROGPoseEstimator, FROGDetector
+from froglib.subsystem import FROGSubsystem
+from froglib.vision import FROGPoseEstimator, FROGDetector
 import constants
 from typing import Optional
 

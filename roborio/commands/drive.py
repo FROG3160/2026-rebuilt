@@ -1,7 +1,7 @@
 from commands2 import Command
 from ntcore import NetworkTableInstance
-from FROGlib.xbox import FROGXboxDriver
-from FROGlib.vision import FROGDetector
+from froglib.xbox import FROGXboxDriver
+from froglib.vision import FROGDetector
 from subsystems.drive import Drive
 from wpimath.geometry import Pose2d, Translation2d
 from wpimath.units import degreesToRadians

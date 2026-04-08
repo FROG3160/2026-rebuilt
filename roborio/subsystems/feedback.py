@@ -1,6 +1,6 @@
 import wpilib
 from wpilib import DriverStation, Timer
-from FROGlib.subsystem import FROGSubsystem
+from froglib.subsystem import FROGSubsystem
 
 
 class ShiftTracker(FROGSubsystem):

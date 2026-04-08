@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import numpy as np
 
 # Adjust import based on your project structure
-from FROGlib.vision import FROGDetector, PhotonTrackedTarget
+from froglib.vision import FROGDetector, PhotonTrackedTarget
 
 
 class MockPhotonTrackedTarget(PhotonTrackedTarget):

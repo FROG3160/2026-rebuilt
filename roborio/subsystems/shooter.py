@@ -4,7 +4,7 @@ from wpimath.units import inchesToMeters, volts
 from wpimath.system.plant import DCMotor, LinearSystemId
 from phoenix6.hardware import TalonFX
 from phoenix6.configs import MotionMagicConfigs
-from FROGlib.ctre import (
+from froglib.ctre import (
     FROGTalonFX,
     get_frog_talon_config,
     MOTOR_OUTPUT_CWP_BRAKE,
@@ -20,16 +20,16 @@ from phoenix6.configs import (
 )
 import constants
 from phoenix6 import controls, SignalLogger
-from FROGlib.utils import DriveTrain
+from froglib.utils import DriveTrain
 from wpiutil import Sendable, SendableBuilder
 import wpilib
 from commands2.button import Trigger
-from FROGlib.ctre import MAX_FALCON_RPM, MAX_KRAKEN_X60_RPM
+from froglib.ctre import MAX_FALCON_RPM, MAX_KRAKEN_X60_RPM
 from commands2 import cmd
 from phoenix6.signals import MotorAlignmentValue
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
-from FROGlib.subsystem import FROGSubsystem
+from froglib.subsystem import FROGSubsystem
 import numpy as np
 
 flywheel_gearing = DriveTrain(

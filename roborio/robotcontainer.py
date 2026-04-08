@@ -9,7 +9,7 @@ from subsystems.hopper import Hopper
 from subsystems.intake import Intake
 from subsystems.feeder import Feeder
 from subsystems.drive import Drive
-from FROGlib.xbox import FROGXboxDriver
+from froglib.xbox import FROGXboxDriver
 from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger
 from commands2.button import Trigger

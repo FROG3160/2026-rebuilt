@@ -3,8 +3,8 @@ import random
 from typing import Optional
 
 import wpilib
-from FROGlib.swerve import SwerveChassis, RotationControllerConfig, SwerveModuleConfig
-from FROGlib.ctre import (
+from froglib.swerve import SwerveChassis, RotationControllerConfig, SwerveModuleConfig
+from froglib.ctre import (
     FROGPigeonGyro,
     FROGTalonFX,
     get_frog_talon_config,
@@ -21,15 +21,15 @@ from phoenix6.configs import (
     MagnetSensorConfigs,
 )
 from phoenix6.signals.spn_enums import SensorDirectionValue
-from FROGlib.sds import MK5I_R2_GEARING, WHEEL_DIAMETER
-from FROGlib.vision import (
+from froglib.sds import MK5I_R2_GEARING, WHEEL_DIAMETER
+from froglib.vision import (
     FROGPoseEstimator,
 )
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from phoenix6.configs.config_groups import ClosedLoopGeneralConfigs
 from copy import deepcopy
-from FROGlib.subsystem import FROGSubsystem
-from FROGlib.utils import DriveTrain, remap
+from froglib.subsystem import FROGSubsystem
+from froglib.utils import DriveTrain, remap
 import constants
 from wpilib import DriverStation, Field2d, RobotBase, SmartDashboard
 from wpimath.geometry import (
@@ -171,7 +171,7 @@ back_right_module_config = {
 
 
 class Drive(FROGSubsystem, SwerveChassis):
-    """The drive subsystem that subclasses FROGlib.SwerveChassis and adds
+    """The drive subsystem that subclasses froglib.SwerveChassis and adds
     additional components, attributes and methods for autonomous driving, etc.
 
     """
