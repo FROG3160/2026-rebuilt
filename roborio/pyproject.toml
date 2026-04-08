@@ -25,7 +25,8 @@ requires = [
     "photonlibpy",
     #"robotpy-pykit",
     "phoenix6 > 26.0.0",
-    "robotpy-pathplannerlib"]
+    "robotpy-pathplannerlib",
+    "FROGlib @ git+https://github.com/FROG3160/FROGlib.git@main"]
 
 [tool.mypy]
 mypy_path = "roborio" # Replace "src" with the actual name of your source folder
